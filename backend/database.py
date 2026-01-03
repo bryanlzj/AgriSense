@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 import logging
 
-from config import settings
+from config import settings, get_database_url, is_development, is_production
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 # Get database URL from config (SQLite or PostgreSQL)
-DATABASE_URL = settings.get_database_url()
+DATABASE_URL = get_database_url()
 
 # Create engine based on database type
 if DATABASE_URL.startswith("sqlite"):
@@ -183,8 +183,8 @@ def get_db_info() -> dict:
     return {
         "database_url": DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else DATABASE_URL,  # Hide password
         "database_type": "sqlite" if DATABASE_URL.startswith("sqlite") else "postgresql",
-        "is_development": settings.is_development(),
-        "is_production": settings.is_production(),
+        "is_development": is_development(),
+        "is_production": is_production(),
         "debug_mode": settings.DEBUG
     }
 
