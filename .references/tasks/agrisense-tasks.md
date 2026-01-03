@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 9/87 (10%)  
+**Completed:** 10/87 (11%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -117,11 +117,12 @@
   - Add index on user_id and timestamp
   - **Completed:** Created sensor_reading.py with comprehensive model and anomaly detection
   
-- [ ] 0.3.3: Create PestDetection model
+- [x] 0.3.3: Create PestDetection model
   - Define `pest_detections` table
   - Fields: id, user_id, image_url, pest_type, confidence, severity, recommendations, detected_at
   - Add foreign key to users table
   - Add index on user_id and detected_at
+  - **Completed:** Created pest_detection.py with SeverityLevel enum and helper methods
   
 - [ ] 0.3.4: Create Alert model
   - Define `alerts` table
