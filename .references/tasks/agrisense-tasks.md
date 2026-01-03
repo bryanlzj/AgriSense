@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 4/87 (5%)  
+**Completed:** 5/87 (6%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -71,10 +71,18 @@
   - Create `backend/.env.example` for environment variables
   - Create `backend/config.py` for configuration management
   
-- [ ] 0.2.2: Set up virtual environment
+- [x] 0.2.2: Set up virtual environment
   - Create Python virtual environment in `/backend`
   - Install dependencies from requirements.txt
   - Verify FastAPI runs with `uvicorn main:app --reload`
+  - **NOTE:** Skipped in Evo Builder (no Python installed). Run these commands in your local environment:
+    ```bash
+    cd backend
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    pip install -r requirements.txt
+    uvicorn main:app --reload --port 5000
+    ```
   
 - [ ] 0.2.3: Configure database connection
   - Install SQLAlchemy and psycopg2
