@@ -1,4 +1,5 @@
 .vscode/
+.instructions
 
 # Git setup scripts
 setup_dual_remote.sh
