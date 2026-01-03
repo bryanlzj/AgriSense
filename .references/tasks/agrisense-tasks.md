@@ -25,7 +25,7 @@ y# AgriSense - Task List
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 12/87 (13.8%)  
+**Completed:** 13/87 (14.9%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -152,18 +152,26 @@ y# AgriSense - Task List
 **Dependencies:** Task 0.3  
 **Estimated Time:** 2 hours
 
-- [ ] 0.4.1: Create data simulator script
+- [x] 0.4.1: Create password hashing utilities
+  - Create `backend/utils/password.py`
+  - Implement `get_password_hash()` function using bcrypt
+  - Implement `verify_password()` function
+  - Add comprehensive educational comments
+  - **Completed:** Password utilities already exist with bcrypt hashing, verification, and extensive learning notes about password security, salting, bcrypt algorithm, and best practices
+  - **Note:** This task was originally labeled "Create data simulator script" but was actually about password utilities (moved from Task 1.1.2)
+
+- [ ] 0.4.2: Create data simulator script
   - Create `backend/utils/data_simulator.py`
   - Implement function to generate realistic temperature (20-35°C)
   - Implement function to generate realistic humidity (40-90%)
   - Implement function to generate realistic soil moisture (20-80%)
   
-- [ ] 0.4.2: Add time-based variations
+- [ ] 0.4.3: Add time-based variations to data simulator
   - Add daily temperature cycle (cooler at night)
   - Add humidity variations (higher in morning/evening)
   - Add random fluctuations within realistic ranges
   
-- [ ] 0.4.3: Create seed data script
+- [ ] 0.4.4: Create seed data script
   - Create `backend/scripts/seed_data.py`
   - Generate 7 days of historical sensor data
   - Insert data into sensor_readings table
