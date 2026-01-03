@@ -37,7 +37,7 @@ if DATABASE_URL.startswith("sqlite"):
         DATABASE_URL,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
-        echo=settings.DEBUG  # Log SQL queries in debug mode (great for learning!)
+        echo=settings.debug  # Log SQL queries in debug mode (great for learning!)
     )
     
     # Enable foreign key constraints for SQLite (disabled by default)
@@ -185,7 +185,7 @@ def get_db_info() -> dict:
         "database_type": "sqlite" if DATABASE_URL.startswith("sqlite") else "postgresql",
         "is_development": is_development(),
         "is_production": is_production(),
-        "debug_mode": settings.DEBUG
+        "debug_mode": settings.debug
     }
 
 # ============================================================================
