@@ -29,11 +29,12 @@
 
 ## 1. Executive Summary
 
-**AgriSense** is an IoT-driven agricultural monitoring mobile application designed for Malaysian farmers to monitor crop health through pest detection and environmental monitoring. This is a **simulation-based capstone project** with NO physical hardware - all sensor data is synthetically generated.
+**AgriSense** is an IoT-driven **Early Warning System for Weather and Pest Risk Management** designed for Malaysian farmers. This is a **simulation-based capstone project** with NO physical hardware - all sensor data is synthetically generated.
 
 ### Key Highlights:
-- **Primary Feature:** AI-powered pest detection via image upload
-- **Supporting Features:** Weather forecasting, simulated sensor monitoring, alert system
+- **DUAL CORE FEATURES (Equal Priority):**
+  - 🌤️ **Weather Early Warning System:** Real-time weather monitoring, 7-day forecasts, anomaly detection, and weather-based alerts
+  - 🐛 **Pest Risk Management System:** AI-powered pest detection, environmental monitoring, and pest outbreak predictions
 - **Target Users:** Small-to-medium scale farmers in Malaysia
 - **Platform:** Cross-platform mobile app (Flutter) + REST API backend (FastAPI/Python)
 - **Deployment:** Self-hosted server (Docker) + Render.com backup
@@ -44,28 +45,60 @@
 ## 2. Project Overview
 
 ### 2.1 Problem Statement
-Malaysian farmers lack accessible, affordable tools to:
-- Detect pest infestations early
-- Monitor environmental conditions affecting crops
-- Receive timely alerts for crop threats
-- Make data-driven farming decisions
+Malaysian farmers face **two critical challenges** that threaten crop yields and farm profitability:
+
+**1. Unpredictable Weather Patterns:**
+- Sudden heavy rains, storms, and extreme temperatures damage crops
+- Lack of timely weather warnings leads to preventable losses
+- Farmers cannot plan irrigation, harvesting, or protective measures effectively
+
+**2. Pest and Disease Outbreaks:**
+- Pest infestations spread rapidly without early detection
+- Farmers lack tools to identify pests accurately
+- Delayed response leads to widespread crop damage
+
+**Result:** Farmers experience significant crop losses, reduced yields, and financial instability due to lack of actionable, real-time information.
 
 ### 2.2 Solution
-AgriSense provides a mobile-first platform that:
-- Uses AI to identify pests from smartphone photos
-- Displays real-time simulated sensor data (temperature, humidity, soil moisture)
-- Integrates weather forecasts from OpenWeatherMap API
-- Sends push notifications for pest risks and weather warnings
-- Maintains historical records for trend analysis
+AgriSense provides a **dual-purpose early warning system** that addresses both challenges:
+
+**🌤️ Weather Early Warning System:**
+- Real-time weather monitoring and 7-day forecasts
+- Automated alerts for heavy rain, storms, and extreme temperatures
+- Weather-based recommendations for farming activities
+- Historical weather data for trend analysis
+
+**🐛 Pest Risk Management System:**
+- AI-powered pest identification from smartphone photos
+- Environmental monitoring (temperature, humidity, soil moisture)
+- Automated pest risk alerts based on environmental conditions
+- Historical pest detection records for outbreak tracking
+
+**📱 Mobile-First Platform:**
+- User-friendly Flutter app for Android/iOS
+- Real-time data updates every 30 seconds
+- Unified alert system for weather and pest warnings
+- Offline mode with cached data
 
 ### 2.3 Scope (MVP)
 **In Scope:**
-- ✅ User authentication (register, login, JWT)
-- ✅ Pest detection (upload image → AI analysis → results)
-- ✅ Dashboard (sensor data, weather, alerts)
-- ✅ Weather forecast (7-day forecast)
-- ✅ Alert system (pest risks, weather warnings)
-- ✅ History (past detections, sensor readings)
+- ✅ User authentication (register, login, JWT - simplified)
+- ✅ **Weather Early Warning System:**
+  - 7-day weather forecast (OpenWeatherMap API)
+  - Weather anomaly alerts (heavy rain, extreme heat)
+  - Weather-based recommendations
+- ✅ **Pest Risk Management System:**
+  - AI-powered pest detection (upload image → analysis → results)
+  - Environmental monitoring dashboard (temp, humidity, soil moisture)
+  - Pest risk alerts based on environmental conditions
+- ✅ **Unified Alert System:**
+  - Weather warnings (heavy rain, storms, extreme heat)
+  - Pest risk notifications (high confidence detections)
+  - Alert history and read/unread status
+- ✅ **Historical Data:**
+  - Past pest detections with timestamps
+  - 7-day sensor data trends
+  - Weather history
 
 **Out of Scope (Future Enhancements):**
 - ❌ Real physical IoT sensors
@@ -80,23 +113,28 @@ AgriSense provides a mobile-first platform that:
 ## 3. Goals & Success Metrics
 
 ### 3.1 Project Goals
-1. **Functional Goal:** Deliver a working end-to-end pest detection workflow
+1. **Functional Goal:** Deliver working end-to-end workflows for BOTH weather early warning AND pest risk management
 2. **Academic Goal:** Meet capstone project requirements (documentation, demo, defense)
-3. **Technical Goal:** Demonstrate full-stack integration (mobile + backend + ML)
-4. **Learning Goal:** Gain hands-on experience with modern development tools
+3. **Technical Goal:** Demonstrate full-stack integration (mobile + backend + ML + external APIs)
+4. **Learning Goal:** Gain hands-on experience with modern development tools and IoT simulation
+5. **Impact Goal:** Create a practical tool that addresses real farmer pain points (weather + pest risks)
 
 ### 3.2 Success Metrics
 
 | Metric | Target | Measurement Method |
 |--------|--------|-------------------|
-| **Core Feature Completion** | 100% of MVP features working | Manual testing checklist |
+| **Core Feature Completion** | 100% of BOTH weather AND pest features working | Manual testing checklist |
+| **Weather Forecast Accuracy** | 7-day forecast displayed correctly | OpenWeatherMap API validation |
+| **Weather Alert Timeliness** | Alerts generated within 1 minute of trigger | Backend logs |
+| **Pest Detection Accuracy** | > 70% confidence for known pests | ML model evaluation |
 | **API Response Time** | < 2 seconds (excluding ML inference) | Backend logs |
 | **ML Inference Time** | < 5 seconds per image | Backend logs |
+| **Sensor Data Refresh Rate** | Every 30 seconds | Mobile app logs |
 | **App Crash Rate** | < 5% during demo | Flutter error tracking |
 | **Code Coverage** | > 60% for critical paths | pytest coverage report |
 | **Documentation Completeness** | All APIs documented in Swagger | Swagger UI review |
 | **Deployment Success** | Backend accessible via HTTPS | curl test from mobile |
-| **Demo Readiness** | 5-minute demo runs without errors | Rehearsal testing |
+| **Demo Readiness** | 5-minute demo showcasing BOTH features | Rehearsal testing |
 
 ---
 
@@ -112,16 +150,17 @@ AgriSense provides a mobile-first platform that:
 - Tech Literacy: Basic smartphone user
 
 **Pain Points:**
-- Cannot identify pest species accurately
-- Discovers infestations too late (crop damage)
-- Lacks weather forecasting tools
-- No historical data for decision-making
+- **Weather-related:** Sudden storms and heavy rains damage crops without warning; cannot plan irrigation or harvesting schedules
+- **Pest-related:** Cannot identify pest species accurately; discovers infestations too late
+- **Data-related:** No historical data for decision-making; lacks tools to track patterns
+- **Alert-related:** No timely warnings for weather or pest threats
 
 **Goals:**
-- Detect pests early to minimize crop loss
-- Monitor environmental conditions remotely
-- Receive alerts for immediate action
-- Access historical data for planning
+- **Primary Goal 1:** Receive early warnings for weather threats (rain, storms, extreme heat) to protect crops
+- **Primary Goal 2:** Detect pests early to minimize crop loss
+- Monitor environmental conditions remotely (temperature, humidity, soil moisture)
+- Receive actionable alerts for immediate response
+- Access historical data for planning future seasons
 
 ### 4.2 User Stories
 
@@ -130,21 +169,31 @@ AgriSense provides a mobile-first platform that:
 - **US-1.2:** As a farmer, I want to log in with my credentials so that I can view my personalized data
 - **US-1.3:** As a farmer, I want my session to persist so that I don't have to log in repeatedly
 
-#### Epic 2: Pest Detection
-- **US-2.1:** As a farmer, I want to take a photo of a pest so that the app can identify it
-- **US-2.2:** As a farmer, I want to upload an existing photo from my gallery so that I can analyze past images
-- **US-2.3:** As a farmer, I want to see the pest species name and confidence score so that I can verify the detection
-- **US-2.4:** As a farmer, I want to view my detection history so that I can track pest patterns over time
+#### Epic 2: Weather Early Warning System (CORE FEATURE)
+- **US-2.1:** As a farmer, I want to see a 7-day weather forecast so that I can plan farming activities (irrigation, harvesting, planting)
+- **US-2.2:** As a farmer, I want to receive alerts for heavy rain warnings so that I can protect my crops from flooding
+- **US-2.3:** As a farmer, I want to receive alerts for extreme heat so that I can increase irrigation
+- **US-2.4:** As a farmer, I want to see current weather conditions (temperature, humidity) so that I can make immediate decisions
+- **US-2.5:** As a farmer, I want to view historical weather data so that I can identify seasonal patterns
 
-#### Epic 3: Environmental Monitoring
-- **US-3.1:** As a farmer, I want to see current temperature, humidity, and soil moisture so that I can assess crop conditions
-- **US-3.2:** As a farmer, I want to see a 7-day weather forecast so that I can plan farming activities
-- **US-3.3:** As a farmer, I want to view historical sensor data so that I can identify trends
+#### Epic 3: Pest Risk Management System (CORE FEATURE)
+- **US-3.1:** As a farmer, I want to take a photo of a pest so that the app can identify it
+- **US-3.2:** As a farmer, I want to upload an existing photo from my gallery so that I can analyze past images
+- **US-3.3:** As a farmer, I want to see the pest species name and confidence score so that I can verify the detection
+- **US-3.4:** As a farmer, I want to view my detection history so that I can track pest patterns over time
+- **US-3.5:** As a farmer, I want to see environmental conditions (temp, humidity, soil moisture) so that I can understand pest risk factors
 
-#### Epic 4: Alert System
-- **US-4.1:** As a farmer, I want to receive alerts when pest risk is high so that I can take preventive action
-- **US-4.2:** As a farmer, I want to receive alerts for severe weather warnings so that I can protect my crops
-- **US-4.3:** As a farmer, I want to mark alerts as read so that I can track which ones I've addressed
+#### Epic 4: Environmental Monitoring Dashboard
+- **US-4.1:** As a farmer, I want to see current temperature, humidity, and soil moisture so that I can assess crop conditions
+- **US-4.2:** As a farmer, I want to view historical sensor data (last 7 days) so that I can identify trends
+- **US-4.3:** As a farmer, I want the dashboard to auto-refresh every 30 seconds so that I have up-to-date information
+
+#### Epic 5: Unified Alert System
+- **US-5.1:** As a farmer, I want to receive weather alerts (heavy rain, storms, extreme heat) so that I can take protective action
+- **US-5.2:** As a farmer, I want to receive pest risk alerts when high-confidence detections occur so that I can respond quickly
+- **US-5.3:** As a farmer, I want to see all alerts in one place so that I don't miss critical warnings
+- **US-5.4:** As a farmer, I want to mark alerts as read so that I can track which ones I've addressed
+- **US-5.5:** As a farmer, I want alerts to be prioritized (High/Medium/Low) so that I know which to address first
 
 ---
 
@@ -182,17 +231,63 @@ AgriSense provides a mobile-first platform that:
 
 ---
 
-### 5.2 Feature: Pest Detection
+### 5.2 Feature: Weather Early Warning System (CORE FEATURE #1)
 
-**Description:** AI-powered pest identification from uploaded images with confidence scoring.
+**Description:** Real-time weather monitoring, 7-day forecasts, and automated weather anomaly alerts to help farmers protect crops from weather threats.
 
 **Functional Requirements:**
-- FR-2.1: System shall accept image uploads (JPEG/PNG, max 5MB)
-- FR-2.2: System shall send images to ML service for inference
-- FR-2.3: System shall return pest species name, confidence score, and timestamp
-- FR-2.4: System shall store detection results in database
-- FR-2.5: System shall provide detection history endpoint (paginated)
-- FR-2.6: System shall handle ML service failures gracefully (fallback to mock)
+- FR-2.1: System shall integrate with OpenWeatherMap API for weather data
+- FR-2.2: System shall fetch 7-day weather forecast for user's location (default: Kuala Lumpur, Malaysia)
+- FR-2.3: System shall display current weather conditions (temperature, humidity, weather description, wind speed)
+- FR-2.4: System shall cache weather data for 30 minutes to reduce API calls
+- FR-2.5: System shall generate weather alerts for:
+  - Heavy rain (> 50mm precipitation forecast)
+  - Extreme heat (temperature > 35°C)
+  - Storms (wind speed > 40 km/h)
+- FR-2.6: System shall provide endpoint for weather forecast data
+- FR-2.7: System shall provide endpoint for weather-based recommendations
+- FR-2.8: System shall handle API rate limits gracefully (1000 calls/day free tier)
+
+**Weather Data Points:**
+- Current temperature (°C)
+- Current humidity (%)
+- Weather condition (clear, rain, cloudy, storm)
+- 7-day forecast (daily high/low, precipitation probability, weather icon)
+- Wind speed (km/h)
+- Sunrise/sunset times
+
+**Weather Alert Triggers:**
+| Alert Type | Trigger Condition | Priority | Recommendation |
+|-----------|------------------|----------|----------------|
+| Heavy Rain Warning | Precipitation > 50mm in forecast | High | Cover crops, prepare drainage |
+| Extreme Heat Alert | Temperature > 35°C | Medium | Increase irrigation, provide shade |
+| Storm Warning | Wind speed > 40 km/h | High | Secure equipment, harvest if ready |
+| Low Temperature | Temperature < 15°C | Low | Protect sensitive crops |
+
+**Acceptance Criteria:**
+- ✅ 7-day weather forecast displays correctly with icons
+- ✅ Current weather updates every 30 minutes
+- ✅ Weather alerts generated within 1 minute of forecast update
+- ✅ Recommendations are actionable and relevant to Malaysian farming
+- ✅ System handles OpenWeatherMap API failures gracefully
+- ✅ Last cached weather data shown during API outage
+- ✅ Weather data specific to Kuala Lumpur region
+
+---
+
+### 5.3 Feature: Pest Risk Management System (CORE FEATURE #2)
+
+**Description:** AI-powered pest identification from uploaded images with confidence scoring and environmental risk assessment.
+
+**Functional Requirements:**
+- FR-3.1: System shall accept image uploads (JPEG/PNG, max 5MB)
+- FR-3.2: System shall send images to ML service for inference
+- FR-3.3: System shall return pest species name, confidence score, and timestamp
+- FR-3.4: System shall store detection results in database
+- FR-3.5: System shall provide detection history endpoint (paginated)
+- FR-3.6: System shall handle ML service failures gracefully (fallback to mock)
+- FR-3.7: System shall correlate pest detections with environmental conditions (temp, humidity)
+- FR-3.8: System shall generate pest risk alerts when confidence > 80%
 
 **ML Service Integration:**
 - **Phase 1 (Weeks 1-8):** Mock ML service returns hardcoded predictions
@@ -209,17 +304,17 @@ AgriSense provides a mobile-first platform that:
 
 ---
 
-### 5.3 Feature: Environmental Monitoring Dashboard
+### 5.4 Feature: Environmental Monitoring Dashboard
 
-**Description:** Real-time display of simulated sensor data and weather information.
+**Description:** Real-time display of simulated IoT sensor data (temperature, humidity, soil moisture) to support both weather and pest risk assessment.
 
 **Functional Requirements:**
-- FR-3.1: System shall generate synthetic sensor data every 30 seconds
-- FR-3.2: System shall provide endpoint for current sensor readings
-- FR-3.3: System shall provide endpoint for historical sensor data (last 7 days)
-- FR-3.4: System shall fetch weather data from OpenWeatherMap API
-- FR-3.5: System shall cache weather data for 30 minutes to reduce API calls
-- FR-3.6: Mobile app shall poll sensor data every 30 seconds
+- FR-4.1: System shall generate synthetic sensor data every 30 seconds
+- FR-4.2: System shall provide endpoint for current sensor readings
+- FR-4.3: System shall provide endpoint for historical sensor data (last 7 days)
+- FR-4.4: System shall correlate sensor data with weather forecasts
+- FR-4.5: System shall provide data visualization endpoints (charts, trends)
+- FR-4.6: Mobile app shall poll sensor data every 30 seconds
 
 **Sensor Data Points:**
 - Temperature (°C): Range 20-35°C
@@ -236,25 +331,29 @@ AgriSense provides a mobile-first platform that:
 
 ---
 
-### 5.4 Feature: Alert System
+### 5.5 Feature: Unified Alert System
 
-**Description:** Automated notifications for pest risks and weather warnings.
+**Description:** Automated notifications for BOTH weather warnings AND pest risks, providing farmers with actionable alerts in one place.
 
 **Functional Requirements:**
-- FR-4.1: System shall generate pest risk alerts when confidence > 80%
-- FR-4.2: System shall generate weather alerts for severe conditions (rain > 50mm, temp > 35°C)
-- FR-4.3: System shall provide endpoint to fetch unread alerts
-- FR-4.4: System shall provide endpoint to mark alerts as read
-- FR-4.5: Mobile app shall display alert badge on dashboard
-- FR-4.6: Mobile app shall show alert list with timestamps
+- FR-5.1: System shall generate weather alerts for severe conditions (rain > 50mm, temp > 35°C, wind > 40 km/h)
+- FR-5.2: System shall generate pest risk alerts when confidence > 80%
+- FR-5.3: System shall generate environmental alerts (low soil moisture < 40%)
+- FR-5.4: System shall provide endpoint to fetch unread alerts
+- FR-5.5: System shall provide endpoint to mark alerts as read
+- FR-5.6: System shall prioritize alerts (High/Medium/Low)
+- FR-5.7: Mobile app shall display alert badge on dashboard
+- FR-5.8: Mobile app shall show alert list with timestamps and priorities
 
 **Alert Types:**
-| Type | Trigger Condition | Priority |
-|------|------------------|----------|
-| Pest Risk | Pest detected with confidence > 80% | High |
-| Heavy Rain | Forecast shows > 50mm rain | Medium |
-| Extreme Heat | Temperature > 35°C | Medium |
-| Low Soil Moisture | Soil moisture < 40% | Low |
+| Type | Trigger Condition | Priority | Source |
+|------|------------------|----------|--------|
+| Heavy Rain Warning | Forecast shows > 50mm rain | High | Weather API |
+| Storm Warning | Wind speed > 40 km/h | High | Weather API |
+| Extreme Heat Alert | Temperature > 35°C | Medium | Weather API |
+| Pest Risk Alert | Pest detected with confidence > 80% | High | ML Detection |
+| Low Soil Moisture | Soil moisture < 40% | Low | Sensor Data |
+| Low Temperature | Temperature < 15°C | Low | Weather API |
 
 **Acceptance Criteria:**
 - ✅ Alerts appear within 1 minute of trigger
@@ -263,25 +362,6 @@ AgriSense provides a mobile-first platform that:
 - ✅ User can mark alert as read
 - ✅ Read alerts are visually distinct
 - ✅ Alerts are sorted by timestamp (newest first)
-
----
-
-### 5.5 Feature: Weather Forecast
-
-**Description:** 7-day weather forecast using OpenWeatherMap API.
-
-**Functional Requirements:**
-- FR-5.1: System shall fetch forecast for user's location (default: Kuala Lumpur)
-- FR-5.2: System shall display daily high/low temperature, weather condition, and precipitation
-- FR-5.3: System shall cache forecast data for 30 minutes
-- FR-5.4: System shall handle API rate limits gracefully
-
-**Acceptance Criteria:**
-- ✅ Forecast shows 7 days ahead
-- ✅ Each day shows icon, temp range, and rain probability
-- ✅ Data updates every 30 minutes
-- ✅ Error message shown if API fails
-- ✅ Last cached data shown during API outage
 
 ---
 

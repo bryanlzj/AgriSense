@@ -1,9 +1,13 @@
 # AgriSense - Task List
 
 **Generated from PRD:** `.references/prd/agrisense-prd.md`  
-**Project:** AgriSense - IoT Agricultural Monitoring System  
+**Project:** AgriSense - IoT-Driven Early Warning System for Weather and Pest Risk Management  
 **Timeline:** 14 Weeks  
-**Last Updated:** 2024
+**Last Updated:** January 2025
+
+**🎯 DUAL CORE FEATURES (Equal Priority):**
+1. 🌤️ **Weather Early Warning System** - Real-time forecasts, weather alerts, recommendations
+2. 🐛 **Pest Risk Management System** - AI-powered pest detection, environmental monitoring
 
 ---
 
@@ -23,6 +27,10 @@
 **Total Subtasks:** 87  
 **Completed:** 3/87 (3%)  
 **Current Phase:** Phase 0 - Setup & Planning
+
+**⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
+- 🌤️ Weather Early Warning System (Task 1.7)
+- 🐛 Pest Risk Management System (Tasks 1.4-1.6)
 
 ---
 
@@ -258,10 +266,11 @@
 
 ---
 
-### Task 1.4: Pest Detection API - Image Upload
-**Goal:** Implement image upload and storage  
+### Task 1.4: Pest Risk Management System - Image Upload (CORE FEATURE #2) 🐛
+**Goal:** Implement image upload and storage for pest detection  
 **Dependencies:** Task 1.1  
-**Estimated Time:** 3 hours
+**Estimated Time:** 3 hours  
+**⚠️ CRITICAL:** This is a CORE FEATURE with equal priority to Weather Early Warning
 
 - [ ] 1.4.1: Set up image storage
   - Create `backend/uploads/` folder for images
@@ -345,10 +354,11 @@
 
 ---
 
-### Task 1.7: Weather API Integration
-**Goal:** Integrate OpenWeatherMap API for weather forecasts  
+### Task 1.7: Weather Early Warning System (CORE FEATURE #1) 🌤️
+**Goal:** Integrate OpenWeatherMap API for weather forecasts, alerts, and recommendations  
 **Dependencies:** Task 1.1  
-**Estimated Time:** 3 hours
+**Estimated Time:** 4 hours  
+**⚠️ CRITICAL:** This is a CORE FEATURE with equal priority to Pest Detection
 
 - [ ] 1.7.1: Set up OpenWeatherMap API
   - Sign up for free OpenWeatherMap API key
@@ -402,11 +412,13 @@
   - Check humidity thresholds (<40% or >90% = alert)
   - Check soil moisture (<30% = low moisture alert)
   
-- [ ] 1.8.2: Implement weather-based alerts
+- [ ] 1.8.2: Implement weather-based alerts (CORE FEATURE)
   - Implement `generate_weather_alerts(user_id)` function
-  - Check for rain forecast (>70% chance = rain alert)
-  - Check for extreme temperatures
-  - Check for storms or severe weather
+  - Check for heavy rain forecast (>50mm = high priority alert)
+  - Check for extreme heat (>35°C = medium priority alert)
+  - Check for storms (wind >40 km/h = high priority alert)
+  - Check for low temperature (<15°C = low priority alert)
+  - Generate actionable recommendations (e.g., "Cover crops, prepare drainage")
   
 - [ ] 1.8.3: Implement pest risk alerts
   - Implement `generate_pest_alerts(user_id)` function
