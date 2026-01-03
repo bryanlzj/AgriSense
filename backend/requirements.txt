@@ -6,8 +6,6 @@ python-multipart==0.0.6
 # Database
 sqlalchemy==2.0.23
 alembic==1.12.1
-psycopg2-binary==2.9.9  # PostgreSQL adapter
-asyncpg==0.29.0  # Async PostgreSQL support
 
 # Authentication & Security
 python-jose[cryptography]==3.3.0  # JWT tokens
@@ -19,7 +17,7 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 email-validator==2.1.0
 
-# HTTP Client (for external APIs)
+# HTTP Client (for external APIs like OpenWeatherMap)
 httpx==0.25.1
 requests==2.31.0
 
@@ -39,18 +37,8 @@ black==23.11.0
 flake8==6.1.0
 mypy==1.7.1
 
-# CORS
-fastapi-cors==0.0.6
-
-# Logging
-loguru==0.7.2
-
-# Caching (for weather API responses)
-redis==5.0.1
-hiredis==2.2.3
-
-# Background Tasks
-celery==5.3.4
-
 # Data Generation (for synthetic sensor data)
 faker==20.1.0
+
+# Note: PostgreSQL support (psycopg2-binary, asyncpg) will be added later
+# when migrating from SQLite to PostgreSQL in production
