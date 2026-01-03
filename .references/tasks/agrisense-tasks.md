@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 5/87 (6%)  
+**Completed:** 6/87 (7%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -84,7 +84,7 @@
     uvicorn main:app --reload --port 5000
     ```
   
-- [ ] 0.2.3: Configure database connection
+- [x] 0.2.3: Configure database connection
   - Install SQLAlchemy and psycopg2
   - Create `backend/database.py` with database connection
   - Create `backend/models/` folder for SQLAlchemy models
