@@ -21,7 +21,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import our application's configuration and models
-from config import settings
+from config import settings, get_database_url
 from database import Base
 
 # Import all models so Alembic can detect them
@@ -54,7 +54,7 @@ def get_url():
     This overrides the URL in alembic.ini with the one from config.py,
     which allows us to use environment variables for database configuration.
     """
-    return settings.get_database_url()
+    return get_database_url()
 
 
 def run_migrations_offline() -> None:
