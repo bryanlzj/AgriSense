@@ -25,7 +25,7 @@ y# AgriSense - Task List
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 13/87 (14.9%)  
+**Completed:** 14/87 (16.1%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -160,11 +160,14 @@ y# AgriSense - Task List
   - **Completed:** Password utilities already exist with bcrypt hashing, verification, and extensive learning notes about password security, salting, bcrypt algorithm, and best practices
   - **Note:** This task was originally labeled "Create data simulator script" but was actually about password utilities (moved from Task 1.1.2)
 
-- [ ] 0.4.2: Create data simulator script
+- [x] 0.4.2: Create data simulator script ✅
   - Create `backend/utils/data_simulator.py`
   - Implement function to generate realistic temperature (20-35°C)
   - Implement function to generate realistic humidity (40-90%)
   - Implement function to generate realistic soil moisture (20-80%)
+  - Implement function to generate realistic light intensity (0-100000 lux)
+  - **Completed:** January 16, 2025
+  - **Details:** Created comprehensive SensorDataSimulator class with time-based variations, realistic ranges, and educational comments. Includes methods for single readings and historical data generation.
   
 - [ ] 0.4.3: Add time-based variations to data simulator
   - Add daily temperature cycle (cooler at night)
