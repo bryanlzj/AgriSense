@@ -89,8 +89,8 @@ class Settings(BaseSettings):
     # ===================================
     upload_dir: str = Field(default="./uploads", env="UPLOAD_DIR")
     max_upload_size: int = Field(default=10485760, env="MAX_UPLOAD_SIZE")  # 10MB
-    allowed_image_extensions: str = Field(
-        default="jpg,jpeg,png",
+    allowed_image_extensions: List[str] = Field(
+        default=["jpg", "jpeg", "png"],
         env="ALLOWED_IMAGE_EXTENSIONS"
     )
     
@@ -140,8 +140,8 @@ class Settings(BaseSettings):
     # ===================================
     # CORS Configuration
     # ===================================
-    cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:5173",
+    cors_origins: List[str] = Field(
+        default=["http://localhost:3000", "http://localhost:5173"],
         env="CORS_ORIGINS"
     )
     
