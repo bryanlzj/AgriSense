@@ -1,77 +1,119 @@
 """
-AgriSense Backend API
-FastAPI application for IoT-driven weather and pest risk management system
+AgriSense Backend - Main Application Entry Point
+
+This is the main FastAPI application that serves the AgriSense API.
+
+Features:
+- RESTful API with versioning (/api/v1)
+- Automatic API documentation (Swagger UI at /docs)
+- CORS enabled for mobile app integration
+- Organized routers by feature domain
+- Database session management
+- Error handling and validation
+
+Tech Stack:
+- FastAPI: Modern Python web framework
+- SQLAlchemy: ORM for database operations
+- Alembic: Database migrations
+- Pydantic: Data validation
+- Uvicorn: ASGI server
+
+Development:
+Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import uvicorn
+from database import engine, Base
 
-# Initialize FastAPI app
+# Import routers (will be uncommented as they are created)
+# from routers import (
+#     auth_router,
+#     sensors_router,
+#     pests_router,
+#     alerts_router,
+#     weather_router,
+# )
+
+# Create database tables (only for development - use Alembic in production)
+# Base.metadata.create_all(bind=engine)
+
+# Create FastAPI application
 app = FastAPI(
     title="AgriSense API",
-    description="IoT-Driven Early Warning System for Weather and Pest Risk Management",
+    description="Backend API for AgriSense - Agricultural Early Warning System",
     version="1.0.0",
-    docs_url="/swagger",
-    redoc_url="/redoc"
+    docs_url="/docs",  # Swagger UI
+    redoc_url="/redoc",  # ReDoc alternative documentation
 )
 
-# CORS middleware configuration
+# Configure CORS (Cross-Origin Resource Sharing)
+# This allows the Flutter mobile app to make requests to the API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, replace with specific origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
-# Health check endpoint
-@app.get("/", tags=["Health"])
+# Register API routers with /api/v1 prefix
+# Uncomment as routers are created:
+# app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+# app.include_router(sensors_router, prefix="/api/v1/sensors", tags=["Sensors"])
+# app.include_router(pests_router, prefix="/api/v1/pests", tags=["Pests"])
+# app.include_router(alerts_router, prefix="/api/v1/alerts", tags=["Alerts"])
+# app.include_router(weather_router, prefix="/api/v1/weather", tags=["Weather"])
+
+
+@app.get("/")
 async def root():
-    """Root endpoint - API health check"""
+    """
+    Root endpoint - API health check
+    
+    Returns:
+        dict: Welcome message and API status
+    """
     return {
-        "message": "AgriSense API is running",
+        "message": "Welcome to AgriSense API",
         "version": "1.0.0",
-        "status": "healthy",
-        "features": [
-            "Weather Early Warning System",
-            "Pest Risk Management System",
-            "Environmental Monitoring",
-            "Unified Alert System"
-        ]
+        "status": "operational",
+        "docs": "/docs",
     }
 
-@app.get("/health", tags=["Health"])
+
+@app.get("/health")
 async def health_check():
-    """Detailed health check endpoint"""
-    return {
-        "status": "healthy",
-        "api": "operational",
-        "database": "not_configured",  # Will be updated after DB setup
-        "services": {
-            "weather_api": "not_configured",
-            "ml_service": "not_configured"
-        }
-    }
+    """
+    Health check endpoint
+    
+    Used by monitoring tools to verify the API is running.
+    
+    Returns:
+        dict: Health status
+    """
+    return {"status": "healthy"}
 
-# Exception handler for general errors
-@app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Global exception handler"""
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal server error",
-            "message": str(exc)
-        }
-    )
+
+# Error handlers can be added here
+# Example:
+# @app.exception_handler(ValueError)
+# async def value_error_handler(request, exc):
+#     return JSONResponse(
+#         status_code=400,
+#         content={"detail": str(exc)},
+#     )
+
 
 if __name__ == "__main__":
+    import uvicorn
+    
     # Run the application
+    # This is only used when running: python main.py
+    # In production, use: uvicorn main:app --host 0.0.0.0 --port 8000
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=5000,
-        reload=True  # Enable auto-reload during development
+        port=8000,
+        reload=True,  # Auto-reload on code changes (development only)
     )

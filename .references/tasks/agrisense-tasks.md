@@ -23,9 +23,9 @@ y# AgriSense - Task List
 
 ## 🎯 Progress Overview
 
-**Total Parent Tasks:** 10  
-**Total Subtasks:** 87  
-**Completed:** 16/87 (18.4%)  
+**Total Parent Tasks:** 11  
+**Total Subtasks:** 88  
+**Completed:** 17/88 (19.3%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -183,6 +183,22 @@ y# AgriSense - Task List
   - Add test user account for development
   - **Completed:** January 16, 2025
   - **Details:** Created comprehensive seed script (371 lines) that clears database and populates with 3 test users (admin, farmer1, farmer2), 7 days of hourly sensor readings per user, sample pest detections (Fall Armyworm, Aphids, Whitefly), and various alerts (weather, pest, environmental). Includes educational comments and usage instructions.
+
+---
+
+### Task 0.5: API Router Structure (Added)
+**Goal:** Set up FastAPI router organization  
+**Dependencies:** Task 0.2  
+**Estimated Time:** 1 hour
+
+- [x] 0.5.1: Create API router structure ✅
+  - Create `backend/routers/` directory
+  - Create `__init__.py` with router imports
+  - Set up main.py with router registration
+  - Configure CORS for mobile app
+  - **Completed:** January 16, 2025
+  - **Details:** Created routers package structure, comprehensive main.py (120 lines) with FastAPI app setup, CORS middleware, health check endpoints, and API_STRUCTURE.md (379 lines) documenting all planned endpoints with request/response examples, authentication flow, pagination, and error handling.
+  - **Note:** This task was added to provide foundational structure before implementing individual routers in Phase 1.
 
 ---
 
