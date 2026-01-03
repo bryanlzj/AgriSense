@@ -88,11 +88,31 @@ async def health_check():
     Health check endpoint
     
     Used by monitoring tools to verify the API is running.
+    Checks database connectivity and returns current timestamp.
     
     Returns:
-        dict: Health status
+        dict: Health status with database connection and timestamp
     """
-    return {"status": "healthy"}
+    from datetime import datetime
+    from sqlalchemy import text
+    from database import SessionLocal
+    
+    # Check database connection
+    db_status = "disconnected"
+    try:
+        db = SessionLocal()
+        # Try a simple query to verify database is accessible
+        db.execute(text("SELECT 1"))
+        db.close()
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
 
 
 # Error handlers can be added here
