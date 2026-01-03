@@ -25,7 +25,7 @@ y# AgriSense - Task List
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 14/87 (16.1%)  
+**Completed:** 16/87 (18.4%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -169,16 +169,20 @@ y# AgriSense - Task List
   - **Completed:** January 16, 2025
   - **Details:** Created comprehensive SensorDataSimulator class with time-based variations, realistic ranges, and educational comments. Includes methods for single readings and historical data generation.
   
-- [ ] 0.4.3: Add time-based variations to data simulator
+- [x] 0.4.3: Add time-based variations to data simulator ✅
   - Add daily temperature cycle (cooler at night)
   - Add humidity variations (higher in morning/evening)
   - Add random fluctuations within realistic ranges
+  - **Completed:** January 16, 2025
+  - **Details:** Already implemented in Task 0.4.2. SensorDataSimulator includes sinusoidal temperature cycles (coolest at 6 AM, warmest at 2 PM), humidity variations correlated with temperature and time of day, and random fluctuations for all sensor types.
   
-- [ ] 0.4.4: Create seed data script
+- [x] 0.4.4: Create seed data script ✅
   - Create `backend/scripts/seed_data.py`
   - Generate 7 days of historical sensor data
   - Insert data into sensor_readings table
   - Add test user account for development
+  - **Completed:** January 16, 2025
+  - **Details:** Created comprehensive seed script (371 lines) that clears database and populates with 3 test users (admin, farmer1, farmer2), 7 days of hourly sensor readings per user, sample pest detections (Fall Armyworm, Aphids, Whitefly), and various alerts (weather, pest, environmental). Includes educational comments and usage instructions.
 
 ---
 
