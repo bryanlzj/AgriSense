@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 6/87 (7%)  
+**Completed:** 7/87 (8%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -90,7 +90,7 @@
   - Create `backend/models/` folder for SQLAlchemy models
   - Test database connection with SQLite first
   
-- [ ] 0.2.4: Set up Alembic for migrations
+- [x] 0.2.4: Set up Alembic for migrations
   - Initialize Alembic in backend folder
   - Configure `alembic.ini` with database URL
   - Create initial migration structure
