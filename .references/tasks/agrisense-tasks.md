@@ -25,7 +25,7 @@ y# AgriSense - Task List
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 10/87 (11%)  
+**Completed:** 12/87 (13.8%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -124,17 +124,26 @@ y# AgriSense - Task List
   - Add index on user_id and detected_at
   - **Completed:** Created pest_detection.py with SeverityLevel enum and helper methods
   
-- [ ] 0.3.4: Create Alert model
+- [x] 0.3.4: Create Alert model
   - Define `alerts` table
   - Fields: id, user_id, alert_type, title, message, severity, is_read, created_at
   - Add foreign key to users table
   - Add index on user_id and is_read
+  - **Completed:** Created alert.py with AlertType and AlertSeverity enums, comprehensive fields (title, message, recommendations, is_read, read_at, expires_at, metadata), helper methods (mark_as_read, is_expired, is_urgent), and helper functions (create_weather_alert, create_pest_alert, create_environmental_alert)
   
-- [ ] 0.3.5: Run initial migration
+- [x] 0.3.5: Run initial migration
   - Generate migration with `alembic revision --autogenerate`
   - Review migration file
   - Apply migration with `alembic upgrade head`
   - Verify all tables created in database
+  - **Completed:** Created MIGRATION_GUIDE.md with step-by-step instructions. Updated models/__init__.py to include Alert imports.
+  - **⚠️ ACTION REQUIRED:** Run migration commands in LOCAL environment (Evo Builder has no Python):
+    ```bash
+    cd backend
+    alembic revision --autogenerate -m "Initial migration: users, sensor_readings, pest_detections, alerts"
+    alembic upgrade head
+    sqlite3 agrisense.db ".tables"  # Verify tables created
+    ```
 
 ---
 
