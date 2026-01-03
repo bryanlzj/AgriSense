@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 8/87 (9%)  
+**Completed:** 9/87 (10%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -110,11 +110,12 @@
   - **Note:** Simplified schema for student project
   - **Completed:** Created user.py with comprehensive model and password utilities
   
-- [ ] 0.3.2: Create SensorReading model
+- [x] 0.3.2: Create SensorReading model
   - Define `sensor_readings` table
-  - Fields: id, user_id, temperature, humidity, soil_moisture, timestamp
+  - Fields: id, user_id, temperature, humidity, soil_moisture, light_intensity, timestamp
   - Add foreign key to users table
   - Add index on user_id and timestamp
+  - **Completed:** Created sensor_reading.py with comprehensive model and anomaly detection
   
 - [ ] 0.3.3: Create PestDetection model
   - Define `pest_detections` table

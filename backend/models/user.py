@@ -80,6 +80,14 @@ class User(Base):
     # Relationships (will be used by other models)
     # These create connections to other tables
     
+    # One user can have many sensor readings
+    sensor_readings = relationship(
+        "SensorReading",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
     # One user can have many pest detections
     pest_detections = relationship(
         "PestDetection",
