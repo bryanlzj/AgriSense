@@ -21,7 +21,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 1/87 (1%)  
+**Completed:** 2/87 (2%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 ---
@@ -39,7 +39,7 @@
   - Create `/docs` folder
   - Create `.gitignore` for Python and Flutter
   
-- [ ] 0.1.2: Initialize Git repository
+- [x] 0.1.2: Initialize Git repository (Already initialized)
   - Run `git init`
   - Create initial commit with folder structure
   - Create `.gitignore` with Python, Flutter, IDE exclusions
