@@ -170,29 +170,29 @@ def create_pest_detections(db: Session, user: User):
     detections = [
         PestDetection(
             user_id=user.id,
-            image_path="/uploads/pest_001.jpg",
-            pest_name="Fall Armyworm",
-            confidence=0.92,
-            severity=SeverityLevel.HIGH,
-            recommendations="1. Apply Bt-based insecticide\n2. Scout fields daily\n3. Remove affected plants\n4. Consider trap crops",
+            image_url="/uploads/pest_001.jpg",
+            pest_type="Fall Armyworm",
+            confidence_score=0.92,
+            severity_level=SeverityLevel.HIGH,
+            treatment_recommendations="1. Apply Bt-based insecticide\n2. Scout fields daily\n3. Remove affected plants\n4. Consider trap crops",
             detected_at=datetime.utcnow() - timedelta(days=2)
         ),
         PestDetection(
             user_id=user.id,
-            image_path="/uploads/pest_002.jpg",
-            pest_name="Aphids",
-            confidence=0.85,
-            severity=SeverityLevel.MEDIUM,
-            recommendations="1. Spray with neem oil\n2. Introduce ladybugs (natural predator)\n3. Remove heavily infested leaves\n4. Monitor weekly",
+            image_url="/uploads/pest_002.jpg",
+            pest_type="Aphids",
+            confidence_score=0.85,
+            severity_level=SeverityLevel.MEDIUM,
+            treatment_recommendations="1. Spray with neem oil\n2. Introduce ladybugs (natural predator)\n3. Remove heavily infested leaves\n4. Monitor weekly",
             detected_at=datetime.utcnow() - timedelta(days=5)
         ),
         PestDetection(
             user_id=user.id,
-            image_path="/uploads/pest_003.jpg",
-            pest_name="Whitefly",
-            confidence=0.78,
-            severity=SeverityLevel.LOW,
-            recommendations="1. Use yellow sticky traps\n2. Spray with insecticidal soap\n3. Maintain good air circulation\n4. Monitor population",
+            image_url="/uploads/pest_003.jpg",
+            pest_type="Whitefly",
+            confidence_score=0.78,
+            severity_level=SeverityLevel.LOW,
+            treatment_recommendations="1. Use yellow sticky traps\n2. Spray with insecticidal soap\n3. Maintain good air circulation\n4. Monitor population",
             detected_at=datetime.utcnow() - timedelta(days=7)
         ),
     ]
@@ -208,7 +208,7 @@ def create_pest_detections(db: Session, user: User):
     
     print(f"✅ Created {len(detections)} pest detections")
     for detection in detections:
-        print(f"   - {detection.pest_name} ({detection.severity.value}, {detection.confidence:.0%} confidence)")
+        print(f"   - {detection.pest_type} ({detection.severity_level.value}, {detection.confidence_score:.0%} confidence)")
 
 
 def create_alerts(db: Session, user: User):
