@@ -169,8 +169,8 @@ class Alert(Base):
         comment="When this alert is no longer relevant (optional)"
     )
     
-    # Metadata
-    metadata = Column(
+    # Metadata (renamed to alert_metadata because 'metadata' is reserved by SQLAlchemy)
+    alert_metadata = Column(
         Text,
         nullable=True,
         comment="Additional data (JSON) - e.g., weather values, pest confidence"
@@ -360,7 +360,7 @@ def create_weather_alert(
         title=title,
         message=message,
         recommendations=recommendations,
-        metadata=metadata,
+        alert_metadata=metadata,
         expires_at=expires_at
     )
     db.add(alert)
@@ -415,7 +415,7 @@ def create_pest_alert(
         title=title,
         message=message,
         recommendations=recommendations,
-        metadata=metadata
+        alert_metadata=metadata
     )
     db.add(alert)
     return alert
@@ -466,7 +466,7 @@ def create_environmental_alert(
         title=title,
         message=message,
         recommendations=recommendations,
-        metadata=metadata
+        alert_metadata=metadata
     )
     db.add(alert)
     return alert
