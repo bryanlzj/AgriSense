@@ -79,24 +79,15 @@ def create_users(db: Session) -> list[User]:
     users = [
         User(
             username="admin",
-            hashed_password=get_password_hash("admin123"),
-            full_name="Admin User",
-            phone_number="+254700000000",
-            farm_location="Nairobi, Kenya"
+            hashed_password=get_password_hash("admin123")
         ),
         User(
             username="farmer1",
-            hashed_password=get_password_hash("password123"),
-            full_name="John Kamau",
-            phone_number="+254712345678",
-            farm_location="Kiambu County, Kenya"
+            hashed_password=get_password_hash("password123")
         ),
         User(
             username="farmer2",
-            hashed_password=get_password_hash("password123"),
-            full_name="Mary Wanjiku",
-            phone_number="+254723456789",
-            farm_location="Nakuru County, Kenya"
+            hashed_password=get_password_hash("password123")
         ),
     ]
     
