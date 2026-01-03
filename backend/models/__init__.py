@@ -9,9 +9,7 @@ Import all models here so Alembic can detect them for migrations.
 from backend.models.user import User
 from backend.models.sensor_reading import SensorReading
 from backend.models.pest_detection import PestDetection, SeverityLevel
-
-# Import other models as they are created
-# from backend.models.alert import Alert
+from backend.models.alert import Alert, AlertType, AlertSeverity
 
 # Export all models
 __all__ = [
@@ -19,5 +17,7 @@ __all__ = [
     "SensorReading",
     "PestDetection",
     "SeverityLevel",
-    # "Alert",
+    "Alert",
+    "AlertType",
+    "AlertSeverity",
 ]
