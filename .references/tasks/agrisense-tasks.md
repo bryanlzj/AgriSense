@@ -21,7 +21,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 2/87 (2%)  
+**Completed:** 3/87 (3%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 ---
@@ -44,7 +44,7 @@
   - Create initial commit with folder structure
   - Create `.gitignore` with Python, Flutter, IDE exclusions
   
-- [ ] 0.1.3: Create README.md
+- [x] 0.1.3: Create README.md ✅
   - Add project title and description
   - Add tech stack overview
   - Add setup instructions placeholder
