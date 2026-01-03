@@ -2,7 +2,10 @@
 
 **IoT-Driven Agricultural Monitoring System for Malaysian Farmers**
 
-AgriSense is a mobile application that helps farmers monitor their crops through AI-powered pest detection, environmental monitoring, and weather forecasting. Built as a simulation-based system for educational purposes.
+> **📚 Personal Learning Project**  
+> This is a capstone project focused on learning full-stack mobile development (Flutter + FastAPI) with AI assistance. Built as a simulation-based system for educational purposes - no physical hardware required.
+
+AgriSense is a mobile application that helps farmers monitor their crops through AI-powered pest detection, environmental monitoring, and weather forecasting.
 
 ---
 

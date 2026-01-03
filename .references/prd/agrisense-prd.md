@@ -6,6 +6,9 @@
 **Project Duration:** 14 Weeks  
 **Document Owner:** Integration Lead
 
+> **📚 IMPORTANT: Personal Learning Project**  
+> This is a personal project for learning full-stack mobile development (Flutter + FastAPI) with AI assistance. It is NOT for the Access platform or enterprise deployment. Focus is on educational value, practical implementation, and demonstrating technical capabilities.
+
 ---
 
 ## 📋 Table of Contents

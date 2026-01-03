@@ -1,11 +1,27 @@
 # Development Environment Notes
 
+## 🎯 **IMPORTANT: Project Context**
+
+**This is a PERSONAL LEARNING PROJECT**
+- ✅ Focus: Learning full-stack mobile development (Flutter + FastAPI)
+- ✅ Purpose: Test knowledge and AI-assisted development capabilities
+- ✅ NOT for Access platform or enterprise deployment
+- ✅ Educational value > Production complexity
+
+**Development Strategy:**
+- 🤖 **Evo Builder:** AI-assisted code generation and project structure
+- 💻 **Local VSCode:** Actual development, testing, and running
+- 📚 **Learning-focused:** Code should be understandable and educational
+
+---
+
 ## 🏗️ Current Environment: Evo Builder
 
 **What is Evo Builder?**
 - Online IDE environment for React + .NET projects
 - Primarily designed for full-stack web applications
 - **Does NOT have Python installed** (this is expected)
+- **Used here as:** AI-powered code generator
 
 ---
 
@@ -142,15 +158,24 @@ For tasks that require **running code** (like Task 0.2.2):
 
 ---
 
-## 💡 Key Insight
+## 💡 Key Insights
 
+### **1. Evo Builder = Code Generator**
 **Evo Builder is your CODE GENERATOR.**  
-**Your local machine is your RUNTIME ENVIRONMENT.**
+**Your local VSCode is your RUNTIME ENVIRONMENT.**
 
 This is actually a **good separation of concerns**:
 - Evo Builder = Fast, AI-assisted code generation
-- Local machine = Testing and debugging
+- Local VSCode = Development, testing, and debugging
 - Your server = Production deployment
+
+### **2. Learning-Focused Development**
+Since this is a **personal learning project**:
+- ✅ Code should be **clear and well-commented**
+- ✅ Focus on **practical patterns** you can reuse
+- ✅ Prioritize **understanding** over complexity
+- ✅ Use **best practices** but avoid over-engineering
+- ✅ Educational value is more important than enterprise features
 
 ---
 
