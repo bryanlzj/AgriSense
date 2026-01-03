@@ -25,7 +25,7 @@
 
 **Total Parent Tasks:** 10  
 **Total Subtasks:** 87  
-**Completed:** 7/87 (8%)  
+**Completed:** 8/87 (9%)  
 **Current Phase:** Phase 0 - Setup & Planning
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
@@ -103,11 +103,12 @@
 **Dependencies:** Task 0.2  
 **Estimated Time:** 3 hours
 
-- [ ] 0.3.1: Create User model (simplified)
+- [x] 0.3.1: Create User model (simplified)
   - Define `users` table with SQLAlchemy
   - Fields: id, username, password_hash, created_at (simplified - no email/phone/location)
   - Add indexes on username (unique)
   - **Note:** Simplified schema for student project
+  - **Completed:** Created user.py with comprehensive model and password utilities
   
 - [ ] 0.3.2: Create SensorReading model
   - Define `sensor_readings` table
