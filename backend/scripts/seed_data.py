@@ -174,7 +174,7 @@ def create_pest_detections(db: Session, user: User):
             pest_type="Fall Armyworm",
             confidence_score=0.92,
             severity_level=SeverityLevel.HIGH,
-            treatment_recommendations="1. Apply Bt-based insecticide\n2. Scout fields daily\n3. Remove affected plants\n4. Consider trap crops",
+            recommendations="1. Apply Bt-based insecticide\n2. Scout fields daily\n3. Remove affected plants\n4. Consider trap crops",
             detected_at=datetime.utcnow() - timedelta(days=2)
         ),
         PestDetection(
@@ -183,7 +183,7 @@ def create_pest_detections(db: Session, user: User):
             pest_type="Aphids",
             confidence_score=0.85,
             severity_level=SeverityLevel.MEDIUM,
-            treatment_recommendations="1. Spray with neem oil\n2. Introduce ladybugs (natural predator)\n3. Remove heavily infested leaves\n4. Monitor weekly",
+            recommendations="1. Spray with neem oil\n2. Introduce ladybugs (natural predator)\n3. Remove heavily infested leaves\n4. Monitor weekly",
             detected_at=datetime.utcnow() - timedelta(days=5)
         ),
         PestDetection(
@@ -192,7 +192,7 @@ def create_pest_detections(db: Session, user: User):
             pest_type="Whitefly",
             confidence_score=0.78,
             severity_level=SeverityLevel.LOW,
-            treatment_recommendations="1. Use yellow sticky traps\n2. Spray with insecticidal soap\n3. Maintain good air circulation\n4. Monitor population",
+            recommendations="1. Use yellow sticky traps\n2. Spray with insecticidal soap\n3. Maintain good air circulation\n4. Monitor population",
             detected_at=datetime.utcnow() - timedelta(days=7)
         ),
     ]
