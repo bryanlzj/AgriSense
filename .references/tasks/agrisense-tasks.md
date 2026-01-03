@@ -87,10 +87,11 @@
 **Dependencies:** Task 0.2  
 **Estimated Time:** 3 hours
 
-- [ ] 0.3.1: Create User model
+- [ ] 0.3.1: Create User model (simplified)
   - Define `users` table with SQLAlchemy
-  - Fields: id, email, password_hash, full_name, phone, location, created_at, updated_at
-  - Add indexes on email (unique)
+  - Fields: id, username, password_hash, created_at (simplified - no email/phone/location)
+  - Add indexes on username (unique)
+  - **Note:** Simplified schema for student project
   
 - [ ] 0.3.2: Create SensorReading model
   - Define `sensor_readings` table
@@ -161,11 +162,12 @@
   - Implement `verify_password()` function
   - Add password strength validation
   
-- [ ] 1.1.3: Create JWT token utilities
+- [ ] 1.1.3: Create JWT token utilities (simplified)
   - Add JWT secret key to config
   - Implement `create_access_token()` function
   - Implement `decode_access_token()` function
-  - Set token expiration to 7 days
+  - Set token expiration to 30 days (long-lived for demo convenience)
+  - **Note:** No refresh tokens - simplified for student project
   
 - [ ] 1.1.4: Create authentication dependency
   - Create `backend/dependencies/auth.py`
@@ -180,25 +182,27 @@
 **Dependencies:** Task 1.1  
 **Estimated Time:** 4 hours
 
-- [ ] 1.2.1: Create Pydantic schemas
+- [ ] 1.2.1: Create Pydantic schemas (simplified)
   - Create `backend/schemas/user.py`
-  - Define `UserRegister` schema (email, password, full_name, phone, location)
-  - Define `UserLogin` schema (email, password)
-  - Define `UserResponse` schema (exclude password)
-  - Define `Token` schema (access_token, token_type)
+  - Define `UserRegister` schema (username, password only - simplified)
+  - Define `UserLogin` schema (username, password)
+  - Define `UserResponse` schema (id, username, created_at)
+  - Define `Token` schema (access_token, token_type, expires_in)
+  - **Note:** No email/phone/location fields - simplified for demo
   
-- [ ] 1.2.2: Implement registration endpoint
+- [ ] 1.2.2: Implement registration endpoint (simplified)
   - Create `backend/routers/auth.py`
   - Implement `POST /api/auth/register`
-  - Validate email format and uniqueness
+  - Validate username uniqueness (no email validation needed)
+  - Validate password min 6 chars (simplified from 8)
   - Hash password before storing
-  - Return user data and JWT token
+  - Return user data and JWT token immediately
   
-- [ ] 1.2.3: Implement login endpoint
+- [ ] 1.2.3: Implement login endpoint (simplified)
   - Implement `POST /api/auth/login`
-  - Verify email exists in database
+  - Verify username exists in database
   - Verify password matches hash
-  - Generate and return JWT token
+  - Generate and return JWT token (30-day expiry)
   - Return 401 for invalid credentials
   
 - [ ] 1.2.4: Implement get current user endpoint
@@ -206,13 +210,14 @@
   - Require authentication (use get_current_user dependency)
   - Return current user's profile data
   
-- [ ] 1.2.5: Test authentication flow
-  - Test registration with valid data
-  - Test registration with duplicate email (should fail)
+- [ ] 1.2.5: Test authentication flow (simplified)
+  - Test registration with valid username/password
+  - Test registration with duplicate username (should fail)
   - Test login with correct credentials
   - Test login with wrong password (should fail)
   - Test protected endpoint with valid token
   - Test protected endpoint without token (should fail)
+  - **Note:** No email tests needed - simplified auth
 
 ---
 

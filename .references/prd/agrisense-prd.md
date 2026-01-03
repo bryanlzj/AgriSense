@@ -150,24 +150,34 @@ AgriSense provides a mobile-first platform that:
 
 ## 5. Feature Requirements
 
-### 5.1 Feature: User Authentication
+### 5.1 Feature: User Authentication (Simplified)
 
-**Description:** Secure user registration and login system with JWT-based authentication.
+**Description:** Basic user registration and login system with simplified JWT-based authentication.
 
 **Functional Requirements:**
-- FR-1.1: System shall allow users to register with email, password, and full name
-- FR-1.2: System shall validate email format and password strength (min 8 chars)
+- FR-1.1: System shall allow users to register with username and password
+- FR-1.2: System shall validate password strength (min 6 chars - simplified for demo)
 - FR-1.3: System shall hash passwords using bcrypt before storing
-- FR-1.4: System shall generate JWT tokens upon successful login
+- FR-1.4: System shall generate JWT tokens upon successful login (30-day expiry)
 - FR-1.5: System shall validate JWT tokens for protected endpoints
 - FR-1.6: System shall return user profile data after authentication
 
+**Simplifications (Student Project):**
+- ❌ No email requirement (username only)
+- ❌ No password reset flow
+- ❌ No email verification
+- ❌ No refresh tokens (long-lived access tokens instead)
+- ❌ No token blacklisting
+- ✅ Simple username/password authentication
+- ✅ JWT for mobile app compatibility
+- ✅ Password hashing for security best practice
+
 **Acceptance Criteria:**
-- ✅ User can register with valid email/password
-- ✅ Duplicate email registration returns error
+- ✅ User can register with valid username/password
+- ✅ Duplicate username registration returns error
 - ✅ User can log in with correct credentials
 - ✅ Invalid credentials return 401 error
-- ✅ JWT token expires after 24 hours
+- ✅ JWT token expires after 30 days (long-lived for demo convenience)
 - ✅ Protected endpoints reject requests without valid token
 
 ---
@@ -402,15 +412,14 @@ External Services:
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 **Indexes:**
-- `idx_users_email` on `email` (for login queries)
+- `idx_users_username` on `username` (for login queries)
 
 ---
 
@@ -481,14 +490,13 @@ CREATE TABLE alerts (
 ### 8.2 Authentication Endpoints
 
 #### POST `/auth/register`
-**Description:** Register a new user account
+**Description:** Register a new user account (simplified)
 
 **Request Body:**
 ```json
 {
-  "email": "ahmad@example.com",
-  "password": "SecurePass123",
-  "full_name": "Ahmad bin Abdullah"
+  "username": "ahmad_farmer",
+  "password": "Pass123"
 }
 ```
 
@@ -498,27 +506,28 @@ CREATE TABLE alerts (
   "message": "User registered successfully",
   "user": {
     "id": 1,
-    "email": "ahmad@example.com",
-    "full_name": "Ahmad bin Abdullah",
+    "username": "ahmad_farmer",
     "created_at": "2025-01-15T10:30:00Z"
-  }
+  },
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
 }
 ```
 
 **Error Responses:**
-- `400 Bad Request`: Invalid email format or weak password
-- `409 Conflict`: Email already registered
+- `400 Bad Request`: Invalid username format or weak password (min 6 chars)
+- `409 Conflict`: Username already registered
 
 ---
 
 #### POST `/auth/login`
-**Description:** Authenticate user and receive JWT token
+**Description:** Authenticate user and receive JWT token (30-day expiry)
 
 **Request Body:**
 ```json
 {
-  "email": "ahmad@example.com",
-  "password": "SecurePass123"
+  "username": "ahmad_farmer",
+  "password": "Pass123"
 }
 ```
 
@@ -527,11 +536,11 @@ CREATE TABLE alerts (
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "bearer",
-  "expires_in": 86400,
+  "expires_in": 2592000,
   "user": {
     "id": 1,
-    "email": "ahmad@example.com",
-    "full_name": "Ahmad bin Abdullah"
+    "username": "ahmad_farmer",
+    "created_at": "2025-01-15T10:30:00Z"
   }
 }
 ```
@@ -553,8 +562,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "id": 1,
-  "email": "ahmad@example.com",
-  "full_name": "Ahmad bin Abdullah",
+  "username": "ahmad_farmer",
   "created_at": "2025-01-15T10:30:00Z"
 }
 ```
