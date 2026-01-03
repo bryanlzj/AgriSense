@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base
 from models import User, SensorReading, PestDetection, Alert
-from models.pest_detection import PestSeverity
+from models.pest_detection import SeverityLevel
 from models.alert import AlertType, AlertSeverity
 from utils.password import get_password_hash
 from utils.data_simulator import SensorDataSimulator
@@ -182,7 +182,7 @@ def create_pest_detections(db: Session, user: User):
             image_path="/uploads/pest_001.jpg",
             pest_name="Fall Armyworm",
             confidence=0.92,
-            severity=PestSeverity.HIGH,
+            severity=SeverityLevel.HIGH,
             recommendations="1. Apply Bt-based insecticide\n2. Scout fields daily\n3. Remove affected plants\n4. Consider trap crops",
             detected_at=datetime.utcnow() - timedelta(days=2)
         ),
@@ -191,7 +191,7 @@ def create_pest_detections(db: Session, user: User):
             image_path="/uploads/pest_002.jpg",
             pest_name="Aphids",
             confidence=0.85,
-            severity=PestSeverity.MEDIUM,
+            severity=SeverityLevel.MEDIUM,
             recommendations="1. Spray with neem oil\n2. Introduce ladybugs (natural predator)\n3. Remove heavily infested leaves\n4. Monitor weekly",
             detected_at=datetime.utcnow() - timedelta(days=5)
         ),
@@ -200,7 +200,7 @@ def create_pest_detections(db: Session, user: User):
             image_path="/uploads/pest_003.jpg",
             pest_name="Whitefly",
             confidence=0.78,
-            severity=PestSeverity.LOW,
+            severity=SeverityLevel.LOW,
             recommendations="1. Use yellow sticky traps\n2. Spray with insecticidal soap\n3. Maintain good air circulation\n4. Monitor population",
             detected_at=datetime.utcnow() - timedelta(days=7)
         ),
