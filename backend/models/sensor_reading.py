@@ -14,7 +14,7 @@ Educational Notes:
 from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from backend.database import Base
+from database import Base
 
 
 class SensorReading(Base):

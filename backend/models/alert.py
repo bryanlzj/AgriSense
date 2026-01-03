@@ -20,7 +20,7 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from enum import Enum
 
-from backend.database import Base
+from database import Base
 
 
 # ============================================================================
