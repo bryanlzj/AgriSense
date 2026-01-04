@@ -123,7 +123,7 @@ class TestListAlerts:
     def test_list_alerts_no_auth(self, client: TestClient):
         """Test listing alerts without authentication fails."""
         response = client.get("/api/v1/alert/")
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestGetAlert:

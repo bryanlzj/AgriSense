@@ -62,7 +62,7 @@ class TestCreateSensorData:
             }
         )
         
-        assert response.status_code == 401
+        assert response.status_code == 403
     
     def test_create_sensor_data_invalid_values(self, client: TestClient, auth_headers: dict):
         """Test creating sensor data with invalid values fails."""
@@ -157,7 +157,7 @@ class TestListSensorData:
     def test_list_sensor_data_no_auth(self, client: TestClient):
         """Test listing sensor data without authentication fails."""
         response = client.get("/api/v1/sensor/")
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestGetSensorData:

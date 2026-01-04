@@ -108,7 +108,6 @@ def test_user(db: Session) -> User:
         User object with:
         - username: "testuser"
         - password: "testpassword123" (hashed)
-        - full_name: "Test User"
     
     Usage:
         def test_example(test_user):
@@ -116,8 +115,7 @@ def test_user(db: Session) -> User:
     """
     user = User(
         username="testuser",
-        hashed_password=get_password_hash("testpassword123"),
-        full_name="Test User"
+        hashed_password=get_password_hash("testpassword123")
     )
     db.add(user)
     db.commit()

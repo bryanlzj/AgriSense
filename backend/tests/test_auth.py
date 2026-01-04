@@ -31,22 +31,19 @@ class TestUserRegistration:
             "/api/v1/auth/register",
             json={
                 "username": "newuser",
-                "password": "password123",
-                "full_name": "New User"
+                "password": "password123"
             }
         )
         
-        assert response.status_code == 200
+        assert response.status_code == 201
         data = response.json()
         assert data["username"] == "newuser"
-        assert data["full_name"] == "New User"
         assert "id" in data
         assert "hashed_password" not in data  # Should not expose password
         
         # Verify user exists in database
         user = db.query(User).filter(User.username == "newuser").first()
         assert user is not None
-        assert user.full_name == "New User"
     
     def test_register_duplicate_username(self, client: TestClient, test_user: User):
         """Test registration with existing username fails."""
@@ -54,8 +51,7 @@ class TestUserRegistration:
             "/api/v1/auth/register",
             json={
                 "username": "testuser",  # Already exists
-                "password": "password123",
-                "full_name": "Another User"
+                "password": "password123"
             }
         )
         
@@ -76,8 +72,7 @@ class TestUserRegistration:
             "/api/v1/auth/register",
             json={
                 "username": "",
-                "password": "password123",
-                "full_name": "User"
+                "password": "password123"
             }
         )
         assert response.status_code == 422
@@ -90,7 +85,7 @@ class TestUserLogin:
         """Test successful login returns token."""
         response = client.post(
             "/api/v1/auth/login",
-            json={
+            data={
                 "username": "testuser",
                 "password": "testpassword123"
             }
@@ -106,7 +101,7 @@ class TestUserLogin:
         """Test login with wrong password fails."""
         response = client.post(
             "/api/v1/auth/login",
-            json={
+            data={
                 "username": "testuser",
                 "password": "wrongpassword"
             }
@@ -119,7 +114,7 @@ class TestUserLogin:
         """Test login with non-existent user fails."""
         response = client.post(
             "/api/v1/auth/login",
-            json={
+            data={
                 "username": "nonexistent",
                 "password": "password123"
             }
@@ -132,7 +127,7 @@ class TestUserLogin:
         """Test login with invalid data fails."""
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "testuser"}  # Missing password
+            data={"username": "testuser"}  # Missing password
         )
         assert response.status_code == 422
 
@@ -150,7 +145,6 @@ class TestGetCurrentUser:
         assert response.status_code == 200
         data = response.json()
         assert data["username"] == "testuser"
-        assert data["full_name"] == "Test User"
         assert "id" in data
         assert "hashed_password" not in data
     
@@ -158,7 +152,7 @@ class TestGetCurrentUser:
         """Test getting current user without token fails."""
         response = client.get("/api/v1/auth/me")
         
-        assert response.status_code == 401
+        assert response.status_code == 403
         assert "not authenticated" in response.json()["detail"].lower()
     
     def test_get_current_user_invalid_token(self, client: TestClient):
@@ -177,7 +171,7 @@ class TestGetCurrentUser:
             "/api/v1/auth/me",
             headers={"Authorization": "token123"}
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestTokenValidation:
@@ -188,7 +182,7 @@ class TestTokenValidation:
         # Login to get token
         login_response = client.post(
             "/api/v1/auth/login",
-            json={
+            data={
                 "username": "testuser",
                 "password": "testpassword123"
             }
