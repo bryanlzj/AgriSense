@@ -103,7 +103,7 @@ async def login(
         )
     
     # Verify password
-    if not verify_password(form_data.password, user.password_hash):
+    if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
