@@ -1,4 +1,4 @@
-y# AgriSense - Task List
+# AgriSense - Task List
 
 **Generated from PRD:** `.references/prd/agrisense-prd.md`  
 **Project:** AgriSense - IoT-Driven Early Warning System for Weather and Pest Risk Management  
@@ -925,410 +925,193 @@ y# AgriSense - Task List
   - Display thumbnail image
   - Display pest type
   - Display detection date
-  - Display confidence score
+  - Display severity badge
   - Add tap to view details
   
 - [ ] 2.7.3: Implement history fetching
   - Call pest_detection_service.getHistory() on load
-  - Display loading indicator
-  - Display list of detections
+  - Display list of past detections
   - Handle empty state (no detections yet)
-  - Implement pagination (load more on scroll)
+  - Implement pull-to-refresh
   
-- [ ] 2.7.4: Implement detection details
-  - Navigate to results screen on item tap
+- [ ] 2.7.4: Implement detection details view
+  - Navigate to results screen when item tapped
   - Load full detection details
   - Display all information (image, pest, recommendations)
   
 - [ ] 2.7.5: Test history functionality
-  - Test history loads correctly
-  - Test list items display properly
-  - Test tap navigation works
-  - Test empty state shows message
-  - Test pagination works
+  - Test history loads past detections
+  - Test empty state displays correctly
+  - Test tap opens details
+  - Test pull-to-refresh works
 
 ---
 
-### Task 2.8: Alerts Screen
-**Goal:** Display and manage alerts  
-**Dependencies:** Task 2.4  
-**Estimated Time:** 3 hours
+## Phase 3: Testing & Deployment (Week 13-14)
 
-- [ ] 2.8.1: Create alert service
-  - Create `lib/services/alert_service.dart`
-  - Implement `getAlerts()` method
-  - Implement `getUnreadCount()` method
-  - Implement `markAsRead(String id)` method
-  
-- [ ] 2.8.2: Create alerts screen UI
-  - Create `lib/screens/alerts/alerts_screen.dart`
-  - Add AppBar with title
-  - Add filter tabs (All, Unread)
-  - Add ListView for alert items
-  - Add pull-to-refresh
-  
-- [ ] 2.8.3: Create alert list item widget
-  - Create `lib/widgets/alert_list_item.dart`
-  - Display alert icon based on type
-  - Display alert title
-  - Display alert message (truncated)
-  - Display timestamp
-  - Add visual indicator for unread alerts
-  - Add severity color coding
-  
-- [ ] 2.8.4: Implement alerts fetching
-  - Call alert_service.getAlerts() on load
-  - Display loading indicator
-  - Display list of alerts
-  - Handle empty state
-  - Implement filter for unread alerts
-  
-- [ ] 2.8.5: Implement mark as read
-  - Add tap handler on alert item
-  - Show full alert details in dialog/bottom sheet
-  - Call alert_service.markAsRead() on tap
-  - Update UI to reflect read status
-  
-- [ ] 2.8.6: Add unread badge to navigation
-  - Call alert_service.getUnreadCount() periodically
-  - Display badge on Alerts tab in bottom navigation
-  - Update count when alerts are read
-  
-- [ ] 2.8.7: Test alerts functionality
-  - Test alerts load correctly
-  - Test filter tabs work
-  - Test mark as read updates UI
-  - Test unread badge displays correct count
-  - Test alert details display properly
-
----
-
-### Task 2.9: Profile Screen
-**Goal:** Display user profile and settings  
-**Dependencies:** Task 2.4  
-**Estimated Time:** 2 hours
-
-- [ ] 2.9.1: Create profile screen UI
-  - Create `lib/screens/profile/profile_screen.dart`
-  - Add AppBar with title
-  - Display user avatar (placeholder icon)
-  - Display user name
-  - Display user email
-  - Display user phone
-  - Display user location
-  
-- [ ] 2.9.2: Add settings options
-  - Add "Edit Profile" button (placeholder for future)
-  - Add "About" section with app version
-  - Add "Privacy Policy" link (placeholder)
-  - Add "Terms of Service" link (placeholder)
-  
-- [ ] 2.9.3: Implement logout
-  - Add "Logout" button at bottom
-  - Show confirmation dialog on tap
-  - Call auth_service.logout()
-  - Clear stored token
-  - Navigate to login screen
-  
-- [ ] 2.9.4: Test profile functionality
-  - Test user data displays correctly
-  - Test logout clears token
-  - Test logout navigates to login
-  - Test cannot access app after logout
-
----
-
-### Task 2.10: Mobile App Testing & Polish
-**Goal:** Test entire app and fix bugs  
+### Task 3.1: Integration Testing
+**Goal:** Test complete system end-to-end  
 **Dependencies:** All Phase 2 tasks  
 **Estimated Time:** 4 hours
 
-- [ ] 2.10.1: Test complete user flow
+- [ ] 3.1.1: Test complete user journey
   - Test registration → login → dashboard flow
-  - Test pest detection → results → history flow
-  - Test alerts → mark as read flow
-  - Test profile → logout flow
+  - Test sensor data display and refresh
+  - Test weather data display
+  - Test pest detection upload and results
+  - Test alerts display and mark as read
   
-- [ ] 2.10.2: Test error handling
-  - Test app behavior with no internet
-  - Test app behavior with API errors
-  - Test app behavior with invalid tokens
-  - Test app behavior with slow network
+- [ ] 3.1.2: Test error scenarios
+  - Test offline mode (no internet)
+  - Test invalid credentials
+  - Test expired token handling
+  - Test API errors (500, 404, etc.)
+  - Test image upload failures
   
-- [ ] 2.10.3: Fix UI issues
-  - Fix layout issues on different screen sizes
-  - Fix text overflow issues
-  - Fix image loading issues
-  - Improve loading states
-  - Improve error messages
+- [ ] 3.1.3: Test data persistence
+  - Test token persists after app restart
+  - Test logout clears token
+  - Test data refreshes correctly
   
-- [ ] 2.10.4: Add loading states
-  - Add shimmer loading for lists
-  - Add skeleton screens for data loading
-  - Add progress indicators for uploads
-  
-- [ ] 2.10.5: Optimize performance
-  - Optimize image loading and caching
-  - Reduce unnecessary API calls
-  - Implement proper state management
-  - Fix memory leaks
-  
-- [ ] 2.10.6: Test on real device
-  - Install APK on Android device
-  - Test all features on real device
-  - Test camera functionality
-  - Test performance and responsiveness
-  - Fix device-specific issues
-
----
-
-## Phase 3: Integration & Deployment (Week 13-14)
-
-### Task 3.1: ML Model Integration (Optional)
-**Goal:** Replace mock ML service with real model  
-**Dependencies:** Task 1.5, ML team delivery  
-**Estimated Time:** 4 hours
-
-- [ ] 3.1.1: Receive ML model from team
-  - Get trained model file (.h5, .pt, or .onnx)
-  - Get model input/output specifications
-  - Get preprocessing requirements
-  - Get class labels mapping
-  
-- [ ] 3.1.2: Set up ML inference
-  - Install TensorFlow/PyTorch in backend
-  - Load model in ml_service.py
-  - Implement image preprocessing
-  - Implement inference function
-  - Implement postprocessing
-  
-- [ ] 3.1.3: Update detect_pest function
-  - Replace mock logic with real model inference
-  - Keep same response format
-  - Add confidence threshold filtering
-  - Add error handling for inference failures
-  
-- [ ] 3.1.4: Test ML integration
-  - Test with various pest images
-  - Verify predictions are reasonable
-  - Test inference speed (should be <5 seconds)
-  - Test error handling
-  
-- [ ] 3.1.5: Fallback to Roboflow (if ML team fails)
-  - Sign up for Roboflow account
-  - Upload pest detection dataset
-  - Train model on Roboflow
-  - Get API key and model endpoint
-  - Integrate Roboflow API in ml_service.py
-
----
-
-### Task 3.2: Backend Deployment
-**Goal:** Deploy backend to production server  
-**Dependencies:** Task 1.11  
-**Estimated Time:** 3 hours
-
-- [ ] 3.2.1: Prepare production server
-  - Set up Linux server (Ubuntu 22.04)
-  - Install Docker and Docker Compose
-  - Configure firewall (allow ports 80, 443, 8000)
-  - Set up domain name (optional)
-  
-- [ ] 3.2.2: Configure production environment
-  - Create `.env` file with production values
-  - Generate secure JWT secret
-  - Set up PostgreSQL database
-  - Configure OpenWeatherMap API key
-  
-- [ ] 3.2.3: Deploy backend
-  - Copy project files to server
-  - Build Docker image
-  - Run docker-compose up -d
-  - Run database migrations
-  - Seed initial data
-  
-- [ ] 3.2.4: Configure reverse proxy (optional)
-  - Install Nginx
-  - Configure SSL with Let's Encrypt
-  - Set up reverse proxy to backend
-  - Test HTTPS access
-  
-- [ ] 3.2.5: Test production deployment
-  - Test all API endpoints from Postman
-  - Test authentication flow
-  - Test image uploads
-  - Test database persistence
-  - Monitor logs for errors
-
----
-
-### Task 3.3: Mobile App Production Build
-**Goal:** Build production APK for distribution  
-**Dependencies:** Task 2.10  
-**Estimated Time:** 2 hours
-
-- [ ] 3.3.1: Update API base URL
-  - Change API_BASE_URL to production server URL
-  - Test app connects to production backend
-  
-- [ ] 3.3.2: Configure app signing
-  - Generate keystore for app signing
-  - Update android/app/build.gradle with signing config
-  - Store keystore securely
-  
-- [ ] 3.3.3: Update app metadata
-  - Update app name in AndroidManifest.xml
-  - Update app icon (launcher icon)
-  - Update app version (1.0.0)
-  - Update package name if needed
-  
-- [ ] 3.3.4: Build release APK
-  - Run `flutter build apk --release`
-  - Test APK on real device
-  - Verify all features work
-  - Check APK size (<50MB)
-  
-- [ ] 3.3.5: Prepare for distribution
-  - Create release notes
-  - Take screenshots for documentation
-  - Create user guide (optional)
-
----
-
-### Task 3.4: Final Testing & Demo Preparation
-**Goal:** End-to-end testing and demo preparation  
-**Dependencies:** Task 3.2, Task 3.3  
-**Estimated Time:** 3 hours
-
-- [ ] 3.4.1: End-to-end testing
-  - Test complete user journey from registration to detection
-  - Test with multiple user accounts
-  - Test concurrent users
-  - Test data persistence
-  - Test all error scenarios
-  
-- [ ] 3.4.2: Performance testing
+- [ ] 3.1.4: Performance testing
+  - Test app load time
   - Test API response times
   - Test image upload speed
-  - Test app responsiveness
-  - Test with poor network conditions
+  - Test chart rendering performance
   
-- [ ] 3.4.3: Create demo data
-  - Create demo user account
-  - Generate sample sensor data
-  - Upload sample pest images
-  - Generate sample alerts
-  
-- [ ] 3.4.4: Prepare demo script
-  - Write step-by-step demo flow
-  - Prepare talking points for each feature
-  - Practice demo presentation
-  - Prepare backup plan for demo failures
-  
-- [ ] 3.4.5: Create demo video
-  - Record screen while using app
-  - Add voiceover explaining features
-  - Edit video (add intro/outro)
-  - Export in HD quality
+- [ ] 3.1.5: Create test report
+  - Document all test cases
+  - Document bugs found and fixed
+  - Document known limitations
+  - Create test coverage report
 
 ---
 
-### Task 3.5: Documentation & Handover
-**Goal:** Complete all documentation  
-**Dependencies:** Task 3.4  
-**Estimated Time:** 3 hours
+### Task 3.2: Deployment
+**Goal:** Deploy backend and prepare mobile app for distribution  
+**Dependencies:** Task 3.1  
+**Estimated Time:** 6 hours
 
-- [ ] 3.5.1: Update README
-  - Add project description
-  - Add features list
-  - Add tech stack
-  - Add setup instructions
-  - Add deployment instructions
-  - Add screenshots
+- [ ] 3.2.1: Deploy backend to server
+  - Set up server (VPS or cloud provider)
+  - Install Docker and Docker Compose
+  - Copy project files to server
+  - Configure environment variables
+  - Run deployment script
+  - Test API endpoints from mobile app
   
-- [ ] 3.5.2: Create user documentation
-  - Create user guide with screenshots
-  - Document each feature
-  - Add troubleshooting section
-  - Add FAQ section
+- [ ] 3.2.2: Configure production database
+  - Set up PostgreSQL database
+  - Run database migrations
+  - Seed initial data if needed
+  - Configure database backups
   
-- [ ] 3.5.3: Create developer documentation
-  - Document code structure
-  - Document API endpoints
-  - Document database schema
-  - Add code comments
-  - Create architecture diagram
+- [ ] 3.2.3: Set up SSL certificate
+  - Install Let's Encrypt certificate
+  - Configure HTTPS
+  - Update mobile app API URL to HTTPS
   
-- [ ] 3.5.4: Create deployment guide
+- [ ] 3.2.4: Build Android APK
+  - Update app version in pubspec.yaml
+  - Update API base URL to production
+  - Run `flutter build apk --release`
+  - Test APK on physical device
+  
+- [ ] 3.2.5: Create deployment documentation
   - Document server setup steps
   - Document environment variables
   - Document backup procedures
-  - Document monitoring setup
+  - Document troubleshooting guide
+
+---
+
+### Task 3.3: Documentation & Presentation
+**Goal:** Create final documentation and demo materials  
+**Dependencies:** Task 3.2  
+**Estimated Time:** 4 hours
+
+- [ ] 3.3.1: Update README.md
+  - Add project overview
+  - Add features list
+  - Add setup instructions
+  - Add API documentation link
+  - Add screenshots
   
-- [ ] 3.5.5: Prepare final report
-  - Write project summary
-  - Document challenges faced
-  - Document solutions implemented
-  - Add future enhancement suggestions
-  - Include demo video link
-  - Include GitHub repository link
+- [ ] 3.3.2: Create user manual
+  - Create `docs/USER_MANUAL.md`
+  - Document registration and login
+  - Document dashboard features
+  - Document pest detection usage
+  - Document alerts system
+  - Add screenshots for each feature
+  
+- [ ] 3.3.3: Create technical documentation
+  - Create `docs/TECHNICAL.md`
+  - Document system architecture
+  - Document database schema
+  - Document API endpoints
+  - Document deployment process
+  
+- [ ] 3.3.4: Prepare demo presentation
+  - Create PowerPoint slides
+  - Add project overview
+  - Add problem statement
+  - Add solution features
+  - Add technical stack
+  - Add demo screenshots
+  - Add future enhancements
+  
+- [ ] 3.3.5: Record demo video
+  - Record app walkthrough
+  - Show registration and login
+  - Show dashboard with live data
+  - Show pest detection feature
+  - Show alerts system
+  - Add voiceover explaining features
 
 ---
 
 ## 📊 Task Summary by Phase
 
-| Phase | Tasks | Subtasks | Estimated Time |
-|-------|-------|----------|----------------|
-| Phase 0: Setup | 4 | 17 | 11 hours |
-| Phase 1: Backend | 7 | 43 | 27 hours |
-| Phase 2: Mobile | 6 | 22 | 26 hours |
-| Phase 3: Integration | 5 | 19 | 15 hours |
-| **TOTAL** | **22** | **101** | **79 hours** |
+| Phase | Total Tasks | Completed | Remaining | Progress |
+|-------|-------------|-----------|-----------|----------|
+| Phase 0: Setup & Planning | 17 | 17 | 0 | 100% ✅ |
+| Phase 1: Backend Development | 45 | 9 | 36 | 20% |
+| Phase 2: Mobile App Development | 26 | 0 | 26 | 0% |
+| Phase 3: Testing & Deployment | 14 | 0 | 14 | 0% |
+| **TOTAL** | **88** | **26** | **62** | **29.5%** |
 
 ---
 
-## 🎯 Critical Path
+## 🎯 Next Steps
 
-The following tasks are on the critical path and cannot be delayed:
+**Current Task:** Task 1.3 - Sensor Data API  
+**Next Subtask:** 1.3.1 - Create sensor data schemas
 
-1. Task 0.2: Backend Environment Setup
-2. Task 0.3: Database Schema Implementation
-3. Task 1.1: Authentication System - Models & Utils
-4. Task 1.2: Authentication System - API Endpoints
-5. Task 1.5: Pest Detection API - Mock ML Service
-6. Task 2.1: Flutter Project Setup
-7. Task 2.3: Authentication Screens
-8. Task 2.6: Pest Detection Screen - Camera & Upload
-9. Task 3.2: Backend Deployment
-10. Task 3.3: Mobile App Production Build
+**To continue:**
+1. Review Task 1.3.1 requirements
+2. Wait for user approval to proceed
+3. Implement sensor data schemas
+4. Mark subtask complete after review
+5. Move to next subtask
 
 ---
 
 ## 📝 Notes
 
-- **Sequential Execution:** Tasks must be completed in order within each phase
-- **Dependencies:** Some tasks can only start after previous tasks are complete
-- **Time Estimates:** Based on single developer working full-time
-- **Flexibility:** Time estimates may vary based on experience and issues encountered
-- **Testing:** Each task includes testing subtasks - do not skip these
-- **Documentation:** Update documentation as you complete tasks
+- **Simplified Authentication:** No email/phone/location fields - username and password only
+- **Long-lived Tokens:** 30-day JWT tokens for demo convenience (no refresh tokens)
+- **Mock ML Service:** Using random predictions instead of real ML model
+- **SQLite Database:** Using SQLite for simplicity (can upgrade to PostgreSQL later)
+- **Local Deployment:** Backend will be deployed to student's own server
+- **No Push Notifications:** Simplified - users check alerts manually in app
 
 ---
 
-## ✅ Completion Checklist
+## ⚠️ Important Reminders
 
-Before marking the project complete, ensure:
-
-- [ ] All 101 subtasks are marked complete
-- [ ] Backend is deployed and accessible
-- [ ] Mobile app APK is built and tested
-- [ ] All API endpoints are documented
-- [ ] All tests are passing
-- [ ] Demo video is created
-- [ ] Documentation is complete
-- [ ] Code is pushed to GitHub
-- [ ] Final report is submitted
-
----
-
-**Ready to start? Begin with Task 0.1.1!** 🚀
+1. **One Task at a Time:** Complete current subtask before moving to next
+2. **User Approval:** Wait for approval before starting next subtask
+3. **Testing:** Test each feature thoroughly before marking complete
+4. **Documentation:** Keep code well-commented for learning purposes
+5. **Dual Core Features:** Weather Early Warning (1.7) and Pest Detection (1.4-1.6) have equal priority
