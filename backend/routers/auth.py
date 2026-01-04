@@ -15,7 +15,7 @@ from typing import Annotated
 from database import get_db
 from models.user import User
 from schemas.auth import UserRegister, UserLogin, Token, UserResponse
-from utils.password import hash_password, verify_password
+from utils.password import get_password_hash, verify_password
 from utils.security import create_access_token
 from dependencies.auth import get_current_user
 
@@ -54,7 +54,7 @@ async def register(
         )
     
     # Hash password
-    hashed_password = hash_password(user_data.password)
+    hashed_password = get_password_hash(user_data.password)
     
     # Create new user
     new_user = User(
