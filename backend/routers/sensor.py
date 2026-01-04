@@ -115,9 +115,9 @@ def get_sensor_data(
     
     # Apply date filters
     if start_date:
-        query = query.filter(SensorReading.recorded_at >= start_date)
+        query = query.filter(SensorReading.timestamp >= start_date)
     if end_date:
-        query = query.filter(SensorReading.recorded_at <= end_date)
+        query = query.filter(SensorReading.timestamp <= end_date)
     
     # Apply temperature filters
     if min_temperature is not None:
@@ -126,7 +126,7 @@ def get_sensor_data(
         query = query.filter(SensorReading.temperature <= max_temperature)
     
     # Order by most recent first
-    query = query.order_by(SensorReading.recorded_at.desc())
+    query = query.order_by(SensorReading.timestamp.desc())
     
     # Apply pagination
     sensor_data = query.offset(skip).limit(limit).all()
@@ -297,8 +297,8 @@ def get_sensor_statistics(
     query = db.query(SensorReading).filter(
         and_(
             SensorReading.user_id == current_user.id,
-            SensorReading.recorded_at >= start_date,
-            SensorReading.recorded_at <= end_date
+            SensorReading.timestamp >= start_date,
+            SensorReading.timestamp <= end_date
         )
     )
     
@@ -317,8 +317,8 @@ def get_sensor_statistics(
     ).filter(
         and_(
             SensorReading.user_id == current_user.id,
-            SensorReading.recorded_at >= start_date,
-            SensorReading.recorded_at <= end_date
+            SensorReading.timestamp >= start_date,
+            SensorReading.timestamp <= end_date
         )
     ).first()
     
