@@ -28,7 +28,7 @@ from models.user import User
 from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from models.alert import Alert
-from utils.password import hash_password
+from utils.password import get_password_hash
 from utils.security import create_access_token
 
 # Use in-memory SQLite for testing
@@ -116,7 +116,7 @@ def test_user(db: Session) -> User:
     """
     user = User(
         username="testuser",
-        hashed_password=hash_password("testpassword123"),
+        hashed_password=get_password_hash("testpassword123"),
         full_name="Test User"
     )
     db.add(user)
