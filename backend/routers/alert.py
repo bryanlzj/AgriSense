@@ -245,7 +245,7 @@ def bulk_update_alerts(
 
 
 class BulkDeleteRequest(BaseModel):
-    alert_ids: Annotated[List[int], Field(min_length=1, description="List of alert IDs to delete")]
+    alert_ids: Annotated[List[int], Field(min_items=1, description="List of alert IDs to delete")]
 
 @router.delete("/bulk", status_code=status.HTTP_200_OK)
 def bulk_delete_alerts(
