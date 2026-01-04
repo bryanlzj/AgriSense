@@ -24,7 +24,7 @@ Learning Notes:
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
-from typing import List
+from typing import List, Annotated
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
@@ -245,7 +245,7 @@ def bulk_update_alerts(
 
 
 class BulkDeleteRequest(BaseModel):
-    alert_ids: List[int] = Field(..., min_length=1, description="List of alert IDs to delete")
+    alert_ids: Annotated[List[int], Field(min_length=1, description="List of alert IDs to delete")]
 
 @router.delete("/bulk", status_code=status.HTTP_200_OK)
 def bulk_delete_alerts(
