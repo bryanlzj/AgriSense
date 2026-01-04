@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from models.sensor_data import SensorData
+from models.sensor_reading import SensorReading
 
 
 class TestCreateSensorData:
@@ -109,7 +109,7 @@ class TestListSensorData:
         """Test pagination works correctly."""
         # Create multiple sensor data entries
         for i in range(5):
-            sensor = SensorData(
+            sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=20.0 + i,
                 humidity=60.0,
@@ -133,7 +133,7 @@ class TestListSensorData:
         """Test filtering by temperature range."""
         # Create sensor data with different temperatures
         for temp in [15.0, 25.0, 35.0]:
-            sensor = SensorData(
+            sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=temp,
                 humidity=60.0,
@@ -231,7 +231,7 @@ class TestDeleteSensorData:
         assert response.json()["message"] == "Sensor data deleted successfully"
         
         # Verify deletion
-        sensor = db.query(SensorData).filter(SensorData.id == test_sensor_data.id).first()
+        sensor = db.query(SensorReading).filter(SensorReading.id == test_sensor_data.id).first()
         assert sensor is None
     
     def test_delete_sensor_data_not_found(self, client: TestClient, auth_headers: dict):
@@ -247,7 +247,7 @@ class TestSensorStatistics:
         """Test getting sensor statistics."""
         # Create multiple sensor data entries
         for temp in [20.0, 25.0, 30.0]:
-            sensor = SensorData(
+            sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=temp,
                 humidity=60.0,

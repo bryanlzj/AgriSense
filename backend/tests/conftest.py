@@ -25,7 +25,7 @@ sys.path.insert(0, str(backend_dir))
 from database import Base, get_db
 from main import app
 from models.user import User
-from models.sensor_data import SensorData
+from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from models.alert import Alert
 from utils.password import hash_password
@@ -161,14 +161,14 @@ def auth_headers(test_user_token: str) -> dict:
 
 
 @pytest.fixture(scope="function")
-def test_sensor_data(db: Session, test_user: User) -> SensorData:
+def test_sensor_data(db: Session, test_user: User) -> SensorReading:
     """
     Create sample sensor data for testing.
     
     Returns:
-        SensorData object with realistic values
+        SensorReading object with realistic values
     """
-    sensor_data = SensorData(
+    sensor_data = SensorReading(
         user_id=test_user.id,
         temperature=25.5,
         humidity=65.0,
