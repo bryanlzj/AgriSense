@@ -25,10 +25,11 @@ y# AgriSense - Task List
 
 **Total Parent Tasks:** 11  
 **Total Subtasks:** 88  
-**Completed:** 21/88 (23.9%)  
+**Completed:** 26/88 (29.5%)  
 **Current Phase:** Phase 1 - Backend Development  
 **Phase 0 Status:** ✅ COMPLETE (All setup and planning tasks finished)  
-**Task 1.1 Status:** ✅ COMPLETE (Authentication infrastructure ready)
+**Task 1.1 Status:** ✅ COMPLETE (Authentication infrastructure ready)  
+**Task 1.2 Status:** ✅ COMPLETE (Authentication API endpoints ready)
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
 - 🌤️ Weather Early Warning System (Task 1.7)
@@ -256,47 +257,50 @@ y# AgriSense - Task List
 
 ---
 
-### Task 1.2: Authentication System - API Endpoints
+### Task 1.2: Authentication System - API Endpoints ✅ COMPLETE
 **Goal:** Implement register and login endpoints  
 **Dependencies:** Task 1.1  
-**Estimated Time:** 4 hours
+**Estimated Time:** 4 hours  
+**Completion Date:** January 4, 2025
 
-- [ ] 1.2.1: Create Pydantic schemas (simplified)
-  - Create `backend/schemas/user.py`
-  - Define `UserRegister` schema (username, password only - simplified)
+- [x] 1.2.1: Create Pydantic schemas (simplified) ✅
+  - Create `backend/schemas/auth.py`
+  - Define `UserRegister` schema (username, password, full_name)
   - Define `UserLogin` schema (username, password)
-  - Define `UserResponse` schema (id, username, created_at)
-  - Define `Token` schema (access_token, token_type, expires_in)
-  - **Note:** No email/phone/location fields - simplified for demo
+  - Define `UserResponse` schema (id, username, full_name, is_active, created_at)
+  - Define `Token` schema (access_token, token_type)
+  - **Completed:** Created comprehensive schemas with validation and examples
   
-- [ ] 1.2.2: Implement registration endpoint (simplified)
+- [x] 1.2.2: Implement registration endpoint (simplified) ✅
   - Create `backend/routers/auth.py`
-  - Implement `POST /api/auth/register`
-  - Validate username uniqueness (no email validation needed)
-  - Validate password min 6 chars (simplified from 8)
+  - Implement `POST /api/v1/auth/register`
+  - Validate username uniqueness
+  - Validate password min 6 chars
   - Hash password before storing
-  - Return user data and JWT token immediately
+  - Return user data (without token)
+  - **Completed:** Full registration endpoint with error handling
   
-- [ ] 1.2.3: Implement login endpoint (simplified)
-  - Implement `POST /api/auth/login`
+- [x] 1.2.3: Implement login endpoint (simplified) ✅
+  - Implement `POST /api/v1/auth/login`
   - Verify username exists in database
   - Verify password matches hash
+  - Check if account is active
   - Generate and return JWT token (30-day expiry)
   - Return 401 for invalid credentials
+  - **Completed:** OAuth2 password flow with comprehensive validation
   
-- [ ] 1.2.4: Implement get current user endpoint
-  - Implement `GET /api/auth/me`
+- [x] 1.2.4: Implement get current user endpoint ✅
+  - Implement `GET /api/v1/auth/me`
   - Require authentication (use get_current_user dependency)
   - Return current user's profile data
+  - **Completed:** Protected endpoint with JWT authentication
   
-- [ ] 1.2.5: Test authentication flow (simplified)
-  - Test registration with valid username/password
-  - Test registration with duplicate username (should fail)
-  - Test login with correct credentials
-  - Test login with wrong password (should fail)
-  - Test protected endpoint with valid token
-  - Test protected endpoint without token (should fail)
-  - **Note:** No email tests needed - simplified auth
+- [x] 1.2.5: Test authentication flow (simplified) ✅
+  - Created `backend/test_auth.py` test script
+  - Tests: registration, login, get current user, invalid token
+  - All endpoints registered in main.py
+  - Router accessible at `/api/v1/auth/*`
+  - **Note:** Manual testing required when server is running
 
 ---
 

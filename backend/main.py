@@ -26,14 +26,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 
-# Import routers (will be uncommented as they are created)
-# from routers import (
-#     auth_router,
-#     sensors_router,
-#     pests_router,
-#     alerts_router,
-#     weather_router,
-# )
+# Import routers
+from routers.auth import router as auth_router
+# Additional routers will be imported as they are created:
+# from routers.sensors import router as sensors_router
+# from routers.pests import router as pests_router
+# from routers.alerts import router as alerts_router
+# from routers.weather import router as weather_router
 
 # Create database tables (only for development - use Alembic in production)
 # Base.metadata.create_all(bind=engine)
@@ -58,12 +57,12 @@ app.add_middleware(
 )
 
 # Register API routers with /api/v1 prefix
-# Uncomment as routers are created:
-# app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
-# app.include_router(sensors_router, prefix="/api/v1/sensors", tags=["Sensors"])
-# app.include_router(pests_router, prefix="/api/v1/pests", tags=["Pests"])
-# app.include_router(alerts_router, prefix="/api/v1/alerts", tags=["Alerts"])
-# app.include_router(weather_router, prefix="/api/v1/weather", tags=["Weather"])
+app.include_router(auth_router, prefix="/api/v1")
+# Additional routers will be registered as they are created:
+# app.include_router(sensors_router, prefix="/api/v1")
+# app.include_router(pests_router, prefix="/api/v1")
+# app.include_router(alerts_router, prefix="/api/v1")
+# app.include_router(weather_router, prefix="/api/v1")
 
 
 @app.get("/")
