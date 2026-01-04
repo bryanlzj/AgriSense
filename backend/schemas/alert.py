@@ -168,7 +168,7 @@ class AlertStatistics(BaseModel):
 
 class BulkAlertUpdate(BaseModel):
     """Schema for bulk updating alerts"""
-    alert_ids: List[int] = Field(..., min_length=1, description="List of alert IDs to update")
+    alert_ids: List[int] = Field(..., min_items=1, description="List of alert IDs to update")
     is_read: Optional[bool] = Field(default=None, description="Mark as read")
     is_acknowledged: Optional[bool] = Field(default=None, description="Mark as acknowledged")
 

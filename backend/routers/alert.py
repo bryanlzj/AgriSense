@@ -70,10 +70,10 @@ def list_alerts(
     
     # Apply filters
     if filter_params.type:
-        query = query.filter(Alert.alert_type == filter_params.type.value)
+        query = query.filter(Alert.alert_type == filter_params.type)
     
     if filter_params.severity:
-        query = query.filter(Alert.severity == filter_params.severity.value)
+        query = query.filter(Alert.severity == filter_params.severity)
     
     if filter_params.is_read is not None:
         query = query.filter(Alert.is_read == filter_params.is_read)
@@ -245,7 +245,7 @@ def bulk_update_alerts(
 
 
 class BulkDeleteRequest(BaseModel):
-    alert_ids: List[int]
+    alert_ids: List[int] = Field(..., min_items=1)
 
 @router.delete("/bulk", status_code=status.HTTP_200_OK)
 def bulk_delete_alerts(
