@@ -247,6 +247,9 @@ class TestBulkOperations:
             }
         )
         
+        if response.status_code != 200:
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.json()}")
         assert response.status_code == 200
         data = response.json()
         assert data["updated_count"] == 3
@@ -279,6 +282,9 @@ class TestBulkOperations:
             json={"alert_ids": alert_ids}
         )
         
+        if response.status_code != 200:
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.json()}")
         assert response.status_code == 200
         data = response.json()
         assert data["deleted_count"] == 3
