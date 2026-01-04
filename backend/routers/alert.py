@@ -90,6 +90,99 @@ def list_alerts(
     return alerts
 
 
+# Bulk operations must be defined BEFORE /{alert_id} routes
+# to avoid FastAPI matching "bulk" as an alert_id parameter
+
+@router.put("/bulk", response_model=dict)
+def bulk_update_alerts(
+    bulk_update: BulkAlertUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Bulk update multiple alerts
+    
+    Args:
+        bulk_update: Bulk update data with alert IDs
+        
+    Returns:
+        Number of alerts updated
+    """
+    # Get alerts
+    alerts = db.query(Alert).filter(
+        Alert.id.in_(bulk_update.alert_ids),
+        Alert.user_id == current_user.id
+    ).all()
+    
+    if not alerts:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No alerts found with the provided IDs"
+        )
+    
+    # Update alerts
+    updated_count = 0
+    for alert in alerts:
+        if bulk_update.is_read is not None:
+            alert.is_read = bulk_update.is_read
+        
+        if bulk_update.is_acknowledged is not None:
+            alert.is_acknowledged = bulk_update.is_acknowledged
+        
+        updated_count += 1
+    
+    db.commit()
+    
+    return {
+        "message": f"Successfully updated {updated_count} alerts",
+        "updated_count": updated_count
+    }
+
+
+class BulkDeleteRequest(BaseModel):
+    alert_ids: Annotated[List[int], Field(min_items=1, description="List of alert IDs to delete")]
+
+@router.delete("/bulk", status_code=status.HTTP_200_OK)
+def bulk_delete_alerts(
+    request: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Bulk delete multiple alerts
+    
+    Args:
+        request: Request body with alert_ids list
+        
+    Returns:
+        Number of alerts deleted
+    """
+    alert_ids = request.alert_ids
+    # Get alerts
+    alerts = db.query(Alert).filter(
+        Alert.id.in_(alert_ids),
+        Alert.user_id == current_user.id
+    ).all()
+    
+    if not alerts:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No alerts found with the provided IDs"
+        )
+    
+    # Delete alerts
+    deleted_count = len(alerts)
+    for alert in alerts:
+        db.delete(alert)
+    
+    db.commit()
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} alerts",
+        "deleted_count": deleted_count
+    }
+
+
 @router.get("/{alert_id}", response_model=AlertResponse)
 def get_alert(
     alert_id: int,
@@ -196,96 +289,6 @@ def delete_alert(
     db.commit()
     
     return None
-
-
-@router.put("/bulk", response_model=dict)
-def bulk_update_alerts(
-    bulk_update: BulkAlertUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Bulk update multiple alerts
-    
-    Args:
-        bulk_update: Bulk update data with alert IDs
-        
-    Returns:
-        Number of alerts updated
-    """
-    # Get alerts
-    alerts = db.query(Alert).filter(
-        Alert.id.in_(bulk_update.alert_ids),
-        Alert.user_id == current_user.id
-    ).all()
-    
-    if not alerts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No alerts found with the provided IDs"
-        )
-    
-    # Update alerts
-    updated_count = 0
-    for alert in alerts:
-        if bulk_update.is_read is not None:
-            alert.is_read = bulk_update.is_read
-        
-        if bulk_update.is_acknowledged is not None:
-            alert.is_acknowledged = bulk_update.is_acknowledged
-        
-        updated_count += 1
-    
-    db.commit()
-    
-    return {
-        "message": f"Successfully updated {updated_count} alerts",
-        "updated_count": updated_count
-    }
-
-
-class BulkDeleteRequest(BaseModel):
-    alert_ids: Annotated[List[int], Field(min_items=1, description="List of alert IDs to delete")]
-
-@router.delete("/bulk", status_code=status.HTTP_200_OK)
-def bulk_delete_alerts(
-    request: BulkDeleteRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Bulk delete multiple alerts
-    
-    Args:
-        request: Request body with alert_ids list
-        
-    Returns:
-        Number of alerts deleted
-    """
-    alert_ids = request.alert_ids
-    # Get alerts
-    alerts = db.query(Alert).filter(
-        Alert.id.in_(alert_ids),
-        Alert.user_id == current_user.id
-    ).all()
-    
-    if not alerts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No alerts found with the provided IDs"
-        )
-    
-    # Delete alerts
-    deleted_count = len(alerts)
-    for alert in alerts:
-        db.delete(alert)
-    
-    db.commit()
-    
-    return {
-        "message": f"Successfully deleted {deleted_count} alerts",
-        "deleted_count": deleted_count
-    }
 
 
 @router.get("/stats/summary", response_model=AlertStatistics)
