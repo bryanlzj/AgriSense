@@ -8,10 +8,20 @@ from .auth import (
     Token,
     UserResponse
 )
+from .sensor import (
+    SensorDataCreate,
+    SensorDataResponse,
+    SensorDataUpdate,
+    SensorDataFilter
+)
 
 __all__ = [
     "UserRegister",
     "UserLogin",
     "Token",
-    "UserResponse"
+    "UserResponse",
+    "SensorDataCreate",
+    "SensorDataResponse",
+    "SensorDataUpdate",
+    "SensorDataFilter"
 ]
