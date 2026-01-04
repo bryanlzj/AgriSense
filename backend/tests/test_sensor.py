@@ -227,8 +227,8 @@ class TestDeleteSensorData:
             headers=auth_headers
         )
         
-        assert response.status_code == 200
-        assert response.json()["message"] == "Sensor data deleted successfully"
+        assert response.status_code == 204
+        # 204 No Content responses don't have a body
         
         # Verify deletion
         sensor = db.query(SensorReading).filter(SensorReading.id == test_sensor_data.id).first()

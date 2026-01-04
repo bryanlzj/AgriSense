@@ -26,11 +26,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from typing import List
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 
 from database import get_db
 from dependencies.auth import get_current_user
 from models.user import User
-from models.alert import Alert
+from models.alert import Alert, AlertType as ModelAlertType, AlertSeverity as ModelAlertSeverity
 from schemas.alert import (
     AlertResponse,
     AlertUpdate,
@@ -69,7 +70,7 @@ def list_alerts(
     
     # Apply filters
     if filter_params.type:
-        query = query.filter(Alert.type == filter_params.type.value)
+        query = query.filter(Alert.alert_type == filter_params.type.value)
     
     if filter_params.severity:
         query = query.filter(Alert.severity == filter_params.severity.value)
@@ -243,9 +244,12 @@ def bulk_update_alerts(
     }
 
 
+class BulkDeleteRequest(BaseModel):
+    alert_ids: List[int]
+
 @router.delete("/bulk", status_code=status.HTTP_200_OK)
 def bulk_delete_alerts(
-    alert_ids: List[int],
+    request: BulkDeleteRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -253,11 +257,12 @@ def bulk_delete_alerts(
     Bulk delete multiple alerts
     
     Args:
-        alert_ids: List of alert IDs to delete
+        request: Request body with alert_ids list
         
     Returns:
         Number of alerts deleted
     """
+    alert_ids = request.alert_ids
     # Get alerts
     alerts = db.query(Alert).filter(
         Alert.id.in_(alert_ids),
@@ -316,7 +321,7 @@ def get_alert_statistics(
     
     # Alerts by type
     alerts_by_type = {}
-    for alert_type in AlertType:
+    for alert_type in ModelAlertType:
         count = db.query(func.count(Alert.id)).filter(
             Alert.user_id == current_user.id,
             Alert.alert_type == alert_type
@@ -325,7 +330,7 @@ def get_alert_statistics(
     
     # Alerts by severity
     alerts_by_severity = {}
-    for severity in AlertSeverity:
+    for severity in ModelAlertSeverity:
         count = db.query(func.count(Alert.id)).filter(
             Alert.user_id == current_user.id,
             Alert.severity == severity
@@ -336,7 +341,7 @@ def get_alert_statistics(
     one_day_ago = datetime.utcnow() - timedelta(days=1)
     recent_critical_alerts = db.query(func.count(Alert.id)).filter(
         Alert.user_id == current_user.id,
-        Alert.severity == AlertSeverity.CRITICAL,
+        Alert.severity == ModelAlertSeverity.CRITICAL,
         Alert.created_at >= one_day_ago
     ).scalar()
     

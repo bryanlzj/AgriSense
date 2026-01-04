@@ -80,15 +80,15 @@ class AlertResponse(BaseModel):
     """Schema for alert response"""
     id: int
     user_id: int
-    type: AlertType
-    severity: AlertSeverity
+    alert_type: str  # Changed from 'type' to 'alert_type' to match model
+    severity: str  # Changed to str to accept model enum values
     title: str
     message: str
-    source_id: Optional[int]
-    source_type: Optional[str]
-    metadata: dict
+    source_id: Optional[int] = None
+    source_type: Optional[str] = None
+    alert_metadata: Optional[dict] = None  # Changed from 'metadata' to 'alert_metadata'
     is_read: bool
-    is_acknowledged: bool
+    is_acknowledged: bool = False
     created_at: datetime
 
     class Config:
