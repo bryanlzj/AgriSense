@@ -64,8 +64,8 @@ class AlertCreate(BaseModel):
 
 class AlertUpdate(BaseModel):
     """Schema for updating an alert"""
-    is_read: Optional[bool] = Field(None, description="Mark as read")
-    is_acknowledged: Optional[bool] = Field(None, description="Mark as acknowledged")
+    is_read: Optional[bool] = Field(default=None, description="Mark as read")
+    is_acknowledged: Optional[bool] = Field(default=None, description="Mark as acknowledged")
 
     class Config:
         json_schema_extra = {
@@ -116,12 +116,12 @@ class AlertResponse(BaseModel):
 
 class AlertFilter(BaseModel):
     """Schema for filtering alerts"""
-    type: Optional[AlertType] = Field(None, description="Filter by alert type")
-    severity: Optional[AlertSeverity] = Field(None, description="Filter by severity")
-    is_read: Optional[bool] = Field(None, description="Filter by read status")
-    is_acknowledged: Optional[bool] = Field(None, description="Filter by acknowledged status")
-    skip: int = Field(0, ge=0, description="Number of records to skip")
-    limit: int = Field(100, ge=1, le=100, description="Maximum number of records to return")
+    type: Optional[str] = Field(default=None, description="Filter by alert type (accepts model enum values)")
+    severity: Optional[str] = Field(default=None, description="Filter by severity (accepts model enum values)")
+    is_read: Optional[bool] = Field(default=None, description="Filter by read status")
+    is_acknowledged: Optional[bool] = Field(default=None, description="Filter by acknowledged status")
+    skip: int = Field(default=0, ge=0, description="Number of records to skip")
+    limit: int = Field(default=100, ge=1, le=100, description="Maximum number of records to return")
 
     class Config:
         json_schema_extra = {
@@ -169,8 +169,8 @@ class AlertStatistics(BaseModel):
 class BulkAlertUpdate(BaseModel):
     """Schema for bulk updating alerts"""
     alert_ids: List[int] = Field(..., min_length=1, description="List of alert IDs to update")
-    is_read: Optional[bool] = Field(None, description="Mark as read")
-    is_acknowledged: Optional[bool] = Field(None, description="Mark as acknowledged")
+    is_read: Optional[bool] = Field(default=None, description="Mark as read")
+    is_acknowledged: Optional[bool] = Field(default=None, description="Mark as acknowledged")
 
     class Config:
         json_schema_extra = {
