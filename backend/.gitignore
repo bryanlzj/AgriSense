@@ -1,45 +1,54 @@
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
+# Environment
+.env
+.env.local
 
-# NuGet Packages
-*.nupkg
-# NuGet Symbol Packages
-*.snupkg
-
-# Others
-~$*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 *~
-CodeCoverage/
 
-# MSBuild Binary and Structured Log
-*.binlog
+# Uploads
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
 
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
+# Logs
+*.log
 
-# NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
+# OS
+.DS_Store
+Thumbs.db

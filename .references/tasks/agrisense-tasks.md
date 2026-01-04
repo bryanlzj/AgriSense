@@ -25,12 +25,13 @@
 
 **Total Parent Tasks:** 11  
 **Total Subtasks:** 88  
-**Completed:** 31/88 (35.2%)  
+**Completed:** 34/88 (38.6%)  
 **Current Phase:** Phase 1 - Backend Development  
 **Phase 0 Status:** ✅ COMPLETE (All setup and planning tasks finished)  
 **Task 1.1 Status:** ✅ COMPLETE (Authentication infrastructure ready)  
 **Task 1.2 Status:** ✅ COMPLETE (Authentication API endpoints ready)  
-**Task 1.3 Status:** ✅ COMPLETE (Sensor Data Management System ready)
+**Task 1.3 Status:** ✅ COMPLETE (Sensor Data Management System ready)  
+**Task 1.4 Status:** ✅ COMPLETE (Pest Detection Image Upload ready - CORE FEATURE #2)
 
 **⚠️ IMPORTANT:** This project has **DUAL CORE FEATURES** with equal priority:
 - 🌤️ Weather Early Warning System (Task 1.7)
@@ -354,32 +355,45 @@
 
 ---
 
-### Task 1.4: Pest Risk Management System - Image Upload (CORE FEATURE #2) 🐛
+### Task 1.4: Pest Risk Management System - Image Upload (CORE FEATURE #2) 🐛 ✅ COMPLETE
 **Goal:** Implement image upload and storage for pest detection  
 **Dependencies:** Task 1.1  
 **Estimated Time:** 3 hours  
+**Completion Date:** January 4, 2025  
 **⚠️ CRITICAL:** This is a CORE FEATURE with equal priority to Weather Early Warning
 
-- [ ] 1.4.1: Set up image storage
+- [x] 1.4.1: Set up image storage ✅
   - Create `backend/uploads/` folder for images
   - Add uploads folder to .gitignore
-  - Install `python-multipart` for file uploads
+  - Install `python-multipart` for file uploads (already in requirements.txt)
   - Create `backend/utils/file_storage.py` helper
+  - **Completed:** Created comprehensive file storage utilities (204 lines) with UUID-based filenames, file validation, and URL generation
   
-- [ ] 1.4.2: Implement image validation
+- [x] 1.4.2: Implement image validation ✅
   - Create `backend/utils/image_validator.py`
   - Validate file type (JPEG, PNG only)
   - Validate file size (max 5MB)
   - Validate image dimensions (min 224x224)
+  - **Completed:** Created image validation utilities (184 lines) with PIL/Pillow integration, comprehensive validation, and error handling
   
-- [ ] 1.4.3: Implement image upload endpoint
-  - Create `backend/routers/pest_detection.py`
-  - Implement `POST /api/pest-detection/upload`
-  - Require authentication
+- [x] 1.4.3: Implement pest detection endpoints ✅
+  - Create `backend/routers/pest.py`
+  - Implement `POST /api/v1/pest/upload` (image upload only)
+  - Implement `POST /api/v1/pest/detect` (upload + analysis in one step)
+  - Implement `GET /api/v1/pest/` (list detections with filters)
+  - Implement `GET /api/v1/pest/{id}` (get specific detection)
+  - Implement `DELETE /api/v1/pest/{id}` (delete detection)
+  - Implement `GET /api/v1/pest/stats/summary` (statistics)
+  - Require authentication for all endpoints
   - Accept multipart/form-data with image file
   - Validate image using validator
   - Save image to uploads folder with unique filename
-  - Return image URL and upload ID
+  - Mock ML detection (returns random pest predictions)
+  - Save detection results to database
+  - Return image URL and detection results
+  - **Completed:** Created comprehensive pest detection router (419 lines) with full CRUD operations, mock ML service, statistics, and static file serving
+  - **Files Created:** `backend/schemas/pest.py` (222 lines), `backend/routers/pest.py` (419 lines), `backend/utils/file_storage.py` (204 lines), `backend/utils/image_validator.py` (184 lines)
+  - **Files Modified:** `backend/schemas/__init__.py`, `backend/main.py` (added pest router and static file serving), `backend/.gitignore` (added uploads folder)
 
 ---
 

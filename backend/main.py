@@ -24,13 +24,15 @@ Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from database import engine, Base
 
 # Import routers
 from routers.auth import router as auth_router
 from routers.sensor import router as sensor_router
+from routers.pest import router as pest_router
 # Additional routers will be imported as they are created:
-# from routers.pests import router as pests_router
 # from routers.alerts import router as alerts_router
 # from routers.weather import router as weather_router
 
@@ -56,11 +58,16 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+# Mount static files for uploaded images
+UPLOAD_DIR = Path(__file__).parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 # Register API routers with /api/v1 prefix
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(sensor_router, prefix="/api/v1")
+app.include_router(pest_router, prefix="/api/v1")
 # Additional routers will be registered as they are created:
-# app.include_router(pests_router, prefix="/api/v1")
 # app.include_router(alerts_router, prefix="/api/v1")
 # app.include_router(weather_router, prefix="/api/v1")
 

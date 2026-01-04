@@ -14,6 +14,15 @@ from .sensor import (
     SensorDataUpdate,
     SensorDataFilter
 )
+from .pest import (
+    PestDetectionCreate,
+    PestDetectionResponse,
+    ImageUploadResponse,
+    PestDetectionResult,
+    PestDetectionAnalysisResponse,
+    PestDetectionFilter,
+    PestStatistics
+)
 
 __all__ = [
     "UserRegister",
@@ -23,5 +32,12 @@ __all__ = [
     "SensorDataCreate",
     "SensorDataResponse",
     "SensorDataUpdate",
-    "SensorDataFilter"
+    "SensorDataFilter",
+    "PestDetectionCreate",
+    "PestDetectionResponse",
+    "ImageUploadResponse",
+    "PestDetectionResult",
+    "PestDetectionAnalysisResponse",
+    "PestDetectionFilter",
+    "PestStatistics",
 ]
