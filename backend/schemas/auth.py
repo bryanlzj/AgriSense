@@ -16,7 +16,6 @@ class UserRegister(BaseModel):
     Validates:
     - Username: 3-50 characters, alphanumeric + underscore
     - Password: minimum 6 characters
-    - Full name: 1-100 characters
     """
     username: str = Field(
         ...,
@@ -28,12 +27,6 @@ class UserRegister(BaseModel):
         ...,
         min_length=6,
         description="Password (minimum 6 characters)"
-    )
-    full_name: str = Field(
-        ...,
-        min_length=1,
-        max_length=100,
-        description="User's full name"
     )
     
     @field_validator('username')
@@ -48,8 +41,7 @@ class UserRegister(BaseModel):
         json_schema_extra = {
             "example": {
                 "username": "john_farmer",
-                "password": "securepass123",
-                "full_name": "John Doe"
+                "password": "securepass123"
             }
         }
 
@@ -100,7 +92,6 @@ class UserResponse(BaseModel):
     """
     id: int = Field(..., description="User ID")
     username: str = Field(..., description="Username")
-    full_name: str = Field(..., description="User's full name")
     is_active: bool = Field(..., description="Whether user account is active")
     created_at: datetime = Field(..., description="Account creation timestamp")
     
@@ -110,7 +101,6 @@ class UserResponse(BaseModel):
             "example": {
                 "id": 1,
                 "username": "john_farmer",
-                "full_name": "John Doe",
                 "is_active": True,
                 "created_at": "2024-01-15T10:30:00"
             }
