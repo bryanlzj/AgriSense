@@ -33,6 +33,16 @@ from .weather import (
     WeatherForecastResponse,
     WeatherSummaryResponse
 )
+from .alert import (
+    AlertType,
+    AlertSeverity,
+    AlertCreate,
+    AlertUpdate,
+    AlertResponse,
+    AlertFilter,
+    AlertStatistics,
+    BulkAlertUpdate
+)
 
 __all__ = [
     "UserRegister",
@@ -58,4 +68,12 @@ __all__ = [
     "CurrentWeatherResponse",
     "WeatherForecastResponse",
     "WeatherSummaryResponse",
+    "AlertType",
+    "AlertSeverity",
+    "AlertCreate",
+    "AlertUpdate",
+    "AlertResponse",
+    "AlertFilter",
+    "AlertStatistics",
+    "BulkAlertUpdate",
 ]
