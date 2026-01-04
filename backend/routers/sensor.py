@@ -311,9 +311,12 @@ def get_sensor_statistics(
         func.avg(SensorReading.humidity).label('avg_humidity'),
         func.min(SensorReading.humidity).label('min_humidity'),
         func.max(SensorReading.humidity).label('max_humidity'),
-        func.sum(SensorReading.rainfall).label('total_rainfall'),
-        func.avg(SensorReading.rainfall).label('avg_rainfall'),
-        func.max(SensorReading.rainfall).label('max_rainfall')
+        func.avg(SensorReading.soil_moisture).label('avg_soil_moisture'),
+        func.min(SensorReading.soil_moisture).label('min_soil_moisture'),
+        func.max(SensorReading.soil_moisture).label('max_soil_moisture'),
+        func.avg(SensorReading.light_intensity).label('avg_light_intensity'),
+        func.min(SensorReading.light_intensity).label('min_light_intensity'),
+        func.max(SensorReading.light_intensity).label('max_light_intensity')
     ).filter(
         and_(
             SensorReading.user_id == current_user.id,
@@ -340,9 +343,14 @@ def get_sensor_statistics(
             "minimum": round(stats.min_humidity, 2) if stats.min_humidity else None,
             "maximum": round(stats.max_humidity, 2) if stats.max_humidity else None
         },
-        "rainfall": {
-            "total": round(stats.total_rainfall, 2) if stats.total_rainfall else 0,
-            "average": round(stats.avg_rainfall, 2) if stats.avg_rainfall else None,
-            "maximum": round(stats.max_rainfall, 2) if stats.max_rainfall else None
+        "soil_moisture": {
+            "average": round(stats.avg_soil_moisture, 2) if stats.avg_soil_moisture else None,
+            "minimum": round(stats.min_soil_moisture, 2) if stats.min_soil_moisture else None,
+            "maximum": round(stats.max_soil_moisture, 2) if stats.max_soil_moisture else None
+        },
+        "light_intensity": {
+            "average": round(stats.avg_light_intensity, 2) if stats.avg_light_intensity else None,
+            "minimum": round(stats.min_light_intensity, 2) if stats.min_light_intensity else None,
+            "maximum": round(stats.max_light_intensity, 2) if stats.max_light_intensity else None
         }
     }
