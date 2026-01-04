@@ -48,7 +48,7 @@ class TestCreateSensorData:
         assert data["light_intensity"] == 50000.0
         assert data["user_id"] == test_user.id
         assert "id" in data
-        assert "created_at" in data
+        assert "timestamp" in data
     
     def test_create_sensor_data_no_auth(self, client: TestClient):
         """Test creating sensor data without authentication fails."""

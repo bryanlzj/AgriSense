@@ -171,7 +171,7 @@ def test_sensor_data(db: Session, test_user: User) -> SensorReading:
         temperature=25.5,
         humidity=65.0,
         soil_moisture=45.0,
-        rainfall=0.0
+        light_intensity=50000.0
     )
     db.add(sensor_data)
     db.commit()
@@ -209,14 +209,15 @@ def test_alert(db: Session, test_user: User) -> Alert:
     Returns:
         Alert object with test data
     """
+    from models.alert import AlertType, AlertSeverity
+    
     alert = Alert(
         user_id=test_user.id,
-        type="sensor",
-        severity="warning",
+        alert_type=AlertType.PEST_RISK,
+        severity=AlertSeverity.MEDIUM,
         title="High Temperature Alert",
         message="Temperature exceeds 32°C",
-        is_read=False,
-        is_acknowledged=False
+        is_read=False
     )
     db.add(alert)
     db.commit()

@@ -39,45 +39,49 @@ class TestListAlerts:
     
     def test_list_alerts_filter_by_type(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test filtering alerts by type."""
+        from models.alert import AlertType, AlertSeverity
+        
         # Create alerts of different types
         alert1 = Alert(
             user_id=test_user.id,
-            alert_type="sensor",
-            severity="warning",
-            title="Sensor Alert",
+            alert_type=AlertType.PEST_RISK,
+            severity=AlertSeverity.MEDIUM,
+            title="Pest Alert",
             message="Test"
         )
         alert2 = Alert(
             user_id=test_user.id,
-            alert_type="weather",
-            severity="warning",
+            alert_type=AlertType.HEAVY_RAIN,
+            severity=AlertSeverity.MEDIUM,
             title="Weather Alert",
             message="Test"
         )
         db.add_all([alert1, alert2])
         db.commit()
         
-        # Filter for sensor alerts only
-        response = client.get("/api/v1/alert/?type=sensor", headers=auth_headers)
+        # Filter for pest alerts only
+        response = client.get("/api/v1/alert/?type=pest_risk", headers=auth_headers)
         
         assert response.status_code == 200
         data = response.json()
-        assert all(alert["type"] == "sensor" for alert in data)
+        assert all(alert["alert_type"] == "pest_risk" for alert in data)
     
     def test_list_alerts_filter_by_severity(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test filtering alerts by severity."""
+        from models.alert import AlertType, AlertSeverity
+        
         # Create alerts of different severities
         alert1 = Alert(
             user_id=test_user.id,
-            alert_type="sensor",
-            severity="warning",
+            alert_type=AlertType.PEST_RISK,
+            severity=AlertSeverity.MEDIUM,
             title="Warning Alert",
             message="Test"
         )
         alert2 = Alert(
             user_id=test_user.id,
-            alert_type="sensor",
-            severity="critical",
+            alert_type=AlertType.PEST_RISK,
+            severity=AlertSeverity.CRITICAL,
             title="Critical Alert",
             message="Test"
         )
@@ -93,19 +97,21 @@ class TestListAlerts:
     
     def test_list_alerts_filter_unread(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test filtering for unread alerts."""
+        from models.alert import AlertType, AlertSeverity
+        
         # Create read and unread alerts
         alert1 = Alert(
             user_id=test_user.id,
-            alert_type="sensor",
-            severity="warning",
+            alert_type=AlertType.PEST_RISK,
+            severity=AlertSeverity.MEDIUM,
             title="Read Alert",
             message="Test",
             is_read=True
         )
         alert2 = Alert(
             user_id=test_user.id,
-            alert_type="sensor",
-            severity="warning",
+            alert_type=AlertType.PEST_RISK,
+            severity=AlertSeverity.MEDIUM,
             title="Unread Alert",
             message="Test",
             is_read=False
@@ -212,13 +218,15 @@ class TestBulkOperations:
     
     def test_bulk_mark_as_read(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test bulk marking alerts as read."""
+        from models.alert import AlertType, AlertSeverity
+        
         # Create multiple unread alerts
         alerts = []
         for i in range(3):
             alert = Alert(
                 user_id=test_user.id,
-                alert_type="sensor",
-                severity="warning",
+                alert_type=AlertType.PEST_RISK,
+                severity=AlertSeverity.MEDIUM,
                 title=f"Alert {i}",
                 message="Test",
                 is_read=False
@@ -245,13 +253,15 @@ class TestBulkOperations:
     
     def test_bulk_delete(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test bulk deleting alerts."""
+        from models.alert import AlertType, AlertSeverity
+        
         # Create multiple alerts
         alerts = []
         for i in range(3):
             alert = Alert(
                 user_id=test_user.id,
-                alert_type="sensor",
-                severity="warning",
+                alert_type=AlertType.PEST_RISK,
+                severity=AlertSeverity.MEDIUM,
                 title=f"Alert {i}",
                 message="Test"
             )
@@ -298,11 +308,11 @@ class TestAlertStatistics:
         assert response.status_code == 200
         data = response.json()
         assert data["total_alerts"] == 3
-        assert data["unread_count"] == 2
-        assert data["by_type"]["sensor"] == 2
-        assert data["by_type"]["weather"] == 1
-        assert data["by_severity"]["warning"] == 2
-        assert data["by_severity"]["critical"] == 1
+        assert data["unread_alerts"] == 2
+        assert data["alerts_by_type"]["pest_risk"] == 2
+        assert data["alerts_by_type"]["heavy_rain"] == 1
+        assert data["alerts_by_severity"]["medium"] == 2
+        assert data["alerts_by_severity"]["critical"] == 1
 
 
 class TestAlertGeneration:
@@ -315,5 +325,5 @@ class TestAlertGeneration:
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert "alerts_generated" in data
-        assert isinstance(data["alerts_generated"], int)
+        assert "new_alerts_count" in data
+        assert isinstance(data["new_alerts_count"], int)
