@@ -8,7 +8,6 @@
 
 # Instructions and setup
 .instructions/
-setup_dual_remote.sh
 
 # Python Backend
 backend/__pycache__/

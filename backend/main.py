@@ -24,16 +24,17 @@ Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from database import engine, Base
 
-# Import routers (will be uncommented as they are created)
-# from routers import (
-#     auth_router,
-#     sensors_router,
-#     pests_router,
-#     alerts_router,
-#     weather_router,
-# )
+# Import routers
+from routers.auth import router as auth_router
+from routers.sensor import router as sensor_router
+from routers.pest import router as pest_router
+from routers.weather import router as weather_router
+from routers.alert import router as alert_router
+# Additional routers will be imported as they are created:
 
 # Create database tables (only for development - use Alembic in production)
 # Base.metadata.create_all(bind=engine)
@@ -57,13 +58,18 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+# Mount static files for uploaded images
+UPLOAD_DIR = Path(__file__).parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 # Register API routers with /api/v1 prefix
-# Uncomment as routers are created:
-# app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
-# app.include_router(sensors_router, prefix="/api/v1/sensors", tags=["Sensors"])
-# app.include_router(pests_router, prefix="/api/v1/pests", tags=["Pests"])
-# app.include_router(alerts_router, prefix="/api/v1/alerts", tags=["Alerts"])
-# app.include_router(weather_router, prefix="/api/v1/weather", tags=["Weather"])
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(sensor_router, prefix="/api/v1")
+app.include_router(pest_router, prefix="/api/v1")
+app.include_router(weather_router, prefix="/api/v1")
+app.include_router(alert_router, prefix="/api/v1")
+# Additional routers will be registered as they are created:
 
 
 @app.get("/")
