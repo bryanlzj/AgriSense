@@ -42,14 +42,14 @@ class TestListAlerts:
         # Create alerts of different types
         alert1 = Alert(
             user_id=test_user.id,
-            type="sensor",
+            alert_type="sensor",
             severity="warning",
             title="Sensor Alert",
             message="Test"
         )
         alert2 = Alert(
             user_id=test_user.id,
-            type="weather",
+            alert_type="weather",
             severity="warning",
             title="Weather Alert",
             message="Test"
@@ -69,14 +69,14 @@ class TestListAlerts:
         # Create alerts of different severities
         alert1 = Alert(
             user_id=test_user.id,
-            type="sensor",
+            alert_type="sensor",
             severity="warning",
             title="Warning Alert",
             message="Test"
         )
         alert2 = Alert(
             user_id=test_user.id,
-            type="sensor",
+            alert_type="sensor",
             severity="critical",
             title="Critical Alert",
             message="Test"
@@ -96,7 +96,7 @@ class TestListAlerts:
         # Create read and unread alerts
         alert1 = Alert(
             user_id=test_user.id,
-            type="sensor",
+            alert_type="sensor",
             severity="warning",
             title="Read Alert",
             message="Test",
@@ -104,7 +104,7 @@ class TestListAlerts:
         )
         alert2 = Alert(
             user_id=test_user.id,
-            type="sensor",
+            alert_type="sensor",
             severity="warning",
             title="Unread Alert",
             message="Test",
@@ -217,7 +217,7 @@ class TestBulkOperations:
         for i in range(3):
             alert = Alert(
                 user_id=test_user.id,
-                type="sensor",
+                alert_type="sensor",
                 severity="warning",
                 title=f"Alert {i}",
                 message="Test",
@@ -250,7 +250,7 @@ class TestBulkOperations:
         for i in range(3):
             alert = Alert(
                 user_id=test_user.id,
-                type="sensor",
+                alert_type="sensor",
                 severity="warning",
                 title=f"Alert {i}",
                 message="Test"
@@ -285,9 +285,9 @@ class TestAlertStatistics:
         """Test getting alert statistics."""
         # Create alerts with different types and severities
         alerts = [
-            Alert(user_id=test_user.id, type="sensor", severity="warning", title="Test", message="Test", is_read=False),
-            Alert(user_id=test_user.id, type="sensor", severity="critical", title="Test", message="Test", is_read=False),
-            Alert(user_id=test_user.id, type="weather", severity="warning", title="Test", message="Test", is_read=True),
+            Alert(user_id=test_user.id, alert_type="sensor", severity="warning", title="Test", message="Test", is_read=False),
+            Alert(user_id=test_user.id, alert_type="sensor", severity="critical", title="Test", message="Test", is_read=False),
+            Alert(user_id=test_user.id, alert_type="weather", severity="warning", title="Test", message="Test", is_read=True),
         ]
         db.add_all(alerts)
         db.commit()

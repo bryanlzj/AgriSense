@@ -113,8 +113,8 @@ class AlertService:
         five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
         recent_data = db.query(SensorReading).filter(
             SensorReading.user_id == user_id,
-            SensorReading.recorded_at >= five_minutes_ago
-        ).order_by(desc(SensorReading.recorded_at)).first()
+            SensorReading.timestamp >= five_minutes_ago
+        ).order_by(desc(SensorReading.timestamp)).first()
         
         if not recent_data:
             return alerts
@@ -126,7 +126,7 @@ class AlertService:
         if recent_data.temperature > AlertService.TEMP_HIGH_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.SENSOR.value,
+                Alert.alert_type == AlertType.SENSOR.value,
                 Alert.title.like("%High Temperature%"),
                 Alert.created_at >= recent_alert_time
             ).first()
@@ -153,7 +153,7 @@ class AlertService:
         if recent_data.temperature < AlertService.TEMP_LOW_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.SENSOR.value,
+                Alert.alert_type == AlertType.SENSOR.value,
                 Alert.title.like("%Low Temperature%"),
                 Alert.created_at >= recent_alert_time
             ).first()
@@ -180,7 +180,7 @@ class AlertService:
         if recent_data.humidity > AlertService.HUMIDITY_HIGH_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.SENSOR.value,
+                Alert.alert_type == AlertType.SENSOR.value,
                 Alert.title.like("%High Humidity%"),
                 Alert.created_at >= recent_alert_time
             ).first()
@@ -207,7 +207,7 @@ class AlertService:
         if recent_data.soil_moisture < AlertService.SOIL_MOISTURE_LOW_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.SENSOR.value,
+                Alert.alert_type == AlertType.SENSOR.value,
                 Alert.title.like("%Low Soil Moisture%"),
                 Alert.created_at >= recent_alert_time
             ).first()
@@ -263,7 +263,7 @@ class AlertService:
             # Skip if we already have an alert for this detection
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.PEST.value,
+                Alert.alert_type == AlertType.PEST.value,
                 Alert.source_id == detection.id,
                 Alert.source_type == "pest_detection"
             ).first()
@@ -296,7 +296,7 @@ class AlertService:
         if len(recent_detections) >= 3:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.PEST.value,
+                Alert.alert_type == AlertType.PEST.value,
                 Alert.title.like("%Multiple Pest%"),
                 Alert.created_at >= recent_alert_time
             ).first()
@@ -346,7 +346,7 @@ class AlertService:
             # Check if we already have a similar alert
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
-                Alert.type == AlertType.WEATHER.value,
+                Alert.alert_type == AlertType.WEATHER.value,
                 Alert.title == weather_alert.get("title"),
                 Alert.created_at >= recent_alert_time
             ).first()

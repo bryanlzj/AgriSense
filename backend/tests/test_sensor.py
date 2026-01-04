@@ -36,7 +36,7 @@ class TestCreateSensorData:
                 "temperature": 28.5,
                 "humidity": 70.0,
                 "soil_moisture": 50.0,
-                "rainfall": 5.2
+                "light_intensity": 50000.0
             }
         )
         
@@ -45,7 +45,7 @@ class TestCreateSensorData:
         assert data["temperature"] == 28.5
         assert data["humidity"] == 70.0
         assert data["soil_moisture"] == 50.0
-        assert data["rainfall"] == 5.2
+        assert data["light_intensity"] == 50000.0
         assert data["user_id"] == test_user.id
         assert "id" in data
         assert "created_at" in data
@@ -58,7 +58,7 @@ class TestCreateSensorData:
                 "temperature": 28.5,
                 "humidity": 70.0,
                 "soil_moisture": 50.0,
-                "rainfall": 5.2
+                "light_intensity": 50000.0
             }
         )
         
@@ -74,7 +74,7 @@ class TestCreateSensorData:
                 "temperature": 28.5,
                 "humidity": -10.0,
                 "soil_moisture": 50.0,
-                "rainfall": 5.2
+                "light_intensity": 50000.0
             }
         )
         assert response.status_code == 422
@@ -87,7 +87,7 @@ class TestCreateSensorData:
                 "temperature": 28.5,
                 "humidity": 150.0,
                 "soil_moisture": 50.0,
-                "rainfall": 5.2
+                "light_intensity": 50000.0
             }
         )
         assert response.status_code == 422
@@ -114,7 +114,7 @@ class TestListSensorData:
                 temperature=20.0 + i,
                 humidity=60.0,
                 soil_moisture=40.0,
-                rainfall=0.0
+                light_intensity=50000.0
             )
             db.add(sensor)
         db.commit()
@@ -138,7 +138,7 @@ class TestListSensorData:
                 temperature=temp,
                 humidity=60.0,
                 soil_moisture=40.0,
-                rainfall=0.0
+                light_intensity=50000.0
             )
             db.add(sensor)
         db.commit()
@@ -193,7 +193,7 @@ class TestUpdateSensorData:
                 "temperature": 30.0,
                 "humidity": 75.0,
                 "soil_moisture": 55.0,
-                "rainfall": 10.0
+                "light_intensity": 60000.0
             }
         )
         
@@ -211,7 +211,7 @@ class TestUpdateSensorData:
                 "temperature": 30.0,
                 "humidity": 75.0,
                 "soil_moisture": 55.0,
-                "rainfall": 10.0
+                "light_intensity": 60000.0
             }
         )
         assert response.status_code == 404
@@ -252,7 +252,7 @@ class TestSensorStatistics:
                 temperature=temp,
                 humidity=60.0,
                 soil_moisture=40.0,
-                rainfall=5.0
+                light_intensity=50000.0
             )
             db.add(sensor)
         db.commit()
