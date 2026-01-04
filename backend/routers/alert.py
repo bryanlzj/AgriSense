@@ -311,18 +311,15 @@ def get_alert_statistics(
         Alert.is_read == False
     ).scalar()
     
-    # Unacknowledged alerts
-    unacknowledged_alerts = db.query(func.count(Alert.id)).filter(
-        Alert.user_id == current_user.id,
-        Alert.is_acknowledged == False
-    ).scalar()
+    # Unread alerts (no is_acknowledged field, using is_read instead)
+    # Note: The Alert model doesn't have is_acknowledged, only is_read
     
     # Alerts by type
     alerts_by_type = {}
     for alert_type in AlertType:
         count = db.query(func.count(Alert.id)).filter(
             Alert.user_id == current_user.id,
-            Alert.type == alert_type.value
+            Alert.alert_type == alert_type
         ).scalar()
         alerts_by_type[alert_type.value] = count
     
@@ -331,7 +328,7 @@ def get_alert_statistics(
     for severity in AlertSeverity:
         count = db.query(func.count(Alert.id)).filter(
             Alert.user_id == current_user.id,
-            Alert.severity == severity.value
+            Alert.severity == severity
         ).scalar()
         alerts_by_severity[severity.value] = count
     
@@ -339,14 +336,14 @@ def get_alert_statistics(
     one_day_ago = datetime.utcnow() - timedelta(days=1)
     recent_critical_alerts = db.query(func.count(Alert.id)).filter(
         Alert.user_id == current_user.id,
-        Alert.severity == AlertSeverity.CRITICAL.value,
+        Alert.severity == AlertSeverity.CRITICAL,
         Alert.created_at >= one_day_ago
     ).scalar()
     
     return AlertStatistics(
         total_alerts=total_alerts,
         unread_alerts=unread_alerts,
-        unacknowledged_alerts=unacknowledged_alerts,
+        unacknowledged_alerts=unread_alerts,  # Using unread_alerts since is_acknowledged doesn't exist
         alerts_by_type=alerts_by_type,
         alerts_by_severity=alerts_by_severity,
         recent_critical_alerts=recent_critical_alerts

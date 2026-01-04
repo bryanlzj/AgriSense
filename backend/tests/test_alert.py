@@ -284,10 +284,11 @@ class TestAlertStatistics:
     def test_get_statistics(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test getting alert statistics."""
         # Create alerts with different types and severities
+        from models.alert import AlertType, AlertSeverity
         alerts = [
-            Alert(user_id=test_user.id, alert_type="sensor", severity="warning", title="Test", message="Test", is_read=False),
-            Alert(user_id=test_user.id, alert_type="sensor", severity="critical", title="Test", message="Test", is_read=False),
-            Alert(user_id=test_user.id, alert_type="weather", severity="warning", title="Test", message="Test", is_read=True),
+            Alert(user_id=test_user.id, alert_type=AlertType.PEST_RISK, severity=AlertSeverity.MEDIUM, title="Test", message="Test", is_read=False),
+            Alert(user_id=test_user.id, alert_type=AlertType.PEST_RISK, severity=AlertSeverity.CRITICAL, title="Test", message="Test", is_read=False),
+            Alert(user_id=test_user.id, alert_type=AlertType.HEAVY_RAIN, severity=AlertSeverity.MEDIUM, title="Test", message="Test", is_read=True),
         ]
         db.add_all(alerts)
         db.commit()

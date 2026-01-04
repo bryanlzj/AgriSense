@@ -250,8 +250,8 @@ class AlertService:
         one_day_ago = datetime.utcnow() - timedelta(days=1)
         recent_detections = db.query(PestDetection).filter(
             PestDetection.user_id == user_id,
-            PestDetection.created_at >= one_day_ago
-        ).order_by(desc(PestDetection.created_at)).all()
+            PestDetection.detected_at >= one_day_ago
+        ).order_by(desc(PestDetection.detected_at)).all()
         
         if not recent_detections:
             return alerts

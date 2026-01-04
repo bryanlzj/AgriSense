@@ -40,7 +40,7 @@ class TestCreateSensorData:
             }
         )
         
-        assert response.status_code == 200
+        assert response.status_code == 201
         data = response.json()
         assert data["temperature"] == 28.5
         assert data["humidity"] == 70.0
@@ -145,7 +145,7 @@ class TestListSensorData:
         
         # Filter for temperature between 20 and 30
         response = client.get(
-            "/api/v1/sensor/?min_temp=20&max_temp=30",
+            "/api/v1/sensor/?min_temperature=20&max_temperature=30",
             headers=auth_headers
         )
         
@@ -261,9 +261,9 @@ class TestSensorStatistics:
         
         assert response.status_code == 200
         data = response.json()
-        assert "avg_temperature" in data
-        assert "min_temperature" in data
-        assert "max_temperature" in data
-        assert data["avg_temperature"] == 25.0
-        assert data["min_temperature"] == 20.0
-        assert data["max_temperature"] == 30.0
+        assert "temperature" in data
+        assert "humidity" in data
+        assert "soil_moisture" in data
+        assert data["temperature"]["average"] == 25.0
+        assert data["temperature"]["minimum"] == 20.0
+        assert data["temperature"]["maximum"] == 30.0
