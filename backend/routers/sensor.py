@@ -64,10 +64,8 @@ def create_sensor_data(
         user_id=current_user.id,
         temperature=sensor_data.temperature,
         humidity=sensor_data.humidity,
-        rainfall=sensor_data.rainfall,
         soil_moisture=sensor_data.soil_moisture,
-        wind_speed=sensor_data.wind_speed,
-        recorded_at=datetime.utcnow()
+        light_intensity=sensor_data.light_intensity
     )
     
     db.add(db_sensor_data)

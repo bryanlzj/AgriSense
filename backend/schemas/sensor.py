@@ -27,20 +27,15 @@ class SensorDataCreate(BaseModel):
         ge=0,    # Greater than or equal to 0%
         le=100   # Less than or equal to 100%
     )
-    rainfall: float = Field(
-        ..., 
-        description="Rainfall in millimeters",
-        ge=0     # Cannot be negative
-    )
-    soil_moisture: Optional[float] = Field(
-        None,
-        description="Soil moisture percentage (optional)",
+    soil_moisture: float = Field(
+        ...,
+        description="Soil moisture percentage",
         ge=0,
         le=100
     )
-    wind_speed: Optional[float] = Field(
-        None,
-        description="Wind speed in km/h (optional)",
+    light_intensity: float = Field(
+        ...,
+        description="Light intensity in lux",
         ge=0
     )
     
@@ -58,11 +53,18 @@ class SensorDataCreate(BaseModel):
             raise ValueError('Humidity must be between 0% and 100%')
         return v
     
-    @validator('rainfall')
-    def validate_rainfall(cls, v):
-        """Validate rainfall is non-negative."""
+    @validator('soil_moisture')
+    def validate_soil_moisture(cls, v):
+        """Validate soil moisture is a valid percentage."""
+        if v < 0 or v > 100:
+            raise ValueError('Soil moisture must be between 0% and 100%')
+        return v
+    
+    @validator('light_intensity')
+    def validate_light_intensity(cls, v):
+        """Validate light intensity is non-negative."""
         if v < 0:
-            raise ValueError('Rainfall cannot be negative')
+            raise ValueError('Light intensity cannot be negative')
         return v
     
     class Config:
@@ -70,9 +72,8 @@ class SensorDataCreate(BaseModel):
             "example": {
                 "temperature": 28.5,
                 "humidity": 75.0,
-                "rainfall": 12.5,
                 "soil_moisture": 65.0,
-                "wind_speed": 15.0
+                "light_intensity": 50000.0
             }
         }
 
@@ -87,11 +88,9 @@ class SensorDataResponse(BaseModel):
     user_id: int
     temperature: float
     humidity: float
-    rainfall: float
-    soil_moisture: Optional[float]
-    wind_speed: Optional[float]
-    recorded_at: datetime
-    created_at: datetime
+    soil_moisture: float
+    light_intensity: float
+    timestamp: datetime
     
     class Config:
         from_attributes = True  # Allows creating from ORM models
@@ -101,11 +100,9 @@ class SensorDataResponse(BaseModel):
                 "user_id": 1,
                 "temperature": 28.5,
                 "humidity": 75.0,
-                "rainfall": 12.5,
                 "soil_moisture": 65.0,
-                "wind_speed": 15.0,
-                "recorded_at": "2024-01-15T10:30:00",
-                "created_at": "2024-01-15T10:30:00"
+                "light_intensity": 50000.0,
+                "timestamp": "2024-01-15T10:30:00"
             }
         }
 
@@ -118,15 +115,15 @@ class SensorDataUpdate(BaseModel):
     """
     temperature: Optional[float] = Field(None, ge=-50, le=60)
     humidity: Optional[float] = Field(None, ge=0, le=100)
-    rainfall: Optional[float] = Field(None, ge=0)
     soil_moisture: Optional[float] = Field(None, ge=0, le=100)
-    wind_speed: Optional[float] = Field(None, ge=0)
+    light_intensity: Optional[float] = Field(None, ge=0)
     
     class Config:
         json_schema_extra = {
             "example": {
                 "temperature": 29.0,
-                "humidity": 78.0
+                "humidity": 78.0,
+                "soil_moisture": 70.0
             }
         }
 
