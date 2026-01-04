@@ -23,6 +23,16 @@ from .pest import (
     PestDetectionFilter,
     PestStatistics
 )
+from .weather import (
+    WeatherCondition,
+    WeatherForecastItem,
+    WeatherAlert,
+    AgriculturalRecommendation,
+    LocationInput,
+    CurrentWeatherResponse,
+    WeatherForecastResponse,
+    WeatherSummaryResponse
+)
 
 __all__ = [
     "UserRegister",
@@ -40,4 +50,12 @@ __all__ = [
     "PestDetectionAnalysisResponse",
     "PestDetectionFilter",
     "PestStatistics",
+    "WeatherCondition",
+    "WeatherForecastItem",
+    "WeatherAlert",
+    "AgriculturalRecommendation",
+    "LocationInput",
+    "CurrentWeatherResponse",
+    "WeatherForecastResponse",
+    "WeatherSummaryResponse",
 ]

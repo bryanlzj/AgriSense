@@ -32,9 +32,9 @@ from database import engine, Base
 from routers.auth import router as auth_router
 from routers.sensor import router as sensor_router
 from routers.pest import router as pest_router
+from routers.weather import router as weather_router
 # Additional routers will be imported as they are created:
 # from routers.alerts import router as alerts_router
-# from routers.weather import router as weather_router
 
 # Create database tables (only for development - use Alembic in production)
 # Base.metadata.create_all(bind=engine)
@@ -67,9 +67,9 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(sensor_router, prefix="/api/v1")
 app.include_router(pest_router, prefix="/api/v1")
+app.include_router(weather_router, prefix="/api/v1")
 # Additional routers will be registered as they are created:
 # app.include_router(alerts_router, prefix="/api/v1")
-# app.include_router(weather_router, prefix="/api/v1")
 
 
 @app.get("/")
