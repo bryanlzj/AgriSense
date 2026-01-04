@@ -32,12 +32,20 @@ Before you begin, ensure you have the following installed on your machine:
   - Verify: `python --version` or `python3 --version`
   - ⚠️ **Important:** During installation, check "Add Python to PATH"
 
-- **Node.js** (version 18+ LTS)
-  - Download: https://nodejs.org/
-  - Verify: `node --version` and `npm --version`
-
 - **Code Editor** (Recommended: VS Code)
   - Download: https://code.visualstudio.com/
+
+### **For Flutter Developer (Member 3) Only:**
+
+- **Flutter SDK** (version 3.10+)
+  - Download: https://docs.flutter.dev/get-started/install
+  - Verify: `flutter --version`
+  
+- **Android Studio** (for Android development)
+  - Download: https://developer.android.com/studio
+  
+- **Xcode** (for iOS development - macOS only)
+  - Download from Mac App Store
 
 ### **Optional but Recommended:**
 
@@ -189,36 +197,52 @@ INFO:     Application startup complete.
 
 ---
 
-## ⚛️ Frontend Setup
+## 📱 Flutter Mobile App Setup (Member 3 Only)
 
-> **Note:** The frontend is currently a template. Member 3 (Flutter Developer) will build the mobile app.
+> **Note:** The `frontend/` folder contains a React template from Evo Builder. **Ignore it completely** - it's not part of AgriSense.
 
-### **For React/Web Development (if needed):**
+### **For Member 3 (Flutter Developer):**
 
+You will create a **new Flutter project** from scratch and integrate with the backend APIs.
+
+**Steps:**
+
+1. **Create Flutter Project:**
 ```bash
-# Navigate to frontend directory
-cd frontend
+# Create new Flutter project (outside of AgriSense repo)
+flutter create agrisense_mobile
 
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+# Or create inside a mobile/ folder in the repo
+cd AgriSense
+mkdir mobile
+cd mobile
+flutter create agrisense_mobile
 ```
 
-### **For Flutter Development:**
+2. **Backend API Integration:**
+- **Backend API Base URL:** `http://localhost:5000` (local development)
+- **API Documentation:** See `backend/API_DOCUMENTATION.md`
+- **All endpoints:** Available at http://localhost:5000/docs (Swagger UI)
 
-Member 3 will create a new Flutter project and integrate with the backend APIs.
+3. **Key Dependencies to Add:**
+```yaml
+dependencies:
+  http: ^1.1.0              # For API calls
+  provider: ^6.1.0          # State management
+  shared_preferences: ^2.2.0 # Token storage
+  image_picker: ^1.0.0      # Camera/gallery access
+```
 
-**Backend API Base URL:**
-- Local development: `http://localhost:5000`
-- Use endpoints documented in `backend/API_DOCUMENTATION.md`
+4. **Authentication Flow:**
+- Store JWT token in SharedPreferences after login
+- Include token in Authorization header for all API calls
+- Handle token expiration (30 days)
 
 ---
 
 ## 🏃 Running the Application
 
-### **Backend Only:**
+### **Backend Server:**
 
 ```bash
 # From backend directory with venv activated
@@ -231,13 +255,15 @@ python run.py
 - Swagger Docs: http://localhost:5000/docs
 - ReDoc: http://localhost:5000/redoc
 
-### **Frontend (when ready):**
+### **Flutter Mobile App (Member 3):**
 
 ```bash
-# From frontend directory
-cd frontend
-npm run dev
+# From your Flutter project directory
+cd mobile/agrisense_mobile  # or wherever you created it
+flutter run
 ```
+
+**Note:** Make sure backend is running before testing the mobile app!
 
 ---
 
@@ -533,6 +559,12 @@ alembic upgrade head          # Run migrations
 # Database
 python seed_database.py       # Seed test data
 alembic revision --autogenerate -m "message"  # Create migration
+
+# Flutter (Member 3 only)
+flutter doctor               # Check Flutter installation
+flutter create project_name  # Create new Flutter project
+flutter run                  # Run on connected device/emulator
+flutter build apk            # Build Android APK
 ```
 
 ---
@@ -564,7 +596,7 @@ Use this checklist to verify your setup is complete:
 ### **Environment Setup:**
 - [ ] Git installed and configured
 - [ ] Python 3.10+ installed
-- [ ] Node.js 18+ installed (if working on frontend)
+- [ ] Flutter SDK installed (Member 3 only)
 - [ ] VS Code or preferred editor installed
 - [ ] Repository cloned successfully
 
