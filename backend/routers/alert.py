@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from typing import List
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conlist
 
 from database import get_db
 from dependencies.auth import get_current_user
@@ -245,7 +245,7 @@ def bulk_update_alerts(
 
 
 class BulkDeleteRequest(BaseModel):
-    alert_ids: List[int] = Field(..., min_length=1)
+    alert_ids: conlist(int, min_length=1)  # type: ignore
 
 @router.delete("/bulk", status_code=status.HTTP_200_OK)
 def bulk_delete_alerts(
