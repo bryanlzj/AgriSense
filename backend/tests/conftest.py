@@ -9,6 +9,8 @@ This file provides shared fixtures for all tests including:
 """
 
 import os
+import sys
+from pathlib import Path
 import pytest
 from typing import Generator
 from fastapi.testclient import TestClient
@@ -16,14 +18,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
-from backend.database import Base, get_db
-from backend.main import app
-from backend.models.user import User
-from backend.models.sensor_data import SensorData
-from backend.models.pest_detection import PestDetection
-from backend.models.alert import Alert
-from backend.utils.password import hash_password
-from backend.utils.security import create_access_token
+# Add parent directory to path to allow imports
+backend_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(backend_dir))
+
+from database import Base, get_db
+from main import app
+from models.user import User
+from models.sensor_data import SensorData
+from models.pest_detection import PestDetection
+from models.alert import Alert
+from utils.password import hash_password
+from utils.security import create_access_token
 
 # Use in-memory SQLite for testing
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
