@@ -19,16 +19,16 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import httpx
 
-from backend.database import get_db
-from backend.models.user import User
-from backend.dependencies.auth import get_current_user
-from backend.schemas.weather import (
+from database import get_db
+from models.user import User
+from dependencies.auth import get_current_user
+from schemas.weather import (
     CurrentWeatherResponse,
     WeatherForecastResponse,
     WeatherSummaryResponse,
     LocationInput
 )
-from backend.services.weather_service import (
+from services.weather_service import (
     get_current_weather,
     get_weather_forecast,
     get_weather_summary

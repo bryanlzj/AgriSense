@@ -30,10 +30,10 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, 
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
-from ..database import get_db
-from ..models import User, PestDetection
-from ..dependencies.auth import get_current_user
-from ..schemas.pest import (
+from database import get_db
+from models import User, PestDetection
+from dependencies.auth import get_current_user
+from schemas.pest import (
     PestDetectionResponse,
     ImageUploadResponse,
     PestDetectionAnalysisResponse,
@@ -41,8 +41,8 @@ from ..schemas.pest import (
     PestDetectionFilter,
     PestStatistics
 )
-from ..utils.image_validator import validate_image_or_raise, get_image_dimensions
-from ..utils.file_storage import save_upload_file, generate_file_url
+from utils.image_validator import validate_image_or_raise, get_image_dimensions
+from utils.file_storage import save_upload_file, generate_file_url
 
 router = APIRouter(prefix="/pest", tags=["Pest Detection 🐛"])
 

@@ -34,7 +34,7 @@ from sqlalchemy import desc, func
 from datetime import datetime, timedelta
 from typing import List, Optional
 from models.alert import Alert
-from models.sensor_data import SensorData
+from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from schemas.alert import AlertType, AlertSeverity
 
@@ -111,10 +111,10 @@ class AlertService:
         
         # Get latest sensor data (last 5 minutes)
         five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
-        recent_data = db.query(SensorData).filter(
-            SensorData.user_id == user_id,
-            SensorData.timestamp >= five_minutes_ago
-        ).order_by(desc(SensorData.timestamp)).first()
+        recent_data = db.query(SensorReading).filter(
+            SensorReading.user_id == user_id,
+            SensorReading.recorded_at >= five_minutes_ago
+        ).order_by(desc(SensorReading.recorded_at)).first()
         
         if not recent_data:
             return alerts

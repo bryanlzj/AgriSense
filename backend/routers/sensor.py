@@ -16,15 +16,15 @@ from sqlalchemy import and_, func
 from typing import List, Optional
 from datetime import datetime, timedelta
 
-from backend.database import get_db
-from backend.models.sensor_data import SensorData
-from backend.models.user import User
-from backend.schemas.sensor import (
+from database import get_db
+from models.sensor_reading import SensorReading
+from models.user import User
+from schemas.sensor import (
     SensorDataCreate,
     SensorDataResponse,
     SensorDataUpdate
 )
-from backend.dependencies.auth import get_current_user
+from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/sensor", tags=["Sensor Data"])
 
@@ -60,7 +60,7 @@ def create_sensor_data(
         }
     """
     # Create new sensor data record
-    db_sensor_data = SensorData(
+    db_sensor_data = SensorReading(
         user_id=current_user.id,
         temperature=sensor_data.temperature,
         humidity=sensor_data.humidity,
@@ -113,22 +113,22 @@ def get_sensor_data(
         GET /api/v1/sensor/?start_date=2024-01-01&limit=50
     """
     # Build query with filters
-    query = db.query(SensorData).filter(SensorData.user_id == current_user.id)
+    query = db.query(SensorReading).filter(SensorReading.user_id == current_user.id)
     
     # Apply date filters
     if start_date:
-        query = query.filter(SensorData.recorded_at >= start_date)
+        query = query.filter(SensorReading.recorded_at >= start_date)
     if end_date:
-        query = query.filter(SensorData.recorded_at <= end_date)
+        query = query.filter(SensorReading.recorded_at <= end_date)
     
     # Apply temperature filters
     if min_temperature is not None:
-        query = query.filter(SensorData.temperature >= min_temperature)
+        query = query.filter(SensorReading.temperature >= min_temperature)
     if max_temperature is not None:
-        query = query.filter(SensorData.temperature <= max_temperature)
+        query = query.filter(SensorReading.temperature <= max_temperature)
     
     # Order by most recent first
-    query = query.order_by(SensorData.recorded_at.desc())
+    query = query.order_by(SensorReading.recorded_at.desc())
     
     # Apply pagination
     sensor_data = query.offset(skip).limit(limit).all()
@@ -156,10 +156,10 @@ def get_sensor_data_by_id(
     Raises:
         404: If the sensor data record is not found or doesn't belong to the user
     """
-    sensor_data = db.query(SensorData).filter(
+    sensor_data = db.query(SensorReading).filter(
         and_(
-            SensorData.id == sensor_data_id,
-            SensorData.user_id == current_user.id
+            SensorReading.id == sensor_data_id,
+            SensorReading.user_id == current_user.id
         )
     ).first()
     
@@ -198,10 +198,10 @@ def update_sensor_data(
         404: If the sensor data record is not found or doesn't belong to the user
     """
     # Find the sensor data record
-    db_sensor_data = db.query(SensorData).filter(
+    db_sensor_data = db.query(SensorReading).filter(
         and_(
-            SensorData.id == sensor_data_id,
-            SensorData.user_id == current_user.id
+            SensorReading.id == sensor_data_id,
+            SensorReading.user_id == current_user.id
         )
     ).first()
     
@@ -245,10 +245,10 @@ def delete_sensor_data(
         404: If the sensor data record is not found or doesn't belong to the user
     """
     # Find the sensor data record
-    db_sensor_data = db.query(SensorData).filter(
+    db_sensor_data = db.query(SensorReading).filter(
         and_(
-            SensorData.id == sensor_data_id,
-            SensorData.user_id == current_user.id
+            SensorReading.id == sensor_data_id,
+            SensorReading.user_id == current_user.id
         )
     ).first()
     
@@ -296,31 +296,31 @@ def get_sensor_statistics(
     start_date = end_date - timedelta(days=days)
     
     # Query sensor data within date range
-    query = db.query(SensorData).filter(
+    query = db.query(SensorReading).filter(
         and_(
-            SensorData.user_id == current_user.id,
-            SensorData.recorded_at >= start_date,
-            SensorData.recorded_at <= end_date
+            SensorReading.user_id == current_user.id,
+            SensorReading.recorded_at >= start_date,
+            SensorReading.recorded_at <= end_date
         )
     )
     
     # Get aggregated statistics
     stats = db.query(
-        func.count(SensorData.id).label('count'),
-        func.avg(SensorData.temperature).label('avg_temperature'),
-        func.min(SensorData.temperature).label('min_temperature'),
-        func.max(SensorData.temperature).label('max_temperature'),
-        func.avg(SensorData.humidity).label('avg_humidity'),
-        func.min(SensorData.humidity).label('min_humidity'),
-        func.max(SensorData.humidity).label('max_humidity'),
-        func.sum(SensorData.rainfall).label('total_rainfall'),
-        func.avg(SensorData.rainfall).label('avg_rainfall'),
-        func.max(SensorData.rainfall).label('max_rainfall')
+        func.count(SensorReading.id).label('count'),
+        func.avg(SensorReading.temperature).label('avg_temperature'),
+        func.min(SensorReading.temperature).label('min_temperature'),
+        func.max(SensorReading.temperature).label('max_temperature'),
+        func.avg(SensorReading.humidity).label('avg_humidity'),
+        func.min(SensorReading.humidity).label('min_humidity'),
+        func.max(SensorReading.humidity).label('max_humidity'),
+        func.sum(SensorReading.rainfall).label('total_rainfall'),
+        func.avg(SensorReading.rainfall).label('avg_rainfall'),
+        func.max(SensorReading.rainfall).label('max_rainfall')
     ).filter(
         and_(
-            SensorData.user_id == current_user.id,
-            SensorData.recorded_at >= start_date,
-            SensorData.recorded_at <= end_date
+            SensorReading.user_id == current_user.id,
+            SensorReading.recorded_at >= start_date,
+            SensorReading.recorded_at <= end_date
         )
     ).first()
     

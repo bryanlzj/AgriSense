@@ -18,7 +18,7 @@ import httpx
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta
 import os
-from backend.schemas.weather import (
+from schemas.weather import (
     WeatherCondition,
     WeatherForecastItem,
     WeatherAlert,
