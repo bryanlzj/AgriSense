@@ -3,8 +3,6 @@
 # ===================================
 # This file defines all services needed to run AgriSense in production
 
-version: '3.8'
-
 services:
   # ===================================
   # PostgreSQL Database
