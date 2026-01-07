@@ -66,7 +66,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index('idx_pest_user_detected', 'pest_detections', ['user_id', 'detected_at'], unique=False)
-    op.create_index('idx_severity', 'pest_detections', ['severity'], unique=False)
+    op.create_index('idx_severity_level', 'pest_detections', ['severity_level'], unique=False)
     op.create_index(op.f('ix_pest_detections_detected_at'), 'pest_detections', ['detected_at'], unique=False)
     op.create_index(op.f('ix_pest_detections_id'), 'pest_detections', ['id'], unique=False)
 
@@ -100,7 +100,7 @@ def downgrade() -> None:
     
     op.drop_index(op.f('ix_pest_detections_id'), table_name='pest_detections')
     op.drop_index(op.f('ix_pest_detections_detected_at'), table_name='pest_detections')
-    op.drop_index('idx_severity', table_name='pest_detections')
+    op.drop_index('idx_severity_level', table_name='pest_detections')
     op.drop_index('idx_pest_user_detected', table_name='pest_detections')
     op.drop_table('pest_detections')
     
