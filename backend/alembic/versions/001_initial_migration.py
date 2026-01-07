@@ -78,9 +78,13 @@ def upgrade() -> None:
         sa.Column('severity', sa.String(length=20), nullable=False),
         sa.Column('title', sa.String(length=200), nullable=False),
         sa.Column('message', sa.Text(), nullable=False),
+        sa.Column('recommendations', sa.Text(), nullable=True),
         sa.Column('is_read', sa.Boolean(), nullable=False, server_default='false'),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('read_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('alert_metadata', sa.Text(), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
