@@ -59,7 +59,7 @@ else:
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
-        echo=settings.DEBUG
+        echo=settings.debug
     )
     
     logger.info("🗄️  Using PostgreSQL database (Production Mode)")
