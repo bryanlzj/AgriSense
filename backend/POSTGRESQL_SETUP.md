@@ -27,11 +27,16 @@ This will:
 ## Manual Setup
 
 ```bash
+<<<<<<< HEAD
 # Start services (database only, no backend)
 docker compose -f docker-compose.db.yml up -d
 
 # OR if you want to start everything including backend:
 # docker compose up -d postgres adminer
+=======
+# Start services
+docker-compose up -d postgres adminer
+>>>>>>> github/bryan
 
 # Update .env
 # Change DATABASE_URL to: postgresql://agrisense_user:changeme@localhost:5432/agrisense
@@ -47,11 +52,17 @@ python scripts/migrate_sqlite_to_postgres.py
 ## Useful Commands
 
 ```bash
+<<<<<<< HEAD
 # Start services (database only)
 docker compose -f docker-compose.db.yml up -d
 
 # Stop services
 docker compose -f docker-compose.db.yml down
+=======
+# Start/stop services
+docker-compose up -d postgres adminer
+docker-compose down
+>>>>>>> github/bryan
 
 # View logs
 docker-compose logs -f postgres
