@@ -1,0 +1,62 @@
+# ===================================
+# AgriSense - Database Only (PostgreSQL + Adminer)
+# ===================================
+# Use this to run just the database and Adminer
+# Command: docker compose -f docker-compose.db.yml up -d
+
+version: '3.8'
+
+services:
+  # ===================================
+  # PostgreSQL Database
+  # ===================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: agrisense-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agrisense_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-agrisense}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - agrisense-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agrisense_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================================
+  # Adminer - Database Management Tool
+  # ===================================
+  adminer:
+    image: adminer:latest
+    container_name: agrisense-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - agrisense-network
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  agrisense-network:
+    driver: bridge
+
+# ===================================
+# Volumes (Persistent Data)
+# ===================================
+volumes:
+  postgres_data:
+    driver: local
