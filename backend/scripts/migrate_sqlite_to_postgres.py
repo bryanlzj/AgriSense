@@ -190,14 +190,19 @@ def migrate_data():
         detections = sqlite_session.query(PestDetection).all()
         
         for detection in detections:
+            # Handle field name differences between old SQLite and new PostgreSQL schema
+            confidence = getattr(detection, 'confidence_score', None) or getattr(detection, 'confidence', None)
+            severity = getattr(detection, 'severity_level', None) or getattr(detection, 'severity', None)
+            image_url = getattr(detection, 'image_url', None) or getattr(detection, 'image_path', None)
+            
             new_detection = PestDetection(
                 id=detection.id,
                 user_id=detection.user_id,
-                image_url=detection.image_url,
-                pest_type=detection.pest_type,
-                confidence=detection.confidence,
-                severity=detection.severity,
-                recommendations=detection.recommendations,
+                image_url=image_url,
+                pest_type=getattr(detection, 'pest_type', None) or getattr(detection, 'pest_name', None),
+                confidence_score=confidence,
+                severity_level=severity,
+                recommendations=getattr(detection, 'recommendations', None),
                 detected_at=detection.detected_at
             )
             postgres_session.add(new_detection)
