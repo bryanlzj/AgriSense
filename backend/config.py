@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings
 from pydantic import Field, validator
 from typing import List, Optional
 import os
+import json
 from pathlib import Path
 
 
@@ -155,15 +156,31 @@ class Settings(BaseSettings):
     
     @validator("cors_origins", pre=True)
     def parse_cors_origins(cls, v):
-        """Parse comma-separated CORS origins into a list"""
+        """Parse comma-separated or JSON array CORS origins into a list"""
         if isinstance(v, str):
+            # Try to parse as JSON first
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except (json.JSONDecodeError, ValueError):
+                pass
+            # Fall back to comma-separated
             return [origin.strip() for origin in v.split(",")]
         return v
     
     @validator("allowed_image_extensions", pre=True)
     def parse_allowed_extensions(cls, v):
-        """Parse comma-separated extensions into a list"""
+        """Parse comma-separated or JSON array extensions into a list"""
         if isinstance(v, str):
+            # Try to parse as JSON first
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except (json.JSONDecodeError, ValueError):
+                pass
+            # Fall back to comma-separated
             return [ext.strip() for ext in v.split(",")]
         return v
     
