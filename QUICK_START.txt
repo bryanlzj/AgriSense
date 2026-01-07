@@ -15,8 +15,8 @@ Linux/Mac:
   cd backend/scripts
   bash quick_postgres_setup.sh
 
-⏱️ Time: 2 minutes
-✅ This sets up PostgreSQL + migrates your data
+⏱️ Time: 2-3 minutes (includes installing dependencies)
+✅ This installs packages, sets up PostgreSQL + migrates your data
 
 
 Step 2: Start Backend

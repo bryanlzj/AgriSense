@@ -101,11 +101,22 @@ fi
 echo ""
 
 # ===================================
-# Step 4: Run database migrations
+# Step 4: Install dependencies
+# ===================================
+
+echo "📦 Installing/Upgrading dependencies..."
+python -m pip install --upgrade pip --quiet
+python -m pip install -r requirements.txt --quiet
+echo "✅ Dependencies installed"
+
+echo ""
+
+# ===================================
+# Step 5: Run database migrations
 # ===================================
 
 echo "🔄 Running database migrations..."
-alembic upgrade head
+python -m alembic upgrade head
 echo "✅ Migrations complete"
 
 echo ""

@@ -33,13 +33,23 @@ $newContent | Set-Content ".env"
 Write-Host "✅ DATABASE_URL updated to PostgreSQL" -ForegroundColor Green
 Write-Host ""
 
+# Install dependencies
+Write-Host "================================================================================" -ForegroundColor Cyan
+Write-Host "Installing/Upgrading dependencies..." -ForegroundColor Cyan
+Write-Host "================================================================================" -ForegroundColor Cyan
+Write-Host ""
+
+python -m pip install --upgrade pip --quiet
+python -m pip install -r requirements.txt --quiet
+
 # Run Alembic migrations
+Write-Host ""
 Write-Host "================================================================================" -ForegroundColor Cyan
 Write-Host "Running Alembic migrations to create tables..." -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-alembic upgrade head
+python -m alembic upgrade head
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
