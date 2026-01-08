@@ -230,7 +230,7 @@ class Alert(Base):
             "is_read": self.is_read,
             "read_at": self.read_at.isoformat() if self.read_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "metadata": self.metadata,
+            "metadata": self.alert_metadata,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

@@ -307,10 +307,17 @@ def seed_database():
     
     After running this script, you'll have a fully populated database
     ready for testing and development.
+    
+    Works with both SQLite and PostgreSQL.
     """
     print("=" * 60)
     print("🌱 AgriSense Database Seeding Script")
     print("=" * 60)
+    
+    # Create all tables first (in case they don't exist)
+    print("\n📋 Ensuring database tables exist...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tables ready")
     
     # Create database session
     db = SessionLocal()
