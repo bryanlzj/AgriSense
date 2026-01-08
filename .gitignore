@@ -5,6 +5,7 @@
 *.swo
 *~
 .DS_Store
+CLAUDE.MD
 
 # Environment files
 .env
