@@ -29,22 +29,15 @@ class Settings(BaseSettings):
     port: int = Field(default=5000, env="PORT")
     
     # ===================================
-    # Database Configuration
+    # Database Configuration (PostgreSQL Only)
     # ===================================
     database_url: str = Field(
-        default="sqlite:///./agrisense.db",
+        default="postgresql://agrisense_user:changeme@localhost:5432/agrisense",
         env="DATABASE_URL"
     )
     
     # Database initialization
     seed_database: bool = Field(default=False, env="SEED_DATABASE")
-    
-    # PostgreSQL specific (optional)
-    postgres_user: Optional[str] = Field(default=None, env="POSTGRES_USER")
-    postgres_password: Optional[str] = Field(default=None, env="POSTGRES_PASSWORD")
-    postgres_db: Optional[str] = Field(default=None, env="POSTGRES_DB")
-    postgres_host: Optional[str] = Field(default="localhost", env="POSTGRES_HOST")
-    postgres_port: int = Field(default=5432, env="POSTGRES_PORT")
     
     # ===================================
     # Authentication & Security
@@ -153,7 +146,7 @@ class Settings(BaseSettings):
     # Testing Configuration
     # ===================================
     test_database_url: str = Field(
-        default="sqlite:///./test_agrisense.db",
+        default="postgresql://agrisense_user:changeme@localhost:5432/agrisense_test",
         env="TEST_DATABASE_URL"
     )
     

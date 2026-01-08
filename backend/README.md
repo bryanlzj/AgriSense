@@ -82,11 +82,8 @@ When `SEED_DATABASE=True`, the backend creates:
 ### Database URL
 
 ```bash
-# PostgreSQL (recommended)
+# PostgreSQL (only supported database)
 DATABASE_URL=postgresql://agrisense_user:changeme@localhost:5432/agrisense
-
-# SQLite (for quick testing)
-DATABASE_URL=sqlite:///./agrisense.db
 ```
 
 ## 🗄️ Database Schema

@@ -2,7 +2,7 @@
 Database Configuration and Session Management
 
 This module sets up SQLAlchemy for database operations.
-It supports both SQLite (for development/learning) and PostgreSQL (for production).
+PostgreSQL is the only supported database.
 
 Key Concepts:
 - Engine: Manages database connections
@@ -10,13 +10,12 @@ Key Concepts:
 - Base: Base class for all database models (tables)
 """
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
 import logging
 
-from config import settings, get_database_url, is_development, is_production
+from config import settings, get_database_url
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -25,44 +24,22 @@ logger = logging.getLogger(__name__)
 # DATABASE ENGINE SETUP
 # ============================================================================
 
-# Get database URL from config (SQLite or PostgreSQL)
+# Get database URL from config (PostgreSQL only)
 DATABASE_URL = get_database_url()
 
-# Create engine based on database type
-if DATABASE_URL.startswith("sqlite"):
-    # SQLite Configuration (for development/learning)
-    # - check_same_thread=False: Allow multiple threads (needed for FastAPI)
-    # - StaticPool: Keep connection alive (good for SQLite)
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        echo=settings.debug  # Log SQL queries in debug mode (great for learning!)
-    )
-    
-    # Enable foreign key constraints for SQLite (disabled by default)
-    @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_conn, connection_record):
-        cursor = dbapi_conn.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
-    
-    logger.info("🗄️  Using SQLite database (Development Mode)")
+# PostgreSQL Configuration
+# - pool_size: Number of connections to keep open
+# - max_overflow: Additional connections when pool is full
+# - pool_pre_ping: Test connections before using (handles disconnects)
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
+    echo=settings.debug  # Log SQL queries in debug mode
+)
 
-else:
-    # PostgreSQL Configuration (for production)
-    # - pool_size: Number of connections to keep open
-    # - max_overflow: Additional connections when pool is full
-    # - pool_pre_ping: Test connections before using (handles disconnects)
-    engine = create_engine(
-        DATABASE_URL,
-        pool_size=5,
-        max_overflow=10,
-        pool_pre_ping=True,
-        echo=settings.debug
-    )
-    
-    logger.info("🗄️  Using PostgreSQL database (Production Mode)")
+logger.info("🗄️  Using PostgreSQL database")
 
 # ============================================================================
 # SESSION FACTORY
@@ -182,9 +159,7 @@ def get_db_info() -> dict:
     """
     return {
         "database_url": DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else DATABASE_URL,  # Hide password
-        "database_type": "sqlite" if DATABASE_URL.startswith("sqlite") else "postgresql",
-        "is_development": is_development(),
-        "is_production": is_production(),
+        "database_type": "postgresql",
         "debug_mode": settings.debug
     }
 
@@ -218,12 +193,7 @@ def get_db_info() -> dict:
 5. **Connection Pooling**
    - Keeps database connections open for reuse
    - Faster than creating new connections each time
-   - Configured differently for SQLite vs PostgreSQL
-
-6. **SQLite vs PostgreSQL**
-   - SQLite: Single file, great for learning/development
-   - PostgreSQL: Full database server, better for production
-   - This code supports both seamlessly!
+   - Optimized for PostgreSQL production use
 
 Next Steps:
 - Create database models (User, SensorData, PestDetection, Alert)

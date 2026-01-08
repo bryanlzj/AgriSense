@@ -59,14 +59,11 @@ SEED_DATABASE=True
 SEED_DATABASE=False
 ```
 
-### Database Options
+### Database Configuration
 
 ```bash
-# PostgreSQL (recommended for production)
+# PostgreSQL (only supported database)
 DATABASE_URL=postgresql://agrisense_user:changeme@localhost:5432/agrisense
-
-# SQLite (quick testing)
-DATABASE_URL=sqlite:///./agrisense.db
 ```
 
 ---

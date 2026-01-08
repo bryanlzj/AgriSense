@@ -31,14 +31,17 @@ from models.alert import Alert
 from utils.password import get_password_hash
 from utils.security import create_access_token
 
-# Use in-memory SQLite for testing
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
+# Use test PostgreSQL database for testing
+# Note: You can also use a separate test database or Docker container
+SQLALCHEMY_TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql://agrisense_user:changeme@localhost:5432/agrisense_test"
+)
 
-# Create test engine with special settings for SQLite
+# Create test engine
 engine = create_engine(
     SQLALCHEMY_TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,  # Use static pool for in-memory database
+    pool_pre_ping=True
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
