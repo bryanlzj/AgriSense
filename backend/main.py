@@ -26,7 +26,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from database import engine, Base
+from contextlib import asynccontextmanager
 
 # Import routers
 from routers.auth import router as auth_router
@@ -36,8 +36,27 @@ from routers.weather import router as weather_router
 from routers.alert import router as alert_router
 # Additional routers will be imported as they are created:
 
-# Create database tables (only for development - use Alembic in production)
-# Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for startup and shutdown
+    
+    Startup:
+    - Initialize database (check schema, create tables, seed data)
+    
+    Shutdown:
+    - Clean up resources
+    """
+    # Startup
+    from db_init import initialize_database
+    initialize_database()
+    
+    yield
+    
+    # Shutdown
+    # Add cleanup code here if needed
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -46,6 +65,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",  # Swagger UI
     redoc_url="/redoc",  # ReDoc alternative documentation
+    lifespan=lifespan,  # Add lifespan handler
 )
 
 # Configure CORS (Cross-Origin Resource Sharing)

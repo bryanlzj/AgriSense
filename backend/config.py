@@ -36,6 +36,9 @@ class Settings(BaseSettings):
         env="DATABASE_URL"
     )
     
+    # Database initialization
+    seed_database: bool = Field(default=False, env="SEED_DATABASE")
+    
     # PostgreSQL specific (optional)
     postgres_user: Optional[str] = Field(default=None, env="POSTGRES_USER")
     postgres_password: Optional[str] = Field(default=None, env="POSTGRES_PASSWORD")

@@ -1,343 +1,304 @@
-# AgriSense Backend
+# 🌾 AgriSense Backend
 
-Smart agriculture monitoring system with weather early warning and pest risk management.
+Agricultural Early Warning System - Backend API
 
-## Features
+## 🚀 Quick Start
 
-### Core Features
-1. **Weather Early Warning System** 🌤️
-   - Real-time weather monitoring
-   - 5-day weather forecast
-   - Automatic weather alerts
-   - Agricultural recommendations
-
-2. **Pest Risk Management** 🐛
-   - Image-based pest detection
-   - AI-powered identification (mock ML)
-   - Severity assessment
-   - Treatment recommendations
-
-### Supporting Features
-- **Sensor Data Management** - Temperature, humidity, soil moisture, rainfall tracking
-- **Alert System** - Automated alerts for weather, pests, and sensor anomalies
-- **User Authentication** - JWT-based authentication with 30-day tokens
-
-## Tech Stack
-
-- **Framework:** FastAPI 0.104.1
-- **Database:** SQLAlchemy 2.0.23 + Alembic (migrations)
-- **Authentication:** JWT (python-jose) + bcrypt
-- **Image Processing:** Pillow 10.1.0
-- **Weather API:** OpenWeatherMap
-- **Testing:** pytest + pytest-asyncio
-
-## Project Structure
-
-```
-backend/
-├── alembic/              # Database migrations
-├── dependencies/         # FastAPI dependencies (auth)
-├── models/              # SQLAlchemy models
-├── routers/             # API endpoints
-├── schemas/             # Pydantic schemas
-├── services/            # Business logic (weather, alerts)
-├── tests/               # Test suite
-├── utils/               # Utilities (password, JWT, file storage)
-├── database.py          # Database configuration
-├── main.py              # FastAPI application
-├── config.py            # Settings configuration
-└── run.py               # Development server
-
-uploads/                 # Uploaded pest images
-```
-
-## Setup
-
-### 1. Install Dependencies
+### 1. Start PostgreSQL
 
 ```bash
-cd backend
+docker-compose up -d postgres adminer
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env if needed (default values work for local development)
+```
+
+### 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Environment Variables
-
-Create `.env` file:
-
-```env
-# Database
-DATABASE_URL=sqlite:///./agrisense.db
-
-# Security
-SECRET_KEY=your-secret-key-here-change-in-production
-
-# Weather API
-OPENWEATHER_API_KEY=your-openweathermap-api-key
-
-# Environment
-ENVIRONMENT=development
-```
-
-Get OpenWeatherMap API key: https://openweathermap.org/api
-
-### 3. Initialize Database
-
-```bash
-# Create initial migration
-alembic revision --autogenerate -m "Initial migration"
-
-# Apply migrations
-alembic upgrade head
-```
-
-### 4. Seed Test Data (Optional)
-
-```bash
-python seed_data.py
-```
-
-Creates:
-- Test user (username: `testuser`, password: `password123`)
-- Sample sensor data
-- Sample pest detections
-- Sample alerts
-
-### 5. Run Development Server
+### 4. Start Backend
 
 ```bash
 python run.py
 ```
 
-Server runs at: http://localhost:5000
+**That's it!** The backend will automatically:
+- ✅ Check database connection
+- ✅ Create missing tables from models
+- ✅ Seed test data (if `SEED_DATABASE=True`)
 
-## API Documentation
+## 📊 Access Points
 
-### Interactive Docs
-- **Swagger UI:** http://localhost:5000/swagger
+- **API Documentation:** http://localhost:5000/docs
+- **Alternative Docs:** http://localhost:5000/redoc
+- **Database UI (Adminer):** http://localhost:8080
+
+## 🔐 Default Credentials
+
+### PostgreSQL
+```
+Host:     localhost:5432
+Database: agrisense
+Username: agrisense_user
+Password: changeme
+```
+
+### Test Users
+```
+Admin:    admin / admin123
+Farmer 1: farmer1 / password123
+Farmer 2: farmer2 / password123
+```
+
+## ⚙️ Configuration
+
+### Database Seeding
+
+Control test data seeding via `.env`:
+
+```bash
+# Seed test data on startup (for development)
+SEED_DATABASE=True
+
+# Don't seed test data (for production)
+SEED_DATABASE=False
+```
+
+When `SEED_DATABASE=True`, the backend creates:
+- 3 test users (admin, farmer1, farmer2)
+- 7 days of hourly sensor readings
+- Sample pest detections
+- Sample alerts
+
+**Note:** Seeding only happens if the database is empty. Existing data is never overwritten.
+
+### Database URL
+
+```bash
+# PostgreSQL (recommended)
+DATABASE_URL=postgresql://agrisense_user:changeme@localhost:5432/agrisense
+
+# SQLite (for quick testing)
+DATABASE_URL=sqlite:///./agrisense.db
+```
+
+## 🗄️ Database Schema
+
+Tables are automatically created from SQLAlchemy models:
+
+1. **users** - User accounts and profiles
+2. **sensor_readings** - Environmental sensor data
+3. **pest_detections** - Pest detection results
+4. **alerts** - System alerts and notifications
+
+## 🔄 How It Works
+
+### Automatic Database Initialization
+
+On backend startup, the system:
+
+1. **Checks Connection** - Verifies database is accessible
+2. **Checks Schema** - Compares existing tables with models
+3. **Creates Missing Tables** - Adds any missing tables
+4. **Seeds Data** (optional) - Populates test data if enabled
+
+This happens automatically in `main.py` via the `lifespan` event handler.
+
+### No Manual Scripts Needed
+
+Unlike traditional setups, you don't need to run migration scripts. The ORM handles everything:
+
+```python
+# Old way (manual)
+python scripts/init_postgres.py
+python scripts/seed_data.py
+
+# New way (automatic)
+python run.py  # Everything happens automatically!
+```
+
+## 🛠️ Development
+
+### Adding New Models
+
+1. Create model in `models/` directory
+2. Import model in `db_init.py`
+3. Restart backend - table is created automatically!
+
+Example:
+
+```python
+# models/new_model.py
+from database import Base
+from sqlalchemy import Column, Integer, String
+
+class NewModel(Base):
+    __tablename__ = "new_table"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+```
+
+```python
+# db_init.py
+from models.new_model import NewModel  # Add this import
+```
+
+### Reset Database
+
+```bash
+# Drop all tables
+docker exec -i agrisense-postgres psql -U agrisense_user -d agrisense \
+  -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+# Restart backend - tables recreated automatically
+python run.py
+```
+
+### View Database
+
+Open Adminer at http://localhost:8080:
+- System: `PostgreSQL`
+- Server: `postgres`
+- Username: `agrisense_user`
+- Password: `changeme`
+- Database: `agrisense`
+
+## 📁 Project Structure
+
+```
+backend/
+├── models/              # SQLAlchemy models (define database schema)
+│   ├── user.py
+│   ├── sensor_reading.py
+│   ├── pest_detection.py
+│   └── alert.py
+├── routers/             # API endpoints
+│   ├── auth.py
+│   ├── sensor.py
+│   ├── pest.py
+│   └── alert.py
+├── services/            # Business logic
+├── schemas/             # Pydantic schemas
+├── db_init.py          # Database initialization (auto-runs on startup)
+├── database.py         # Database configuration
+├── config.py           # Application settings
+├── main.py             # FastAPI application
+└── run.py              # Entry point
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+```
+
+## 🐳 Docker
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f backend
+
+# Stop all services
+docker-compose down
+```
+
+## 🔧 Troubleshooting
+
+### "Cannot connect to database"
+
+Check if PostgreSQL is running:
+```bash
+docker ps
+```
+
+Start PostgreSQL:
+```bash
+docker-compose up -d postgres
+```
+
+### "Tables already exist"
+
+This is normal! The system detects existing tables and skips creation.
+
+### "Module not found"
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### Reset Everything
+
+```bash
+# Stop containers
+docker-compose down -v
+
+# Start fresh
+docker-compose up -d postgres adminer
+python run.py
+```
+
+## 📚 API Documentation
+
+Once the backend is running, visit:
+- **Swagger UI:** http://localhost:5000/docs
 - **ReDoc:** http://localhost:5000/redoc
 
-### Full Documentation
-See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete API reference.
+## 🔐 Security Notes
 
-## Testing
+**For Production:**
 
-### Run All Tests
+1. Change default passwords in `.env`
+2. Set `SEED_DATABASE=False`
+3. Use strong `SECRET_KEY`
+4. Enable HTTPS
+5. Restrict CORS origins
+6. Use environment-specific configs
 
-```bash
-pytest
-```
+## 📝 Environment Variables
 
-### Run with Coverage
+See `.env.example` for all available configuration options:
 
-```bash
-pytest --cov=backend --cov-report=html
-```
+- **Database:** Connection settings
+- **Authentication:** JWT settings
+- **Weather API:** OpenWeatherMap integration
+- **ML Service:** Pest detection service
+- **Alerts:** Threshold configurations
+- **File Uploads:** Size and type restrictions
 
-View coverage report: `htmlcov/index.html`
+## 🚀 Deployment
 
-### Run Specific Tests
+The backend automatically initializes the database on startup, making deployment simple:
 
-```bash
-# Authentication tests only
-pytest tests/test_auth.py
+1. Set environment variables
+2. Set `SEED_DATABASE=False`
+3. Start the application
+4. Database is ready!
 
-# Sensor tests only
-pytest tests/test_sensor.py
+No manual migration scripts needed.
 
-# Alert tests only
-pytest tests/test_alert.py
+## 📞 Support
 
-# Run with verbose output
-pytest -v
+For issues or questions:
+1. Check logs: `docker-compose logs backend`
+2. Verify `.env` configuration
+3. Check database connection
+4. Review API docs at `/docs`
 
-# Run specific test
-pytest tests/test_auth.py::TestUserRegistration::test_register_new_user
-```
+---
 
-### Test Markers
-
-```bash
-# Run only unit tests
-pytest -m unit
-
-# Run only integration tests
-pytest -m integration
-
-# Run only auth tests
-pytest -m auth
-```
-
-## Database Migrations
-
-### Create Migration
-
-```bash
-# Auto-generate migration from model changes
-alembic revision --autogenerate -m "Description of changes"
-
-# Create empty migration
-alembic revision -m "Description"
-```
-
-### Apply Migrations
-
-```bash
-# Upgrade to latest
-alembic upgrade head
-
-# Upgrade one version
-alembic upgrade +1
-
-# Downgrade one version
-alembic downgrade -1
-
-# Downgrade to specific version
-alembic downgrade <revision_id>
-```
-
-### View Migration History
-
-```bash
-# Show current version
-alembic current
-
-# Show migration history
-alembic history
-
-# Show pending migrations
-alembic history --verbose
-```
-
-## Development
-
-### Code Quality
-
-```bash
-# Format code
-black backend/
-
-# Lint code
-flake8 backend/
-
-# Type checking
-mypy backend/
-```
-
-### Adding New Endpoints
-
-1. Create model in `models/`
-2. Create schema in `schemas/`
-3. Create router in `routers/`
-4. Register router in `main.py`
-5. Create migration: `alembic revision --autogenerate -m "Add model"`
-6. Apply migration: `alembic upgrade head`
-7. Write tests in `tests/`
-
-### Adding New Dependencies
-
-```bash
-# Install package
-pip install package-name
-
-# Update requirements
-pip freeze > requirements.txt
-```
-
-## Production Deployment
-
-### Database
-
-Migrate from SQLite to PostgreSQL:
-
-1. Install PostgreSQL driver:
-```bash
-pip install psycopg2-binary asyncpg
-```
-
-2. Update `DATABASE_URL` in `.env`:
-```env
-DATABASE_URL=postgresql://user:password@localhost/agrisense
-```
-
-3. Run migrations:
-```bash
-alembic upgrade head
-```
-
-### Security
-
-1. **Change SECRET_KEY** - Use strong random key
-2. **Enable HTTPS** - Use SSL/TLS certificates
-3. **Set CORS origins** - Restrict to your frontend domain
-4. **Add rate limiting** - Prevent abuse
-5. **Enable logging** - Monitor for security issues
-
-### Performance
-
-1. **Use PostgreSQL** - Better performance than SQLite
-2. **Add caching** - Redis for weather data, alerts
-3. **Optimize queries** - Add indexes, use eager loading
-4. **Use CDN** - For uploaded images
-5. **Enable compression** - Gzip responses
-
-### Monitoring
-
-1. **Add logging** - Use structured logging (loguru)
-2. **Add metrics** - Prometheus + Grafana
-3. **Add error tracking** - Sentry
-4. **Add health checks** - `/health` endpoint
-5. **Add uptime monitoring** - UptimeRobot, Pingdom
-
-## Troubleshooting
-
-### Database Issues
-
-```bash
-# Reset database (WARNING: deletes all data)
-rm agrisense.db
-alembic upgrade head
-python seed_data.py
-```
-
-### Migration Issues
-
-```bash
-# Reset migrations (WARNING: deletes migration history)
-rm -rf alembic/versions/*.py
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
-
-### Import Errors
-
-```bash
-# Ensure backend is in Python path
-export PYTHONPATH="${PYTHONPATH}:/path/to/project"
-```
-
-### Port Already in Use
-
-```bash
-# Kill process on port 5000
-lsof -ti:5000 | xargs kill -9
-```
-
-## Contributing
-
-1. Create feature branch
-2. Make changes
-3. Write tests
-4. Run tests: `pytest`
-5. Format code: `black backend/`
-6. Create pull request
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Support
-
-For issues and questions:
-- GitHub Issues: [Create issue]
-- Documentation: [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
-- Alembic Guide: [../.references/ALEMBIC_SETUP_GUIDE.md](../.references/ALEMBIC_SETUP_GUIDE.md)
+**Built with:** FastAPI, SQLAlchemy, PostgreSQL, Docker

@@ -1,90 +1,281 @@
-# AgriSense Scripts
+# 📜 Backend Scripts
 
-All utility scripts for AgriSense backend.
+## ⚠️ Important Notice
 
-## 🚀 Quick Start (Windows)
+**Most scripts in this folder are no longer needed!**
 
-**Double-click:** `START_HERE.bat`
+The backend now automatically handles database initialization on startup. Simply run:
 
-This will automatically:
-1. Start PostgreSQL + Adminer
-2. Create database tables
-3. Migrate your data from SQLite
-
-Then run:
 ```bash
-cd backend
+python run.py
+```
+
+The system will automatically:
+- ✅ Check database connection
+- ✅ Create missing tables
+- ✅ Seed test data (if `SEED_DATABASE=True`)
+
+---
+
+## 🗑️ Legacy Scripts (Not Needed)
+
+These scripts were used in the old setup but are **no longer required**:
+
+### ❌ Initialization Scripts
+- `init_postgres.py` - Replaced by automatic initialization in `db_init.py`
+- `setup_postgres_direct.sh` - No longer needed
+- `setup_postgres_direct.bat` - No longer needed
+- `quick_postgres_setup.sh` - No longer needed
+- `setup_postgres.bat` - No longer needed
+- `setup_postgres.ps1` - No longer needed
+- `START_HERE.bat` - No longer needed
+
+### ❌ Migration Scripts
+- `migrate_sqlite_to_postgres.py` - System uses PostgreSQL directly now
+
+### ❌ Seeding Scripts
+- `seed_data.py` - Seeding happens automatically via `SEED_DATABASE` flag
+
+---
+
+## ✅ Useful Scripts (Keep These)
+
+### **Database Management**
+
+#### `start-database.bat` (Windows)
+Start PostgreSQL and Adminer containers:
+```bash
+scripts\start-database.bat
+```
+
+#### `stop-database.bat` (Windows)
+Stop database containers:
+```bash
+scripts\stop-database.bat
+```
+
+#### `reset_postgres.bat` (Windows)
+Reset the database (drops all tables):
+```bash
+scripts\reset_postgres.bat
+```
+
+After reset, restart the backend to recreate tables:
+```bash
 python run.py
 ```
 
 ---
 
-## 📁 Available Scripts
+### **Backup & Restore** (Linux/Mac)
 
-### Setup Scripts
-- **`START_HERE.bat`** - Complete automated setup (Windows)
-- **`setup_postgres.ps1`** - PowerShell setup script
-- **`setup_postgres.bat`** - Batch setup script
-- **`start-database.bat`** - Start PostgreSQL + Adminer only
-- **`stop-database.bat`** - Stop database services
+#### `backup.sh`
+Create a database backup:
+```bash
+bash scripts/backup.sh
+```
 
-### Database Scripts
-- **`migrate_sqlite_to_postgres.py`** - Migrate data from SQLite to PostgreSQL
-- **`seed_data.py`** - Seed database with test data
-- **`backup.sh`** - Backup database (Linux/Mac)
-- **`restore.sh`** - Restore database (Linux/Mac)
-- **`rollback.sh`** - Rollback migrations (Linux/Mac)
+Creates timestamped backup in `backups/` directory.
 
-### Deployment Scripts
-- **`deploy.sh`** - Deploy to production (Linux/Mac)
-- **`quick_postgres_setup.sh`** - Quick PostgreSQL setup (Linux/Mac)
+#### `restore.sh`
+Restore from a backup:
+```bash
+bash scripts/restore.sh backups/agrisense_backup_YYYYMMDD_HHMMSS.sql.gz
+```
+
+#### `rollback.sh`
+Rollback Alembic migrations:
+```bash
+bash scripts/rollback.sh 1  # Rollback 1 migration
+```
+
+---
+
+### **Deployment**
+
+#### `deploy.sh` (Linux/Mac)
+Production deployment script:
+```bash
+bash scripts/deploy.sh
+```
+
+This script:
+- Pulls latest code
+- Rebuilds containers
+- Runs migrations
+- Restarts services
 
 ---
 
 ## 🎯 Common Tasks
 
-### First Time Setup
+### First-Time Setup
+
+```bash
+# 1. Start PostgreSQL
+docker-compose up -d postgres adminer
+
+# 2. Configure environment
+cp .env.example .env
+
+# 3. Start backend (automatic initialization)
+python run.py
+```
+
+### Reset Database
+
 ```bash
 # Windows
-START_HERE.bat
+scripts\reset_postgres.bat
+python run.py
 
 # Linux/Mac
-bash quick_postgres_setup.sh
+docker exec -i agrisense-postgres psql -U agrisense_user -d agrisense \
+  -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+python run.py
 ```
 
-### Start Database Only
-```bash
-# Windows
-start-database.bat
+### Backup Database
 
+```bash
 # Linux/Mac
-docker compose up postgres adminer -d
+bash scripts/backup.sh
+
+# Windows (manual)
+docker exec agrisense-postgres pg_dump -U agrisense_user agrisense > backup.sql
 ```
 
-### Migrate Data from SQLite
-```bash
-python migrate_sqlite_to_postgres.py
-```
+### View Database
 
-### Seed Test Data
-```bash
-python seed_data.py
-```
+Open Adminer: http://localhost:8080
+- System: `PostgreSQL`
+- Server: `postgres`
+- Username: `agrisense_user`
+- Password: `changeme`
+- Database: `agrisense`
 
 ---
 
-## 🌐 Access Points
+## 🔄 Migration from Old Setup
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Backend API | http://localhost:8000 | - |
-| API Docs | http://localhost:8000/docs | - |
-| Adminer | http://localhost:8080 | postgres / agrisense_user / changeme / agrisense |
+If you were using the old scripts:
+
+### Old Way:
+```bash
+bash scripts/setup_postgres_direct.sh
+python scripts/init_postgres.py
+python scripts/seed_data.py
+```
+
+### New Way:
+```bash
+# Just set SEED_DATABASE=True in .env
+python run.py
+```
+
+That's it! Everything happens automatically.
 
 ---
 
-## 📝 Notes
+## 📝 Script Cleanup Recommendations
 
-- All scripts assume you're running from the `backend/scripts/` directory
-- Make sure Docker Desktop is running before executing setup scripts
-- Your SQLite database (`agrisense.db`) is kept as a backup after migration
+You can safely delete these legacy scripts:
+
+```bash
+cd backend/scripts
+rm -f init_postgres.py
+rm -f setup_postgres_direct.sh
+rm -f setup_postgres_direct.bat
+rm -f quick_postgres_setup.sh
+rm -f setup_postgres.bat
+rm -f setup_postgres.ps1
+rm -f START_HERE.bat
+rm -f migrate_sqlite_to_postgres.py
+rm -f seed_data.py
+```
+
+**Keep these:**
+- `start-database.bat` / `stop-database.bat` (Windows)
+- `reset_postgres.bat` (Windows)
+- `backup.sh` / `restore.sh` / `rollback.sh` (Linux/Mac)
+- `deploy.sh` (Linux/Mac)
+- `README.md` (this file)
+- `FIX_MIGRATION.md` (reference)
+
+---
+
+## 🎓 Understanding the New System
+
+### Automatic Initialization
+
+The backend uses a `lifespan` event handler in `main.py`:
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs on startup
+    from db_init import initialize_database
+    initialize_database()
+    
+    yield
+    
+    # Runs on shutdown
+    # Cleanup code here
+```
+
+### Database Initialization Flow
+
+1. **Check Connection** - Verify PostgreSQL is accessible
+2. **Compare Schema** - Check existing tables vs. models
+3. **Create Missing Tables** - Add any missing tables
+4. **Seed Data** (optional) - If `SEED_DATABASE=True` and database is empty
+
+### Benefits
+
+- ✅ No manual scripts to run
+- ✅ Automatic schema updates
+- ✅ Consistent across environments
+- ✅ Simpler deployment
+- ✅ Less room for error
+
+---
+
+## 🔧 Troubleshooting
+
+### "Database already has data"
+
+This is normal! The system detects existing data and skips seeding.
+
+To force re-seed:
+1. Reset database: `scripts\reset_postgres.bat`
+2. Restart backend: `python run.py`
+
+### "Cannot connect to database"
+
+Check if PostgreSQL is running:
+```bash
+docker ps
+```
+
+Start it:
+```bash
+docker-compose up -d postgres
+```
+
+### "Tables already exist"
+
+This is expected behavior. The system only creates missing tables.
+
+---
+
+## 📚 Documentation
+
+- **Main README:** `/backend/README.md`
+- **API Docs:** http://localhost:5000/docs
+- **Database Schema:** See `/backend/models/`
+
+---
+
+**Last Updated:** January 2025
+
+**Note:** This folder contains legacy scripts for reference. Most functionality is now built into the backend startup process.
