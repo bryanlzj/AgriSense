@@ -31,11 +31,12 @@ from models.alert import Alert
 from utils.password import get_password_hash
 from utils.security import create_access_token
 
-# Use test PostgreSQL database for testing
-# Note: You can also use a separate test database or Docker container
+# Use PostgreSQL for testing - defaults to main agrisense database
+# Set TEST_DATABASE_URL environment variable to override
+# Password matches root .env: agrisense_dev_password_123
 SQLALCHEMY_TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://agrisense_user:changeme@localhost:5432/agrisense_test"
+    "postgresql://agrisense_user:agrisense_dev_password_123@localhost:5432/agrisense"
 )
 
 # Create test engine
@@ -50,27 +51,36 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="function")
 def db() -> Generator[Session, None, None]:
     """
-    Create a fresh database for each test.
-    
+    Provide a database session for each test with transaction rollback.
+
     This fixture:
-    1. Creates all tables
-    2. Yields a database session
-    3. Drops all tables after the test
-    
-    Scope: function (new database for each test)
+    1. Ensures tables exist (creates if missing)
+    2. Starts a transaction
+    3. Yields a database session
+    4. Rolls back the transaction (test data is discarded)
+
+    Benefits:
+    - Existing tables and data are preserved
+    - Each test is isolated (changes rolled back)
+    - Fast (no drop/create overhead)
     """
-    # Create all tables
+    # Ensure tables exist (won't recreate if they already exist)
     Base.metadata.create_all(bind=engine)
-    
-    # Create a new session
-    db_session = TestingSessionLocal()
-    
+
+    # Start a connection and transaction
+    connection = engine.connect()
+    transaction = connection.begin()
+
+    # Create session bound to this connection
+    db_session = TestingSessionLocal(bind=connection)
+
     try:
         yield db_session
     finally:
         db_session.close()
-        # Drop all tables
-        Base.metadata.drop_all(bind=engine)
+        # Rollback transaction - all test changes are discarded
+        transaction.rollback()
+        connection.close()
 
 
 @pytest.fixture(scope="function")
@@ -106,19 +116,29 @@ def client(db: Session) -> Generator[TestClient, None, None]:
 def test_user(db: Session) -> User:
     """
     Create a test user in the database.
-    
+
     Returns:
         User object with:
         - username: "testuser"
         - password: "testpassword123" (hashed)
-    
+        - full_name: "Test User"
+        - farm_location_name: "Kedah"
+        - farm_location_lat: 6.1184
+        - farm_location_lng: 100.3685
+        - crop_type: "rice"
+
     Usage:
         def test_example(test_user):
             assert test_user.username == "testuser"
     """
     user = User(
         username="testuser",
-        hashed_password=get_password_hash("testpassword123")
+        hashed_password=get_password_hash("testpassword123"),
+        full_name="Test User",
+        farm_location_name="Kedah",
+        farm_location_lat=6.1184,
+        farm_location_lng=100.3685,
+        crop_type="rice"
     )
     db.add(user)
     db.commit()
@@ -208,24 +228,61 @@ def test_pest_detection(db: Session, test_user: User) -> PestDetection:
 def test_alert(db: Session, test_user: User) -> Alert:
     """
     Create sample alert for testing.
-    
+
     Returns:
         Alert object with test data
     """
     from models.alert import AlertType, AlertSeverity
-    
+
     alert = Alert(
         user_id=test_user.id,
         alert_type=AlertType.PEST_RISK,
         severity=AlertSeverity.MEDIUM,
         title="High Temperature Alert",
         message="Temperature exceeds 32°C",
-        is_read=False
+        is_read=False,
+        is_acknowledged=False,
+        recommendations="Increase irrigation, provide shade for crops"
     )
     db.add(alert)
     db.commit()
     db.refresh(alert)
     return alert
+
+
+@pytest.fixture(scope="function")
+def test_pest_weather_correlation(db: Session):
+    """
+    Create sample pest-weather correlation for testing.
+
+    Returns:
+        PestWeatherCorrelation object with test data
+    """
+    from models.pest_weather_correlation import PestWeatherCorrelation
+
+    correlation = PestWeatherCorrelation(
+        pest_name="Rice Stem Borer",
+        crop_type="rice",
+        weather_conditions={
+            "temperature_min": 25,
+            "temperature_max": 35,
+            "humidity_min": 70,
+            "humidity_max": 95,
+            "recent_rain": True
+        },
+        risk_level="high",
+        risk_message="Warm, humid conditions following recent rain increase stem borer activity.",
+        prevention_tips=[
+            "Monitor stems for entry holes",
+            "Apply biological control (Trichogramma)",
+            "Avoid excessive nitrogen fertilization"
+        ],
+        source="MARDI Research"
+    )
+    db.add(correlation)
+    db.commit()
+    db.refresh(correlation)
+    return correlation
 
 
 # Environment variable fixtures

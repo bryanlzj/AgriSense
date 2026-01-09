@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Server Configuration
     # ===================================
     host: str = Field(default="0.0.0.0", env="HOST")
-    port: int = Field(default=5000, env="PORT")
+    port: int = Field(default=8000, env="PORT")
     
     # ===================================
     # Database Configuration (PostgreSQL Only)
@@ -47,9 +47,21 @@ class Settings(BaseSettings):
         env="SECRET_KEY"
     )
     algorithm: str = Field(default="HS256", env="ALGORITHM")
-    access_token_expire_days: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_DAYS")
+    access_token_expire_days: int = Field(default=7, env="ACCESS_TOKEN_EXPIRE_DAYS")
     bcrypt_rounds: int = Field(default=12, env="BCRYPT_ROUNDS")
     
+    # ===================================
+    # AI Service (OpenRouter)
+    # ===================================
+    openrouter_api_key: str = Field(
+        default="",
+        env="OPENROUTER_API_KEY"
+    )
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        env="OPENROUTER_BASE_URL"
+    )
+
     # ===================================
     # Weather API (OpenWeatherMap)
     # ===================================

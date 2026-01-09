@@ -46,7 +46,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        # Default: 30 days (simplified for student project)
+        # Default: 7 days (PRD v2)
         expire = datetime.utcnow() + timedelta(days=settings.access_token_expire_days)
     
     # Add expiration claim

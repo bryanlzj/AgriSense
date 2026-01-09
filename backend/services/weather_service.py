@@ -5,16 +5,23 @@ This module provides functions to:
 - Fetch current weather data
 - Fetch weather forecasts
 - Generate weather alerts based on conditions
-- Generate agricultural recommendations
+- Generate agricultural recommendations (static + AI-enhanced)
 
 Learning Notes:
 - Uses httpx for async HTTP requests
 - Implements error handling for API failures
 - Caches API responses to reduce API calls
 - Generates mock alerts and recommendations for student project
+- Can optionally use AI service for enhanced recommendations
+
+PRD v2 Integration:
+- Weather ML model outputs weather conditions (not recommendations)
+- AI API (OpenRouter) generates farming recommendations
+- Static recommendations serve as fallback when AI unavailable
 """
 
 import httpx
+import logging
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta
 import os
@@ -41,6 +48,9 @@ OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5"
 # Cache configuration (simple in-memory cache)
 _weather_cache = {}
 CACHE_DURATION = timedelta(minutes=10)  # Cache for 10 minutes
+
+# Logger
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -575,3 +585,171 @@ async def get_weather_summary(
         recommendations=recommendations,
         updated_at=datetime.now()
     )
+
+
+# ============================================================================
+# AI-ENHANCED RECOMMENDATIONS (PRD v2)
+# ============================================================================
+
+async def get_ai_enhanced_weather_recommendations(
+    alerts: List[WeatherAlert],
+    crop_type: str,
+    location_name: Optional[str] = None
+) -> List[dict]:
+    """
+    Enhance weather alerts with AI-generated recommendations.
+
+    This function takes weather alerts and calls the AI service to generate
+    context-aware farming recommendations for each alert type.
+
+    Args:
+        alerts: List of weather alerts from generate_weather_alerts()
+        crop_type: User's crop type (rice, vegetables, etc.)
+        location_name: Farm location name
+
+    Returns:
+        List[dict]: Enhanced alerts with AI recommendations
+    """
+    from services.ai_service import get_weather_recommendations, is_ai_available
+
+    enhanced_alerts = []
+
+    for alert in alerts:
+        # Prepare conditions dict for AI
+        conditions = {
+            "alert_type": alert.alert_type,
+            "severity": alert.severity,
+            "description": alert.description
+        }
+
+        # Determine alert type category
+        alert_type_lower = alert.alert_type.lower()
+        if "rain" in alert_type_lower:
+            ai_alert_type = "heavy_rain"
+        elif "wind" in alert_type_lower:
+            ai_alert_type = "strong_wind"
+        elif "temperature" in alert_type_lower or "heat" in alert_type_lower:
+            ai_alert_type = "high_temperature"
+        else:
+            ai_alert_type = alert_type_lower.replace(" ", "_")
+
+        # Get AI recommendations if available
+        if is_ai_available():
+            try:
+                ai_recs = await get_weather_recommendations(
+                    alert_type=ai_alert_type,
+                    conditions=conditions,
+                    crop_type=crop_type,
+                    location=location_name
+                )
+                # Combine static and AI recommendations
+                combined_recommendations = list(alert.recommendations) if alert.recommendations else []
+                if ai_recs.get("immediate_actions"):
+                    combined_recommendations.extend(ai_recs["immediate_actions"])
+                if ai_recs.get("crop_protection"):
+                    combined_recommendations.extend(ai_recs["crop_protection"])
+
+                # Deduplicate recommendations
+                seen = set()
+                unique_recs = []
+                for rec in combined_recommendations:
+                    if rec.lower() not in seen:
+                        seen.add(rec.lower())
+                        unique_recs.append(rec)
+
+                enhanced_alert = {
+                    "alert_type": alert.alert_type,
+                    "severity": alert.severity,
+                    "title": alert.title,
+                    "description": alert.description,
+                    "start_time": alert.start_time.isoformat() if alert.start_time else None,
+                    "end_time": alert.end_time.isoformat() if alert.end_time else None,
+                    "recommendations": unique_recs[:8],  # Limit to 8 recommendations
+                    "ai_enhanced": True
+                }
+            except Exception as e:
+                logger.warning(f"Failed to get AI recommendations for {alert.alert_type}: {e}")
+                enhanced_alert = {
+                    "alert_type": alert.alert_type,
+                    "severity": alert.severity,
+                    "title": alert.title,
+                    "description": alert.description,
+                    "start_time": alert.start_time.isoformat() if alert.start_time else None,
+                    "end_time": alert.end_time.isoformat() if alert.end_time else None,
+                    "recommendations": alert.recommendations,
+                    "ai_enhanced": False
+                }
+        else:
+            # Use static recommendations
+            enhanced_alert = {
+                "alert_type": alert.alert_type,
+                "severity": alert.severity,
+                "title": alert.title,
+                "description": alert.description,
+                "start_time": alert.start_time.isoformat() if alert.start_time else None,
+                "end_time": alert.end_time.isoformat() if alert.end_time else None,
+                "recommendations": alert.recommendations,
+                "ai_enhanced": False
+            }
+
+        enhanced_alerts.append(enhanced_alert)
+
+    return enhanced_alerts
+
+
+async def get_weather_summary_with_ai(
+    latitude: float,
+    longitude: float,
+    location_name: Optional[str] = None,
+    crop_type: str = "rice"
+) -> WeatherSummaryResponse:
+    """
+    Get complete weather summary with AI-enhanced recommendations.
+
+    This is an enhanced version of get_weather_summary that includes
+    AI-generated recommendations when the AI service is available.
+
+    Args:
+        latitude: Latitude coordinate
+        longitude: Longitude coordinate
+        location_name: Optional location name
+        crop_type: User's crop type for context-aware recommendations
+
+    Returns:
+        WeatherSummaryResponse: Complete weather summary with AI recommendations
+    """
+    # Get base weather summary
+    summary = await get_weather_summary(latitude, longitude, location_name)
+
+    # Enhance alerts with AI recommendations
+    if summary.alerts:
+        enhanced_alerts = await get_ai_enhanced_weather_recommendations(
+            alerts=summary.alerts,
+            crop_type=crop_type,
+            location_name=location_name
+        )
+
+        # Update the alerts with enhanced versions (convert back to WeatherAlert)
+        enhanced_weather_alerts = []
+        for alert_dict in enhanced_alerts:
+            enhanced_weather_alerts.append(WeatherAlert(
+                alert_type=alert_dict["alert_type"],
+                severity=alert_dict["severity"],
+                title=alert_dict["title"],
+                description=alert_dict["description"],
+                start_time=datetime.fromisoformat(alert_dict["start_time"]) if alert_dict["start_time"] else None,
+                end_time=datetime.fromisoformat(alert_dict["end_time"]) if alert_dict["end_time"] else None,
+                recommendations=alert_dict["recommendations"]
+            ))
+
+        # Return updated summary with enhanced alerts
+        return WeatherSummaryResponse(
+            location=summary.location,
+            current=summary.current,
+            forecast=summary.forecast,
+            alerts=enhanced_weather_alerts,
+            recommendations=summary.recommendations,
+            updated_at=summary.updated_at
+        )
+
+    return summary

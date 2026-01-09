@@ -29,21 +29,22 @@ from database import Base
 
 class AlertType(str, Enum):
     """
-    Types of alerts in the system
-    
+    Types of alerts in the system (PRD v2)
+
     Weather Alerts (CORE FEATURE #1):
     - HEAVY_RAIN: Precipitation > 50mm forecast
     - EXTREME_HEAT: Temperature > 35°C
     - STORM_WARNING: Wind speed > 40 km/h
     - LOW_TEMPERATURE: Temperature < 15°C
-    
+
     Pest Alerts (CORE FEATURE #2):
-    - PEST_RISK: High confidence pest detection (>80%)
-    
+    - PEST_DETECTION: High confidence pest detection from image (>=70%)
+    - PEST_RISK_WARNING: Predicted pest risk based on weather-pest correlation
+
     Environmental Alerts:
     - LOW_SOIL_MOISTURE: Soil moisture < 40%
     - HIGH_HUMIDITY: Humidity > 85%
-    
+
     System Alerts:
     - SYSTEM: General system notifications
     """
@@ -52,14 +53,18 @@ class AlertType(str, Enum):
     EXTREME_HEAT = "extreme_heat"
     STORM_WARNING = "storm_warning"
     LOW_TEMPERATURE = "low_temperature"
-    
+
     # Pest Risk Management System (CORE FEATURE #2)
+    PEST_DETECTION = "pest_detection"      # From image upload (detected)
+    PEST_RISK_WARNING = "pest_risk_warning"  # From weather-pest correlation (predicted)
+
+    # Legacy - kept for backwards compatibility
     PEST_RISK = "pest_risk"
-    
+
     # Environmental Monitoring
     LOW_SOIL_MOISTURE = "low_soil_moisture"
     HIGH_HUMIDITY = "high_humidity"
-    
+
     # System
     SYSTEM = "system"
 
@@ -153,9 +158,17 @@ class Alert(Base):
         default=False,
         nullable=False,
         index=True,
+        comment="Whether user has seen this alert"
+    )
+
+    is_acknowledged = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+        index=True,
         comment="Whether user has acknowledged this alert"
     )
-    
+
     read_at = Column(
         DateTime(timezone=True),
         nullable=True,
@@ -228,6 +241,7 @@ class Alert(Base):
             "message": self.message,
             "recommendations": self.recommendations,
             "is_read": self.is_read,
+            "is_acknowledged": self.is_acknowledged,
             "read_at": self.read_at.isoformat() if self.read_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "metadata": self.alert_metadata,
@@ -433,7 +447,7 @@ def create_environmental_alert(
 ) -> Alert:
     """
     Helper function to create environmental monitoring alerts
-    
+
     Args:
         db: Database session
         user_id: User ID to receive alert
@@ -443,10 +457,10 @@ def create_environmental_alert(
         severity: Alert severity level
         recommendations: Actionable recommendations (optional)
         metadata: Additional data as JSON string (optional)
-        
+
     Returns:
         Alert: Created alert object
-        
+
     Usage:
         alert = create_environmental_alert(
             db,
@@ -467,6 +481,158 @@ def create_environmental_alert(
         message=message,
         recommendations=recommendations,
         alert_metadata=metadata
+    )
+    db.add(alert)
+    return alert
+
+
+def create_pest_risk_warning(
+    db,
+    user_id: int,
+    pest_name: str,
+    risk_level: str,
+    risk_message: str,
+    prevention_tips: list,
+    weather_conditions: dict,
+    severity: AlertSeverity = AlertSeverity.MEDIUM,
+    metadata: str = None
+) -> Alert:
+    """
+    Helper function to create pest risk warning alerts (PRD v2).
+
+    This is for PREDICTED pest risk based on weather-pest correlations,
+    NOT for actual pest detections from image uploads.
+
+    Args:
+        db: Database session
+        user_id: User ID to receive alert
+        pest_name: Name of pest with elevated risk
+        risk_level: Risk level (low, medium, high)
+        risk_message: Explanation of why conditions favor this pest
+        prevention_tips: List of prevention recommendations
+        weather_conditions: Current weather data that triggered the alert
+        severity: Alert severity level
+        metadata: Additional data as JSON string (optional)
+
+    Returns:
+        Alert: Created alert object
+
+    Usage:
+        alert = create_pest_risk_warning(
+            db,
+            user_id=1,
+            pest_name="Rice Stem Borer",
+            risk_level="high",
+            risk_message="Warm, humid conditions following recent rain increase stem borer activity.",
+            prevention_tips=["Monitor stems", "Apply biological control"],
+            weather_conditions={"temp": 28, "humidity": 85, "recent_rain": True},
+            severity=AlertSeverity.HIGH
+        )
+        db.commit()
+    """
+    import json
+
+    title = f"Pest Risk Warning: {pest_name}"
+    message = (
+        f"Weather conditions indicate elevated risk of {pest_name}. "
+        f"{risk_message}"
+    )
+
+    # Format recommendations as bullet points
+    recommendations = "\n".join([f"• {tip}" for tip in prevention_tips])
+
+    # Include weather conditions in metadata
+    alert_data = {
+        "pest_name": pest_name,
+        "risk_level": risk_level,
+        "weather_conditions": weather_conditions,
+        "source": "weather_pest_correlation"
+    }
+
+    alert = Alert(
+        user_id=user_id,
+        alert_type=AlertType.PEST_RISK_WARNING,
+        severity=severity,
+        title=title,
+        message=message,
+        recommendations=recommendations,
+        alert_metadata=json.dumps(alert_data) if not metadata else metadata
+    )
+    db.add(alert)
+    return alert
+
+
+def create_pest_detection_alert(
+    db,
+    user_id: int,
+    pest_name: str,
+    confidence: float,
+    danger_level: str,
+    recommendations: list,
+    detection_id: int,
+    severity: AlertSeverity = AlertSeverity.HIGH,
+    metadata: str = None
+) -> Alert:
+    """
+    Helper function to create pest detection alerts (PRD v2).
+
+    This is for ACTUAL pest detections from image uploads with >= 70% confidence.
+
+    Args:
+        db: Database session
+        user_id: User ID to receive alert
+        pest_name: Name of detected pest
+        confidence: Detection confidence (0-1)
+        danger_level: Danger level (low, medium, high)
+        recommendations: List of treatment recommendations
+        detection_id: ID of the pest detection record
+        severity: Alert severity level
+        metadata: Additional data as JSON string (optional)
+
+    Returns:
+        Alert: Created alert object
+
+    Usage:
+        alert = create_pest_detection_alert(
+            db,
+            user_id=1,
+            pest_name="Brown Planthopper",
+            confidence=0.87,
+            danger_level="high",
+            recommendations=["Drain fields", "Apply insecticide"],
+            detection_id=123,
+            severity=AlertSeverity.HIGH
+        )
+        db.commit()
+    """
+    import json
+
+    title = f"Pest Detected: {pest_name}"
+    message = (
+        f"{pest_name} detected with {confidence*100:.0f}% confidence. "
+        f"Danger level: {danger_level.upper()}. Immediate action recommended."
+    )
+
+    # Format recommendations as bullet points
+    recommendations_text = "\n".join([f"• {tip}" for tip in recommendations])
+
+    # Include detection info in metadata
+    alert_data = {
+        "pest_name": pest_name,
+        "confidence": confidence,
+        "danger_level": danger_level,
+        "detection_id": detection_id,
+        "source": "image_detection"
+    }
+
+    alert = Alert(
+        user_id=user_id,
+        alert_type=AlertType.PEST_DETECTION,
+        severity=severity,
+        title=title,
+        message=message,
+        recommendations=recommendations_text,
+        alert_metadata=json.dumps(alert_data) if not metadata else metadata
     )
     db.add(alert)
     return alert

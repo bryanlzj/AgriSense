@@ -204,7 +204,7 @@ class PestStatistics(BaseModel):
     most_common_pest: Optional[str] = Field(None, description="Most frequently detected pest")
     average_confidence: float = Field(..., description="Average confidence score")
     detections_by_pest: dict = Field(..., description="Count of detections per pest type")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -216,6 +216,276 @@ class PestStatistics(BaseModel):
                     "Fall Armyworm": 15,
                     "Aphids": 7,
                     "Whitefly": 3
+                }
+            }
+        }
+
+
+# ============================================================================
+# PRD v2: Enhanced Detection Response with Confidence Tiering
+# ============================================================================
+
+class DetectionStatus:
+    """Detection status constants based on confidence tiering (PRD v2)"""
+    DETECTED = "detected"      # >= 70% confidence
+    PARTIAL = "partial"        # 50-69% confidence
+    UNKNOWN = "unknown"        # < 50% confidence
+
+
+class DangerLevel:
+    """Danger level constants for pest severity"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+# Retry tips for failed detections (PRD v2 Section 5.3)
+RETRY_TIPS = {
+    1: "Image unclear. Please try again with better lighting and focus on the pest.",
+    2: "Still having trouble. Tips: Get closer, ensure pest is centered, avoid shadows.",
+    3: "Unable to identify. Would you like to report this pest for assistance?"
+}
+
+
+class EnhancedPestDetectionResponse(BaseModel):
+    """
+    Enhanced pest detection response with confidence tiering (PRD v2).
+
+    Confidence Tiering:
+    - >= 70%: Successful detection (status="detected")
+    - 50-69%: Partial match (status="partial")
+    - < 50%: Unknown (status="unknown")
+    """
+    # Detection identifiers
+    detection_id: Optional[int] = Field(None, description="Saved detection record ID (only if detected)")
+    image_url: str = Field(..., description="URL to uploaded image")
+
+    # Status and confidence
+    status: str = Field(..., description="Detection status: detected, partial, unknown")
+    confidence: float = Field(..., description="Confidence score (0-1)")
+    confidence_percent: int = Field(..., description="Confidence as percentage (0-100)")
+
+    # Pest information (if detected or partial)
+    pest_name: Optional[str] = Field(None, description="Name of detected pest")
+    scientific_name: Optional[str] = Field(None, description="Scientific name of pest")
+    description: Optional[str] = Field(None, description="Pest description")
+    danger_level: Optional[str] = Field(None, description="Danger level: low, medium, high")
+
+    # AI Recommendations (only for >= 70% confidence)
+    recommendations: Optional[List[str]] = Field(None, description="AI-generated treatment recommendations")
+
+    # Retry information
+    can_retry: bool = Field(..., description="Whether user can retry detection")
+    retry_tip: Optional[str] = Field(None, description="Tip for improving next detection attempt")
+    offer_report: bool = Field(False, description="Whether to offer manual report option")
+
+    # Analysis metadata
+    analysis_timestamp: datetime = Field(..., description="When analysis was performed")
+    all_detections: Optional[List[PestDetectionResult]] = Field(None, description="All detected pests (for debugging)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "detection_id": 1,
+                "image_url": "http://localhost:8000/uploads/abc123.jpg",
+                "status": "detected",
+                "confidence": 0.87,
+                "confidence_percent": 87,
+                "pest_name": "Rice Stem Borer",
+                "scientific_name": "Scirpophaga incertulas",
+                "description": "A major pest of rice that bores into stems",
+                "danger_level": "high",
+                "recommendations": [
+                    "Monitor rice stems for entry holes and frass",
+                    "Apply Trichogramma biological control",
+                    "Remove and destroy infected stems"
+                ],
+                "can_retry": False,
+                "retry_tip": None,
+                "offer_report": False,
+                "analysis_timestamp": "2025-01-04T10:30:00",
+                "all_detections": None
+            }
+        }
+
+
+class PartialDetectionResponse(BaseModel):
+    """
+    Response for partial detection (50-69% confidence).
+    Suggests possible pest but recommends retry or report.
+    """
+    image_url: str
+    status: str = "partial"
+    confidence: float
+    confidence_percent: int
+    possible_pest: str
+    message: str = "Detection confidence is low. This might be the pest, but we're not certain."
+    can_retry: bool = True
+    retry_tip: str
+    offer_report: bool = False
+    analysis_timestamp: datetime
+
+
+class UnknownDetectionResponse(BaseModel):
+    """
+    Response for unknown detection (< 50% confidence).
+    Prompts retry with tips, offers manual report after 3 attempts.
+    """
+    image_url: str
+    status: str = "unknown"
+    confidence: float
+    confidence_percent: int
+    message: str = "Unable to identify pest in image."
+    can_retry: bool = True
+    retry_tip: str
+    offer_report: bool  # True after 3 attempts
+    analysis_timestamp: datetime
+
+
+# ============================================================================
+# PRD v2: Pest Risk Prediction Schemas (Section 5.4)
+# ============================================================================
+
+class WeatherSummarySchema(BaseModel):
+    """Current weather conditions used for risk assessment."""
+    temperature: float = Field(..., description="Current temperature in Celsius")
+    humidity: float = Field(..., description="Current humidity percentage")
+    weather_main: str = Field(..., description="Main weather condition")
+    weather_description: str = Field(..., description="Detailed weather description")
+    recent_rain: bool = Field(False, description="Whether there was recent rainfall")
+    location_name: Optional[str] = Field(None, description="Location name")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "temperature": 28.5,
+                "humidity": 85,
+                "weather_main": "Clouds",
+                "weather_description": "scattered clouds",
+                "recent_rain": True,
+                "location_name": "Kedah"
+            }
+        }
+
+
+class RiskLevelInfoSchema(BaseModel):
+    """Risk level information for display."""
+    label: str = Field(..., description="Human-readable risk label")
+    color: str = Field(..., description="Color code for UI display")
+    description: str = Field(..., description="Description of risk level")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "label": "Medium",
+                "color": "yellow",
+                "description": "Moderate risk - increase monitoring frequency"
+            }
+        }
+
+
+class ActiveRiskSchema(BaseModel):
+    """Individual pest risk that matches current conditions."""
+    pest_name: str = Field(..., description="Common name of the pest")
+    scientific_name: Optional[str] = Field(None, description="Scientific name")
+    risk_level: str = Field(..., description="Risk level: low, medium, high")
+    risk_message: str = Field(..., description="Description of risk and pest behavior")
+    prevention_tips: List[str] = Field(..., description="Prevention recommendations")
+    data_source: Optional[str] = Field(None, description="Source of correlation data")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "pest_name": "Brown Planthopper",
+                "scientific_name": "Nilaparvata lugens",
+                "risk_level": "high",
+                "risk_message": "High humidity and warm temperatures favor Brown Planthopper population explosion.",
+                "prevention_tips": [
+                    "Avoid excessive nitrogen fertilizer",
+                    "Maintain proper plant spacing",
+                    "Drain fields periodically",
+                    "Use resistant rice varieties"
+                ],
+                "data_source": "MARDI Rice Pest Guidelines"
+            }
+        }
+
+
+class PestRiskAssessmentResponse(BaseModel):
+    """
+    Complete pest risk assessment response.
+
+    Returns risk assessment based on current weather conditions
+    checked against pest-weather correlations for user's crop type.
+    """
+    status: str = Field(..., description="Assessment status: success or error")
+    weather_summary: Optional[WeatherSummarySchema] = Field(None, description="Current weather conditions")
+    overall_risk: str = Field(..., description="Overall risk level: none, low, medium, high")
+    overall_risk_info: RiskLevelInfoSchema = Field(..., description="Risk level details for display")
+    active_risks: List[ActiveRiskSchema] = Field(default_factory=list, description="List of active pest risks")
+    total_risks: int = Field(0, description="Total number of active risks")
+    crop_type: str = Field(..., description="User's crop type")
+    correlations_checked: int = Field(0, description="Number of correlations checked")
+    assessed_at: str = Field(..., description="ISO timestamp of assessment")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "success",
+                "weather_summary": {
+                    "temperature": 28.5,
+                    "humidity": 85,
+                    "weather_main": "Clouds",
+                    "weather_description": "scattered clouds",
+                    "recent_rain": True,
+                    "location_name": "Kedah"
+                },
+                "overall_risk": "high",
+                "overall_risk_info": {
+                    "label": "High",
+                    "color": "red",
+                    "description": "High risk - take preventive action immediately"
+                },
+                "active_risks": [
+                    {
+                        "pest_name": "Brown Planthopper",
+                        "scientific_name": "Nilaparvata lugens",
+                        "risk_level": "high",
+                        "risk_message": "High humidity favors BPH population explosion.",
+                        "prevention_tips": ["Avoid excessive nitrogen", "Drain fields"],
+                        "data_source": "MARDI Rice Pest Guidelines"
+                    }
+                ],
+                "total_risks": 1,
+                "crop_type": "rice",
+                "correlations_checked": 8,
+                "assessed_at": "2025-01-09T10:30:00"
+            }
+        }
+
+
+class PestRiskSummaryResponse(BaseModel):
+    """
+    Simplified pest risk summary for dashboard display.
+    """
+    status: str = Field(..., description="Risk status: safe, caution, warning, critical")
+    headline: str = Field(..., description="Short headline for display")
+    description: str = Field(..., description="Longer description of current risk")
+    action_required: bool = Field(False, description="Whether immediate action is needed")
+    top_risk: Optional[ActiveRiskSchema] = Field(None, description="Top risk for quick view")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "warning",
+                "headline": "2 Pest Risk Warnings",
+                "description": "Weather conditions favor 2 pests. Increase monitoring frequency.",
+                "action_required": True,
+                "top_risk": {
+                    "pest_name": "Brown Planthopper",
+                    "risk_level": "high",
+                    "risk_message": "High humidity favors population growth.",
+                    "prevention_tips": ["Drain fields", "Use resistant varieties"]
                 }
             }
         }

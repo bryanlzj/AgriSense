@@ -10,6 +10,9 @@ from .user import User
 from .sensor_reading import SensorReading
 from .pest_detection import PestDetection, SeverityLevel
 from .alert import Alert, AlertType, AlertSeverity
+from .pest_report import PestReport, ObservedSeverity, ReportStatus
+from .pest_weather_correlation import PestWeatherCorrelation
+from .weather_cache import WeatherCache
 
 # Export all models
 __all__ = [
@@ -20,4 +23,9 @@ __all__ = [
     "Alert",
     "AlertType",
     "AlertSeverity",
+    "PestReport",
+    "ObservedSeverity",
+    "ReportStatus",
+    "PestWeatherCorrelation",
+    "WeatherCache",
 ]

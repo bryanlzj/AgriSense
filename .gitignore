@@ -6,6 +6,8 @@
 *~
 .DS_Store
 CLAUDE.MD
+.claude
+.pytest_cache
 
 # Environment files
 .env

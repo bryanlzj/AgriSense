@@ -10,12 +10,16 @@ Learning Notes:
 - Indexes improve query performance on frequently searched columns
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Index
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Index, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 
 from database import Base
+
+
+# Valid crop types for validation
+VALID_CROP_TYPES = ["rice", "vegetables", "corn", "oil_palm", "rubber"]
 
 
 class User(Base):
@@ -48,11 +52,48 @@ class User(Base):
     )
     
     hashed_password = Column(
-        String(255), 
+        String(255),
         nullable=False,
         comment="Bcrypt hashed password (never store plain passwords!)"
     )
-    
+
+    # Profile Fields (PRD v2)
+    full_name = Column(
+        String(100),
+        nullable=True,
+        comment="User's full name"
+    )
+
+    # Farm Location Fields
+    farm_location_name = Column(
+        String(100),
+        nullable=False,
+        default="Kuala Lumpur",
+        comment="Farm location name (e.g., state/region)"
+    )
+
+    farm_location_lat = Column(
+        Float,
+        nullable=False,
+        default=3.1390,
+        comment="Farm latitude coordinate"
+    )
+
+    farm_location_lng = Column(
+        Float,
+        nullable=False,
+        default=101.6869,
+        comment="Farm longitude coordinate"
+    )
+
+    # Crop Type
+    crop_type = Column(
+        String(50),
+        nullable=False,
+        default="rice",
+        comment="Primary crop type (rice, vegetables, corn, oil_palm, rubber)"
+    )
+
     # Account Status
     is_active = Column(
         Boolean, 
@@ -103,7 +144,15 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
-    
+
+    # One user can have many pest reports (manual reports for unidentified pests)
+    pest_reports = relationship(
+        "PestReport",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+
     # Indexes for performance
     # Composite index for common query patterns
     __table_args__ = (
@@ -118,12 +167,17 @@ class User(Base):
     def to_dict(self):
         """
         Convert user object to dictionary (for API responses)
-        
+
         Note: Never include hashed_password in API responses!
         """
         return {
             "id": self.id,
             "username": self.username,
+            "full_name": self.full_name,
+            "farm_location_name": self.farm_location_name,
+            "farm_location_lat": self.farm_location_lat,
+            "farm_location_lng": self.farm_location_lng,
+            "crop_type": self.crop_type,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None

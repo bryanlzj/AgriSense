@@ -24,27 +24,53 @@ from models.user import User
 
 class TestUserRegistration:
     """Test user registration endpoint."""
-    
+
     def test_register_new_user(self, client: TestClient, db: Session):
-        """Test successful user registration."""
+        """Test successful user registration with all fields."""
         response = client.post(
             "/api/v1/auth/register",
             json={
                 "username": "newuser",
-                "password": "password123"
+                "password": "password123",
+                "full_name": "New Test User",
+                "farm_location_name": "Kedah",
+                "farm_location_lat": 6.1184,
+                "farm_location_lng": 100.3685,
+                "crop_type": "rice"
             }
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["username"] == "newuser"
+        assert data["full_name"] == "New Test User"
+        assert data["farm_location_name"] == "Kedah"
+        assert data["crop_type"] == "rice"
         assert "id" in data
         assert "hashed_password" not in data  # Should not expose password
-        
+
         # Verify user exists in database
         user = db.query(User).filter(User.username == "newuser").first()
         assert user is not None
-    
+        assert user.farm_location_lat == 6.1184
+
+    def test_register_new_user_minimal(self, client: TestClient, db: Session):
+        """Test registration with only required fields (uses defaults)."""
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "minimaluser",
+                "password": "password123"
+            }
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["username"] == "minimaluser"
+        # Defaults should be applied
+        assert data["farm_location_name"] == "Kuala Lumpur"
+        assert data["crop_type"] == "rice"
+
     def test_register_duplicate_username(self, client: TestClient, test_user: User):
         """Test registration with existing username fails."""
         response = client.post(
@@ -54,10 +80,22 @@ class TestUserRegistration:
                 "password": "password123"
             }
         )
-        
+
         assert response.status_code == 400
         assert "already registered" in response.json()["detail"].lower()
-    
+
+    def test_register_invalid_crop_type(self, client: TestClient):
+        """Test registration with invalid crop type fails."""
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "badcrop",
+                "password": "password123",
+                "crop_type": "invalid_crop"
+            }
+        )
+        assert response.status_code == 422
+
     def test_register_invalid_data(self, client: TestClient):
         """Test registration with invalid data fails."""
         # Missing required fields
@@ -66,13 +104,23 @@ class TestUserRegistration:
             json={"username": "newuser"}
         )
         assert response.status_code == 422  # Validation error
-        
+
         # Empty username
         response = client.post(
             "/api/v1/auth/register",
             json={
                 "username": "",
                 "password": "password123"
+            }
+        )
+        assert response.status_code == 422
+
+        # Short password
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "shortpass",
+                "password": "123"  # Less than 6 chars
             }
         )
         assert response.status_code == 422

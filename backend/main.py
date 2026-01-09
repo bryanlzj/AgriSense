@@ -34,6 +34,8 @@ from routers.sensor import router as sensor_router
 from routers.pest import router as pest_router
 from routers.weather import router as weather_router
 from routers.alert import router as alert_router
+from routers.chat import router as chat_router
+from routers.dashboard import router as dashboard_router
 # Additional routers will be imported as they are created:
 
 
@@ -41,21 +43,35 @@ from routers.alert import router as alert_router
 async def lifespan(app: FastAPI):
     """
     Lifespan event handler for startup and shutdown
-    
+
     Startup:
     - Initialize database (check schema, create tables, seed data)
-    
+    - Start background job scheduler
+
     Shutdown:
+    - Stop background job scheduler
     - Clean up resources
     """
     # Startup
     from db_init import initialize_database
+    from jobs.scheduler import start_scheduler, stop_scheduler
+
     initialize_database()
-    
+
+    # Start background jobs (weather check, pest risk check)
+    # Comment out if you want to disable background jobs
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"Warning: Failed to start scheduler: {e}")
+
     yield
-    
+
     # Shutdown
-    # Add cleanup code here if needed
+    try:
+        stop_scheduler()
+    except Exception as e:
+        print(f"Warning: Error stopping scheduler: {e}")
 
 
 # Create FastAPI application
@@ -89,6 +105,8 @@ app.include_router(sensor_router, prefix="/api/v1")
 app.include_router(pest_router, prefix="/api/v1")
 app.include_router(weather_router, prefix="/api/v1")
 app.include_router(alert_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")
+app.include_router(dashboard_router, prefix="/api/v1")
 # Additional routers will be registered as they are created:
 
 

@@ -21,10 +21,26 @@ from enum import Enum
 
 
 class AlertType(str, Enum):
-    """Alert type enumeration"""
+    """Alert type enumeration (PRD v2)"""
+    # Weather alerts
     WEATHER = "weather"
-    PEST = "pest"
+    HEAVY_RAIN = "heavy_rain"
+    EXTREME_HEAT = "extreme_heat"
+    STORM_WARNING = "storm_warning"
+    LOW_TEMPERATURE = "low_temperature"
+
+    # Pest alerts (PRD v2 differentiation)
+    PEST = "pest"                          # Legacy
+    PEST_DETECTION = "pest_detection"      # From image upload (detected)
+    PEST_RISK_WARNING = "pest_risk_warning"  # From weather-pest correlation (predicted)
+    PEST_RISK = "pest_risk"                # Legacy
+
+    # Environmental
     SENSOR = "sensor"
+    LOW_SOIL_MOISTURE = "low_soil_moisture"
+    HIGH_HUMIDITY = "high_humidity"
+
+    # System
     SYSTEM = "system"
 
 
@@ -77,19 +93,21 @@ class AlertUpdate(BaseModel):
 
 
 class AlertResponse(BaseModel):
-    """Schema for alert response"""
+    """Schema for alert response (PRD v2)"""
     id: int
     user_id: int
     alert_type: str  # Changed from 'type' to 'alert_type' to match model
     severity: str  # Changed to str to accept model enum values
     title: str
     message: str
+    recommendations: Optional[str] = None  # PRD v2: Include recommendations in response
     source_id: Optional[int] = None
     source_type: Optional[str] = None
     alert_metadata: Optional[dict] = None  # Changed from 'metadata' to 'alert_metadata'
     is_read: bool
     is_acknowledged: bool = False
     created_at: datetime
+    expires_at: Optional[datetime] = None  # PRD v2: Include expiration time
 
     class Config:
         from_attributes = True
@@ -97,19 +115,23 @@ class AlertResponse(BaseModel):
             "example": {
                 "id": 1,
                 "user_id": 1,
-                "type": "sensor",
-                "severity": "warning",
-                "title": "High Temperature Alert",
-                "message": "Temperature has exceeded 32°C. Consider irrigation.",
-                "source_id": 123,
-                "source_type": "sensor_data",
-                "metadata": {
-                    "temperature": 33.5,
-                    "threshold": 32.0
+                "alert_type": "pest_risk_warning",
+                "severity": "high",
+                "title": "Pest Risk Warning: Rice Stem Borer",
+                "message": "Weather conditions indicate elevated risk of Rice Stem Borer.",
+                "recommendations": "• Monitor rice stems for entry holes\n• Apply biological control\n• Remove infected stems",
+                "source_id": None,
+                "source_type": None,
+                "alert_metadata": {
+                    "pest_name": "Rice Stem Borer",
+                    "risk_level": "high",
+                    "weather_conditions": {"temp": 28, "humidity": 85},
+                    "source": "weather_pest_correlation"
                 },
                 "is_read": False,
                 "is_acknowledged": False,
-                "created_at": "2025-01-04T10:30:00"
+                "created_at": "2025-01-04T10:30:00",
+                "expires_at": None
             }
         }
 

@@ -318,9 +318,12 @@ def get_alert_statistics(
         Alert.user_id == current_user.id,
         Alert.is_read == False
     ).scalar()
-    
-    # Unread alerts (no is_acknowledged field, using is_read instead)
-    # Note: The Alert model doesn't have is_acknowledged, only is_read
+
+    # Unacknowledged alerts
+    unacknowledged_alerts = db.query(func.count(Alert.id)).filter(
+        Alert.user_id == current_user.id,
+        Alert.is_acknowledged == False
+    ).scalar()
     
     # Alerts by type
     alerts_by_type = {}
@@ -351,7 +354,7 @@ def get_alert_statistics(
     return AlertStatistics(
         total_alerts=total_alerts,
         unread_alerts=unread_alerts,
-        unacknowledged_alerts=unread_alerts,  # Using unread_alerts since is_acknowledged doesn't exist
+        unacknowledged_alerts=unacknowledged_alerts,
         alerts_by_type=alerts_by_type,
         alerts_by_severity=alerts_by_severity,
         recent_critical_alerts=recent_critical_alerts

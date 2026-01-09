@@ -20,6 +20,8 @@ from models.user import User
 from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from models.alert import Alert
+from models.pest_weather_correlation import PestWeatherCorrelation
+from models.weather_cache import WeatherCache
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -143,43 +145,47 @@ def seed_test_data():
         
         logger.info("Seeding test data...")
         
-        # Create test users
+        # Create test users (PRD v2 format with Malaysian locations)
         users_data = [
             {
                 "username": "admin",
-                "email": "admin@agrisense.com",
                 "password": "admin123",
                 "full_name": "Admin User",
-                "phone_number": "+60123456789",
-                "farm_location": "Kuala Lumpur",
-                "farm_size": 10.0,
-                "crop_types": "Rice, Vegetables",
-                "is_active": True,
-                "is_admin": True
+                "farm_location_name": "Kuala Lumpur",
+                "farm_location_lat": 3.1390,
+                "farm_location_lng": 101.6869,
+                "crop_type": "rice",
+                "is_active": True
             },
             {
-                "username": "farmer1",
-                "email": "farmer1@agrisense.com",
+                "username": "ahmad",
                 "password": "password123",
-                "full_name": "John Farmer",
-                "phone_number": "+60123456790",
-                "farm_location": "Penang",
-                "farm_size": 5.5,
-                "crop_types": "Rice",
-                "is_active": True,
-                "is_admin": False
+                "full_name": "Ahmad bin Ibrahim",
+                "farm_location_name": "Kedah",
+                "farm_location_lat": 6.1184,
+                "farm_location_lng": 100.3685,
+                "crop_type": "rice",
+                "is_active": True
             },
             {
-                "username": "farmer2",
-                "email": "farmer2@agrisense.com",
+                "username": "mei_ling",
                 "password": "password123",
-                "full_name": "Jane Grower",
-                "phone_number": "+60123456791",
-                "farm_location": "Johor",
-                "farm_size": 8.0,
-                "crop_types": "Vegetables, Fruits",
-                "is_active": True,
-                "is_admin": False
+                "full_name": "Tan Mei Ling",
+                "farm_location_name": "Johor",
+                "farm_location_lat": 1.4854,
+                "farm_location_lng": 103.7618,
+                "crop_type": "vegetables",
+                "is_active": True
+            },
+            {
+                "username": "raj",
+                "password": "password123",
+                "full_name": "Raj Kumar",
+                "farm_location_name": "Perak",
+                "farm_location_lat": 4.5921,
+                "farm_location_lng": 101.0901,
+                "crop_type": "oil_palm",
+                "is_active": True
             }
         ]
         
@@ -220,9 +226,9 @@ def seed_test_data():
         logger.info(f"✓ Created {len(sensor_readings)} sensor readings")
         
         # Create pest detections
-        pest_types = ["Brown Planthopper", "Rice Leaf Roller", "Stem Borer"]
+        pest_types = ["Brown Planthopper", "Rice Leaf Roller", "Stem Borer", "Rice Bug", "Green Leafhopper"]
         pest_detections = []
-        
+
         for user in created_users:
             for i in range(3):
                 detection = PestDetection(
@@ -231,7 +237,7 @@ def seed_test_data():
                     confidence_score=round(random.uniform(0.75, 0.98), 2),
                     severity_level=random.choice(["low", "medium", "high"]),
                     image_path=f"/uploads/pest_{user.id}_{i}.jpg",
-                    location=user.farm_location,
+                    location=user.farm_location_name,
                     detected_at=datetime.utcnow() - timedelta(days=random.randint(0, 7))
                 )
                 pest_detections.append(detection)
@@ -260,7 +266,140 @@ def seed_test_data():
         db.bulk_save_objects(alerts)
         db.commit()
         logger.info(f"✓ Created {len(alerts)} alerts")
-        
+
+        # Create pest-weather correlations (reference data for risk prediction)
+        existing_correlations = db.query(PestWeatherCorrelation).count()
+        if existing_correlations == 0:
+            correlations_data = [
+                {
+                    "pest_name": "Rice Stem Borer",
+                    "scientific_name": "Scirpophaga incertulas",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"temp_min": 25, "temp_max": 35, "humidity_min": 70, "trigger": "after_rain"},
+                    "risk_level": "high",
+                    "risk_message": "Stem Borer activity increases in warm, humid conditions following rainfall. Moths lay eggs on leaves, larvae bore into stems.",
+                    "prevention_tips": [
+                        "Monitor rice stems for entry holes and frass",
+                        "Apply Trichogramma biological control",
+                        "Remove and destroy infected stems",
+                        "Avoid excessive nitrogen fertilizer"
+                    ],
+                    "data_source": "MARDI Pest Management Guidelines"
+                },
+                {
+                    "pest_name": "Rice Leaf Folder",
+                    "scientific_name": "Cnaphalocrocis medinalis",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"temp_min": 25, "temp_max": 30, "humidity_min": 60, "humidity_max": 80, "condition": "cloudy"},
+                    "risk_level": "medium",
+                    "risk_message": "Leaf Folder larvae fold leaves and feed inside. Common during cloudy, humid weather.",
+                    "prevention_tips": [
+                        "Scout for folded leaves with larvae inside",
+                        "Maintain field hygiene",
+                        "Avoid dense planting",
+                        "Apply neem-based spray if >10% damage"
+                    ],
+                    "data_source": "MARDI Pest Management Guidelines"
+                },
+                {
+                    "pest_name": "Brown Planthopper",
+                    "scientific_name": "Nilaparvata lugens",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"humidity_min": 85, "temp_min": 25, "temp_max": 30},
+                    "risk_level": "high",
+                    "risk_message": "Brown Planthopper thrives in high humidity with dense crop canopy. Can cause hopper burn.",
+                    "prevention_tips": [
+                        "Avoid excessive nitrogen application",
+                        "Maintain proper plant spacing",
+                        "Drain fields periodically",
+                        "Use resistant varieties if available"
+                    ],
+                    "data_source": "IRRI Rice Knowledge Bank"
+                },
+                {
+                    "pest_name": "Rice Bug",
+                    "scientific_name": "Leptocorisa oratorius",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"humidity_max": 70, "trigger": "dry_period", "stage": "grain_filling"},
+                    "risk_level": "medium",
+                    "risk_message": "Rice bugs attack during grain filling stage, especially in dry periods. Cause empty or discolored grains.",
+                    "prevention_tips": [
+                        "Monitor during flowering and grain filling",
+                        "Remove weeds around field",
+                        "Early morning collection when bugs are sluggish",
+                        "Apply insecticide if >5 bugs per hill"
+                    ],
+                    "data_source": "Philippine Rice Research Institute"
+                },
+                {
+                    "pest_name": "Rice Blast",
+                    "scientific_name": "Magnaporthe oryzae",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"humidity_min": 90, "humidity_sustained_hours": 48, "temp_min": 24, "temp_max": 28},
+                    "risk_level": "high",
+                    "risk_message": "Fungal disease favored by prolonged high humidity and moderate temperatures. Causes lesions on leaves and neck rot.",
+                    "prevention_tips": [
+                        "Use certified disease-free seeds",
+                        "Apply fungicide preventively in high-risk conditions",
+                        "Avoid excessive nitrogen",
+                        "Ensure good field drainage"
+                    ],
+                    "data_source": "IRRI Rice Knowledge Bank"
+                },
+                {
+                    "pest_name": "Bacterial Leaf Blight",
+                    "scientific_name": "Xanthomonas oryzae",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"trigger": "after_heavy_rain", "humidity_min": 80, "condition": "flooding"},
+                    "risk_level": "high",
+                    "risk_message": "Bacterial disease spreads rapidly after heavy rain and flooding. Causes yellowing leaf margins.",
+                    "prevention_tips": [
+                        "Avoid field flooding",
+                        "Ensure proper drainage",
+                        "Remove infected plant debris",
+                        "Use resistant varieties"
+                    ],
+                    "data_source": "MARDI Pest Management Guidelines"
+                },
+                {
+                    "pest_name": "Sheath Blight",
+                    "scientific_name": "Rhizoctonia solani",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"humidity_min": 85, "temp_min": 28, "temp_max": 32},
+                    "risk_level": "medium",
+                    "risk_message": "Fungal disease common in dense plantings with high humidity. Causes oval lesions on leaf sheaths.",
+                    "prevention_tips": [
+                        "Maintain proper plant spacing",
+                        "Avoid excessive nitrogen",
+                        "Remove crop residue after harvest",
+                        "Apply fungicide if lesions spread"
+                    ],
+                    "data_source": "IRRI Rice Knowledge Bank"
+                },
+                {
+                    "pest_name": "Green Leafhopper",
+                    "scientific_name": "Nephotettix virescens",
+                    "affected_crops": ["rice"],
+                    "risk_conditions": {"temp_min": 25, "temp_max": 32, "humidity_min": 70},
+                    "risk_level": "medium",
+                    "risk_message": "Vector for tungro virus disease. Common in warm, humid conditions.",
+                    "prevention_tips": [
+                        "Monitor for hopper populations",
+                        "Remove infected plants immediately",
+                        "Synchronize planting in area",
+                        "Use resistant varieties"
+                    ],
+                    "data_source": "Philippine Rice Research Institute"
+                }
+            ]
+
+            correlations = [PestWeatherCorrelation(**data) for data in correlations_data]
+            db.bulk_save_objects(correlations)
+            db.commit()
+            logger.info(f"✓ Created {len(correlations)} pest-weather correlations")
+        else:
+            logger.info(f"✓ Pest-weather correlations already exist ({existing_correlations}) - skipping")
+
         logger.info("✓ Test data seeding completed successfully")
         
     except Exception as e:
@@ -325,9 +464,10 @@ def initialize_database():
             reading_count = db.query(SensorReading).count()
             pest_count = db.query(PestDetection).count()
             alert_count = db.query(Alert).count()
-            
+            correlation_count = db.query(PestWeatherCorrelation).count()
+
             logger.info(f"Records: {user_count} users, {reading_count} readings, "
-                       f"{pest_count} pests, {alert_count} alerts")
+                       f"{pest_count} pests, {alert_count} alerts, {correlation_count} correlations")
         finally:
             db.close()
         

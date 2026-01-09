@@ -27,21 +27,31 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register new user",
-    description="Create a new user account with username, password, and full name."
+    description="Create a new user account with username, password, farm profile, and crop type."
 )
 async def register(
     user_data: UserRegister,
     db: Session = Depends(get_db)
 ):
     """
-    Register a new user.
-    
+    Register a new user (PRD v2).
+
     Steps:
     1. Check if username already exists
     2. Hash the password
-    3. Create new user in database
+    3. Create new user with farm profile in database
     4. Return user data (without password)
-    
+
+    Required fields:
+    - username: Unique identifier
+    - password: Minimum 6 characters
+
+    Optional/Default fields:
+    - full_name: User's full name
+    - farm_location_name: Malaysian state (default: Kuala Lumpur)
+    - farm_location_lat/lng: Coordinates (default: KL coordinates)
+    - crop_type: Primary crop (default: rice)
+
     Raises:
         400: Username already exists
     """
@@ -52,21 +62,26 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
+
     # Hash password
     hashed_password = get_password_hash(user_data.password)
-    
-    # Create new user
+
+    # Create new user with farm profile
     new_user = User(
         username=user_data.username,
         hashed_password=hashed_password,
+        full_name=user_data.full_name,
+        farm_location_name=user_data.farm_location_name,
+        farm_location_lat=user_data.farm_location_lat,
+        farm_location_lng=user_data.farm_location_lng,
+        crop_type=user_data.crop_type,
         is_active=True
     )
-    
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     return new_user
 
 
