@@ -1,353 +1,361 @@
-# 🌾 AgriSense
+# AgriSense
 
 **IoT-Driven Agricultural Monitoring System for Malaysian Farmers**
 
-> **📚 Personal Learning Project**  
-> This is a capstone project focused on learning full-stack mobile development (Flutter + FastAPI) with AI assistance. Built as a simulation-based system for educational purposes - no physical hardware required.
+> **Personal Learning Project**
+> A capstone project focused on learning full-stack mobile development (Flutter + FastAPI) with AI assistance. Built as a simulation-based system for educational purposes - no physical hardware required.
 
 AgriSense is a mobile application that helps farmers monitor their crops through AI-powered pest detection, environmental monitoring, and weather forecasting.
 
 ---
 
-## 📱 Project Overview
+## Project Overview
 
 AgriSense provides farmers with:
-- 🐛 **AI Pest Detection** - Upload crop images to identify pest infestations
-- 🌡️ **Environmental Monitoring** - Track temperature, humidity, and soil moisture
-- ⛅ **Weather Forecasting** - 7-day weather predictions
-- 🔔 **Smart Alerts** - Notifications for pest risks and weather warnings
-- 📊 **Historical Data** - View trends and past detections
+- **AI Pest Detection** - Upload crop images to identify pest infestations
+- **Environmental Monitoring** - Track temperature, humidity, and soil moisture
+- **Weather Forecasting** - 7-day weather predictions with alerts
+- **Smart Alerts** - Notifications for pest risks and weather warnings
+- **AI Chatbot** - Get farming recommendations via chat
+- **Historical Data** - View trends and past detections
 
 **Note:** This is a simulation-based system using synthetic sensor data - no physical IoT hardware required.
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-### **Backend**
-- **Framework:** FastAPI (Python 3.10+)
-- **Database:** PostgreSQL (production) / SQLite (development)
-- **Authentication:** JWT (JSON Web Tokens)
-- **ORM:** SQLAlchemy
-- **Migrations:** Alembic
-- **API Docs:** Swagger UI (auto-generated)
+### Backend
+| Component | Technology |
+|-----------|------------|
+| Framework | FastAPI (Python 3.10+) |
+| Database | PostgreSQL 15 |
+| Authentication | JWT (7-day expiration) |
+| ORM | SQLAlchemy |
+| Migrations | Alembic |
+| Background Jobs | APScheduler |
+| API Docs | Swagger UI (auto-generated) |
 
-### **Mobile App**
-- **Framework:** Flutter (Dart)
-- **State Management:** Provider / Riverpod
-- **HTTP Client:** Dio
-- **Storage:** SharedPreferences (JWT tokens)
-- **Platforms:** Android & iOS
+### Mobile App
+| Component | Technology |
+|-----------|------------|
+| Framework | Flutter (Dart) |
+| State Management | Provider |
+| HTTP Client | http package |
+| Storage | SharedPreferences |
+| Platforms | Android & iOS |
 
-### **External Services**
-- **Weather API:** OpenWeatherMap
-- **ML Service:** Mock service → Real model → Roboflow (backup)
-
-### **Deployment**
-- **Backend:** Self-hosted server with Docker
-- **Database:** PostgreSQL on server
-- **Mobile:** APK distribution
+### External Services
+| Service | Provider |
+|---------|----------|
+| Weather API | WeatherAPI.com |
+| AI/Recommendations | OpenRouter API (Grok model) |
+| ML Service | Mock service (real model TBD) |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-agrisense/
+AgriSense/
 ├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── main.py         # FastAPI application entry
-│   │   ├── models/         # SQLAlchemy models
-│   │   ├── routes/         # API endpoints
-│   │   ├── services/       # Business logic
-│   │   ├── schemas/        # Pydantic schemas
-│   │   └── utils/          # Helper functions
 │   ├── alembic/            # Database migrations
-│   ├── tests/              # Backend tests
-│   ├── requirements.txt    # Python dependencies
-│   └── .env.example        # Environment variables template
+│   ├── dependencies/       # FastAPI dependencies (auth)
+│   ├── jobs/               # Background scheduled jobs
+│   ├── models/             # SQLAlchemy models
+│   ├── routers/            # API endpoints
+│   ├── schemas/            # Pydantic schemas
+│   ├── services/           # Business logic
+│   ├── tests/              # Backend tests (118 tests)
+│   ├── utils/              # Helper functions
+│   ├── config.py           # Settings configuration
+│   ├── database.py         # Database connection
+│   ├── main.py             # FastAPI application
+│   ├── run.py              # Development server
+│   └── requirements.txt    # Python dependencies
 │
 ├── mobile/                 # Flutter mobile app
 │   ├── lib/
-│   │   ├── main.dart       # App entry point
-│   │   ├── screens/        # UI screens
-│   │   ├── widgets/        # Reusable widgets
-│   │   ├── services/       # API services
 │   │   ├── models/         # Data models
-│   │   └── utils/          # Helper functions
-│   ├── assets/             # Images, fonts, etc.
-│   ├── test/               # Mobile tests
+│   │   ├── screens/        # UI screens
+│   │   ├── services/       # API services
+│   │   ├── utils/          # Helper functions
+│   │   ├── widgets/        # Reusable widgets
+│   │   └── main.dart       # App entry point
 │   └── pubspec.yaml        # Flutter dependencies
 │
-├── docs/                   # Documentation
-│   ├── api/                # API documentation
-│   ├── architecture/       # System design docs
-│   └── user-guide/         # User manuals
-│
-├── .references/            # Project references
+├── .references/            # Project documentation
 │   ├── prd/                # Product Requirements Document
-│   └── tasks/              # Task list and tracking
+│   └── tasks/              # Task tracking
 │
-└── Context/                # Project context and handover docs
-
+├── docker-compose.yml      # Docker services
+├── CLAUDE.md               # Development guide
+└── README.md               # This file
 ```
 
 ---
 
-## 🚀 Getting Started
+## Quick Start
 
-### **Prerequisites**
-- Python 3.10+
-- Flutter SDK 3.0+
-- PostgreSQL 14+ (or SQLite for development)
-- Git
+### Prerequisites
 
-### **Backend Setup**
+- **Python 3.10+** - https://www.python.org/downloads
+- **Docker Desktop** - https://www.docker.com/products/docker-desktop
+- **Flutter SDK 3.0+** - https://docs.flutter.dev/get-started/install
+- **Git** - https://git-scm.com/downloads
 
-1. **Navigate to backend directory:**
-   ```bash
-   cd backend
-   ```
+### 1. Clone Repository
 
-2. **Create virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+```bash
+git clone <repository-url>
+cd AgriSense
+```
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Start Database
 
-4. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+```bash
+docker compose up postgres adminer -d
+```
 
-5. **Run database migrations:**
-   ```bash
-   alembic upgrade head
-   ```
+### 3. Backend Setup
 
-6. **Start development server:**
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-7. **Access API documentation:**
-   - Swagger UI: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
-
-### **Mobile Setup**
-
-1. **Navigate to mobile directory:**
-   ```bash
-   cd mobile
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with backend API URL
-   ```
-
-4. **Run on emulator/device:**
-   ```bash
-   flutter run
-   ```
-
-5. **Build APK (Android):**
-   ```bash
-   flutter build apk --release
-   ```
-
----
-
-## 📚 API Documentation
-
-Once the backend is running, access the interactive API documentation:
-
-- **Swagger UI:** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
-
-### **Key Endpoints:**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login and get JWT token |
-| GET | `/api/sensors/current` | Get current sensor readings |
-| GET | `/api/sensors/history` | Get historical sensor data |
-| POST | `/api/detections/upload` | Upload image for pest detection |
-| GET | `/api/detections/history` | Get detection history |
-| GET | `/api/weather/forecast` | Get 7-day weather forecast |
-| GET | `/api/alerts` | Get user alerts |
-| PUT | `/api/alerts/{id}/read` | Mark alert as read |
-
----
-
-## 🧪 Testing
-
-### **Backend Tests**
 ```bash
 cd backend
-pytest tests/ -v --cov=app
+
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment file and configure
+cp .env.example .env
+# Edit .env with your API keys (see Environment Variables section)
+
+# Run database migrations
+alembic upgrade head
+
+# Start server
+python run.py
 ```
 
-### **Mobile Tests**
+### 4. Verify Setup
+
 ```bash
-cd mobile
-flutter test
+# Run tests (should pass 118/118)
+python -m pytest -v
 ```
+
+### 5. Access Points
+
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8000 |
+| API Documentation | http://localhost:8000/docs |
+| Database UI (Adminer) | http://localhost:8080 |
+
+**Adminer Login:**
+- Server: `postgres`
+- Username: `agrisense_user`
+- Password: `strongpassword`
+- Database: `agrisense`
 
 ---
 
-## 🐳 Docker Deployment
+## Environment Variables
 
-### **Backend with Docker:**
+Create `backend/.env` from `.env.example`:
 
-1. **Build image:**
-   ```bash
-   cd backend
-   docker build -t agrisense-backend .
-   ```
-
-2. **Run container:**
-   ```bash
-   docker run -d -p 8000:8000 \
-     -e DATABASE_URL=postgresql://user:pass@host/db \
-     -e JWT_SECRET=your-secret-key \
-     agrisense-backend
-   ```
-
-### **Docker Compose (Full Stack):**
-```bash
-docker-compose up -d
-```
-
----
-
-## 🔐 Environment Variables
-
-### **Backend (.env)**
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/agrisense
-# or for SQLite: sqlite:///./agrisense.db
+DATABASE_URL=postgresql://agrisense_user:strongpassword@localhost:5432/agrisense
 
-# JWT Authentication
-JWT_SECRET_KEY=your-super-secret-key-change-this
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_MINUTES=1440
+# Authentication (generate with: openssl rand -hex 32)
+SECRET_KEY=your-secret-key-change-in-production
 
-# OpenWeatherMap API
-OPENWEATHER_API_KEY=your-api-key-here
+# Weather API (get from https://www.weatherapi.com)
+WEATHERAPI_KEY=your_weatherapi_key_here
 
-# ML Service
-ML_SERVICE_URL=http://localhost:5001
-ML_SERVICE_ENABLED=false
+# AI Service (get from https://openrouter.ai/keys)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 
-# File Upload
-UPLOAD_DIR=./uploads
-MAX_UPLOAD_SIZE_MB=10
-```
-
-### **Mobile (.env)**
-```env
-API_BASE_URL=http://localhost:8000
-API_TIMEOUT_SECONDS=30
+# Development settings
+ENVIRONMENT=development
+SEED_DATABASE=True
+USE_MOCK_ML=True
 ```
 
 ---
 
-## 📖 Documentation
+## Mobile Setup
 
-- **PRD:** `.references/prd/agrisense-prd.md` - Complete product requirements
-- **Task List:** `.references/tasks/agrisense-tasks.md` - Development tasks
-- **Handover:** `Context/agrisense_handover_v2.md` - Project context and decisions
-- **API Docs:** Available at `/docs` when backend is running
+```bash
+cd mobile
 
----
+# Install dependencies
+flutter pub get
 
-## 🎯 Development Roadmap
+# Run on emulator/device
+flutter run
+```
 
-### **Phase 0: Setup** ✅ (Current)
-- [x] Project structure
-- [ ] Backend scaffolding
-- [ ] Database setup
-- [ ] Mobile app initialization
-
-### **Phase 1: Backend Development** (Weeks 1-8)
-- [ ] Authentication system
-- [ ] Sensor data API
-- [ ] Pest detection API
-- [ ] Weather integration
-- [ ] Alert system
-
-### **Phase 2: Mobile Development** (Weeks 9-12)
-- [ ] Authentication screens
-- [ ] Dashboard UI
-- [ ] Pest detection flow
-- [ ] Alerts & notifications
-
-### **Phase 3: Integration** (Weeks 13-14)
-- [ ] ML model integration
-- [ ] End-to-end testing
-- [ ] Deployment
-- [ ] Demo preparation
+**API Base URL Configuration:**
+- Android Emulator: `http://10.0.2.2:8000`
+- iOS Simulator: `http://localhost:8000`
+- Physical Device: Use your computer's IP (e.g., `http://192.168.1.x:8000`)
 
 ---
 
-## 🤝 Contributing
+## API Endpoints
 
-This is a capstone project for educational purposes. For questions or suggestions:
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | Register new user |
+| POST | `/api/v1/auth/login` | Login and get JWT token |
+| GET | `/api/v1/auth/me` | Get current user profile |
 
-1. Review the PRD and task list in `.references/`
-2. Follow the coding standards in `.instructions/`
-3. Ensure all tests pass before committing
-4. Update documentation for new features
+### Sensors
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/sensors/current` | Get current sensor readings |
+| GET | `/api/v1/sensors/history` | Get historical sensor data |
+| POST | `/api/v1/sensors/readings` | Submit sensor reading |
+
+### Pest Detection
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/pest/detect` | Upload image for pest detection |
+| GET | `/api/v1/pest/history` | Get detection history |
+| GET | `/api/v1/pest/risk` | Get pest risk prediction |
+| POST | `/api/v1/pest/reports` | Submit manual pest report |
+
+### Weather
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/weather/current` | Get current weather |
+| GET | `/api/v1/weather/forecast` | Get 7-day forecast |
+
+### Alerts
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/alerts` | Get user alerts |
+| PUT | `/api/v1/alerts/{id}/read` | Mark alert as read |
+| PUT | `/api/v1/alerts/{id}/acknowledge` | Acknowledge alert |
+
+### Chat
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/chat` | Send message to AI chatbot |
+| GET | `/api/v1/chat/history` | Get chat history |
+
+### Dashboard
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/dashboard/summary` | Get dashboard summary |
 
 ---
 
-## 📄 License
+## Testing
+
+### Backend Tests
+```bash
+cd backend
+
+# Run all tests
+python -m pytest -v
+
+# Run with coverage
+python -m pytest --cov=. --cov-report=html
+
+# Run specific test file
+python -m pytest tests/test_auth.py -v
+```
+
+### Test User (Auto-seeded)
+When `SEED_DATABASE=True`:
+- Email: `test@example.com`
+- Password: `password123`
+
+---
+
+## Docker Deployment
+
+### Full Stack
+```bash
+docker compose up -d
+```
+
+### Database Only
+```bash
+docker compose up postgres adminer -d
+```
+
+### Stop Services
+```bash
+docker compose down
+```
+
+---
+
+## Development Status
+
+### Phase Status
+| Phase | Status |
+|-------|--------|
+| Phase 0: Setup | Complete |
+| Phase 1: Backend Foundation | Complete |
+| Phase 1A: Infrastructure | Complete |
+| Phase 1B: Backend Modifications | Complete |
+| Phase 1C: New Features | Complete |
+| Phase 1D: ML Service | On Hold |
+| Phase 2: Mobile (Flutter) | In Progress |
+| Phase 3: Testing & Deployment | Pending |
+
+### Test Coverage
+- **118 tests passing**
+- Auth, Sensors, Pest Detection, Weather, Alerts, Chat, Dashboard
+
+---
+
+## Documentation
+
+| Document | Location |
+|----------|----------|
+| Development Guide | `CLAUDE.md` |
+| Project Handover | `.references/agrisense-handover.md` |
+| Product Requirements | `.references/prd/agrisense-prd-v2.md` |
+| Task Tracking | `.references/tasks/agrisense-tasks.md` |
+| API Documentation | http://localhost:8000/docs |
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Port 5432 in use | Stop existing PostgreSQL or change port in docker-compose.yml |
+| Database connection failed | Ensure Docker is running: `docker compose up postgres -d` |
+| Tests failing | Apply migrations: `alembic upgrade head` |
+| Module not found | Activate venv and reinstall: `pip install -r requirements.txt` |
+
+---
+
+## Team
+
+**Project Type:** Final Year Capstone Project (Bachelor of Software Engineering)
+
+- Integration Lead - Backend, Mobile, ML Integration
+- ML Team - Pest detection model training
+
+---
+
+## License
 
 This project is developed for educational purposes as part of a Bachelor of Software Engineering capstone project.
 
 ---
 
-## 👥 Team
-
-**Integration Lead** - Backend, Mobile, ML Integration
-
-**ML Team** - Pest detection model training
-
-**Project Type** - Final Year Capstone Project (Bachelor of Software Engineering)
-
----
-
-## 🙏 Acknowledgments
-
-- OpenWeatherMap for weather data API
-- Roboflow for ML model hosting (backup)
-- Flutter and FastAPI communities
-- Malaysian farmers for inspiration
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Check the documentation in `/docs`
-- Review the handover document in `/Context`
-- Refer to API documentation at `/docs` endpoint
-
----
-
-**Built with ❤️ for Malaysian farmers** 🇲🇾🌾
+**Built for Malaysian farmers**
