@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     # Database Configuration (PostgreSQL Only)
     # ===================================
     database_url: str = Field(
-        default="postgresql://agrisense_user:changeme@localhost:5432/agrisense",
+        default="postgresql://agrisense_user:strongpassword@localhost:5432/agrisense",
         env="DATABASE_URL"
     )
     
@@ -63,15 +63,15 @@ class Settings(BaseSettings):
     )
 
     # ===================================
-    # Weather API (OpenWeatherMap)
+    # Weather API (WeatherAPI.com)
     # ===================================
-    openweather_api_key: str = Field(
+    weatherapi_key: str = Field(
         default="",
-        env="OPENWEATHER_API_KEY"
+        env="WEATHERAPI_KEY"
     )
-    openweather_base_url: str = Field(
-        default="https://api.openweathermap.org/data/2.5",
-        env="OPENWEATHER_BASE_URL"
+    weatherapi_base_url: str = Field(
+        default="https://api.weatherapi.com/v1",
+        env="WEATHERAPI_BASE_URL"
     )
     default_latitude: float = Field(default=3.1390, env="DEFAULT_LATITUDE")
     default_longitude: float = Field(default=101.6869, env="DEFAULT_LONGITUDE")
@@ -158,7 +158,7 @@ class Settings(BaseSettings):
     # Testing Configuration
     # ===================================
     test_database_url: str = Field(
-        default="postgresql://agrisense_user:changeme@localhost:5432/agrisense_test",
+        default="postgresql://agrisense_user:strongpassword@localhost:5432/agrisense_test",
         env="TEST_DATABASE_URL"
     )
     

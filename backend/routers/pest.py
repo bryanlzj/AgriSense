@@ -225,7 +225,7 @@ async def detect_pest(
         image_url=file_url,
         detections=detections,
         primary_detection=primary_detection,
-        analysis_timestamp=pest_detection.created_at
+        analysis_timestamp=pest_detection.detected_at
     )
 
 
@@ -503,10 +503,10 @@ def get_pest_detections(
         query = query.filter(PestDetection.pest_type == pest_type)
     
     if min_confidence is not None:
-        query = query.filter(PestDetection.confidence >= min_confidence)
+        query = query.filter(PestDetection.confidence_score >= min_confidence)
     
     # Order by newest first
-    query = query.order_by(desc(PestDetection.created_at))
+    query = query.order_by(desc(PestDetection.detected_at))
     
     # Apply pagination
     detections = query.offset(skip).limit(limit).all()
@@ -515,97 +515,21 @@ def get_pest_detections(
     base_url = str(request.base_url).rstrip('/')
     results = []
     for detection in detections:
-        # Extract filename from image_path
-        filename = detection.image_path.split('/')[-1]
-        image_url = generate_file_url(filename, base_url)
-        
+        # Extract filename from image_url
+        filename = detection.image_url.split('/')[-1] if detection.image_url else ""
+        image_url = generate_file_url(filename, base_url) if filename else ""
+
         results.append(PestDetectionResponse(
             id=detection.id,
             user_id=detection.user_id,
             pest_type=detection.pest_type,
-            confidence=detection.confidence,
-            image_path=detection.image_path,
+            confidence_score=detection.confidence_score,
             image_url=image_url,
-            notes=detection.notes,
-            created_at=detection.created_at
+            recommendations=detection.recommendations,
+            detected_at=detection.detected_at
         ))
-    
+
     return results
-
-
-@router.get("/{detection_id}", response_model=PestDetectionResponse)
-def get_pest_detection(
-    detection_id: int,
-    request: Request,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Get a specific pest detection by ID.
-    
-    Users can only access their own detections.
-    
-    **Example:**
-    ```bash
-    curl "http://localhost:8000/api/v1/pest/1" \\
-      -H "Authorization: Bearer YOUR_TOKEN"
-    ```
-    """
-    detection = db.query(PestDetection).filter(
-        PestDetection.id == detection_id,
-        PestDetection.user_id == current_user.id
-    ).first()
-    
-    if not detection:
-        raise HTTPException(status_code=404, detail="Pest detection not found")
-    
-    # Generate image URL
-    base_url = str(request.base_url).rstrip('/')
-    filename = detection.image_path.split('/')[-1]
-    image_url = generate_file_url(filename, base_url)
-    
-    return PestDetectionResponse(
-        id=detection.id,
-        user_id=detection.user_id,
-        pest_type=detection.pest_type,
-        confidence=detection.confidence,
-        image_path=detection.image_path,
-        image_url=image_url,
-        notes=detection.notes,
-        created_at=detection.created_at
-    )
-
-
-@router.delete("/{detection_id}", status_code=204)
-def delete_pest_detection(
-    detection_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Delete a pest detection record.
-    
-    Users can only delete their own detections.
-    Note: This does not delete the image file from disk.
-    
-    **Example:**
-    ```bash
-    curl -X DELETE "http://localhost:8000/api/v1/pest/1" \\
-      -H "Authorization: Bearer YOUR_TOKEN"
-    ```
-    """
-    detection = db.query(PestDetection).filter(
-        PestDetection.id == detection_id,
-        PestDetection.user_id == current_user.id
-    ).first()
-    
-    if not detection:
-        raise HTTPException(status_code=404, detail="Pest detection not found")
-    
-    db.delete(detection)
-    db.commit()
-    
-    return None
 
 
 @router.get("/stats/summary", response_model=PestStatistics)
@@ -640,7 +564,7 @@ def get_pest_statistics(
     # Get detections in date range
     detections = db.query(PestDetection).filter(
         PestDetection.user_id == current_user.id,
-        PestDetection.created_at >= start_date
+        PestDetection.detected_at >= start_date
     ).all()
     
     if not detections:
@@ -662,7 +586,7 @@ def get_pest_statistics(
     for detection in detections:
         pest_type = detection.pest_type
         detections_by_pest[pest_type] = detections_by_pest.get(pest_type, 0) + 1
-        total_confidence += detection.confidence
+        total_confidence += detection.confidence_score or 0
     
     unique_pests = len(detections_by_pest)
     most_common_pest = max(detections_by_pest, key=detections_by_pest.get) if detections_by_pest else None
@@ -1033,6 +957,84 @@ def get_pest_report(
         status=report.status,
         reported_at=report.reported_at
     )
+
+
+# ============================================================================
+# Individual Detection Routes (must be last due to path parameter matching)
+# ============================================================================
+
+@router.get("/{detection_id}", response_model=PestDetectionResponse)
+def get_pest_detection(
+    detection_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get a specific pest detection by ID.
+
+    Users can only access their own detections.
+
+    **Example:**
+    ```bash
+    curl "http://localhost:8000/api/v1/pest/1" \\
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+    """
+    detection = db.query(PestDetection).filter(
+        PestDetection.id == detection_id,
+        PestDetection.user_id == current_user.id
+    ).first()
+
+    if not detection:
+        raise HTTPException(status_code=404, detail="Pest detection not found")
+
+    # Generate image URL
+    base_url = str(request.base_url).rstrip('/')
+    filename = detection.image_url.split('/')[-1] if detection.image_url else ""
+    image_url = generate_file_url(filename, base_url) if filename else ""
+
+    return PestDetectionResponse(
+        id=detection.id,
+        user_id=detection.user_id,
+        pest_type=detection.pest_type,
+        confidence_score=detection.confidence_score,
+        image_url=image_url,
+        recommendations=detection.recommendations,
+        detected_at=detection.detected_at
+    )
+
+
+@router.delete("/{detection_id}", status_code=204)
+def delete_pest_detection(
+    detection_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a pest detection record.
+
+    Users can only delete their own detections.
+    Note: This does not delete the image file from disk.
+
+    **Example:**
+    ```bash
+    curl -X DELETE "http://localhost:8000/api/v1/pest/1" \\
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+    """
+    detection = db.query(PestDetection).filter(
+        PestDetection.id == detection_id,
+        PestDetection.user_id == current_user.id
+    ).first()
+
+    if not detection:
+        raise HTTPException(status_code=404, detail="Pest detection not found")
+
+    db.delete(detection)
+    db.commit()
+
+    return None
 
 
 # ============================================================================

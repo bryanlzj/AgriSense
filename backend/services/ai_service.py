@@ -32,7 +32,7 @@ OPENROUTER_BASE_URL = settings.openrouter_base_url
 
 # Model to use (free tier model)
 # Using Llama 3.1 8B Instruct - free and good for agricultural advice
-DEFAULT_MODEL = "meta-llama/llama-3.1-8b-instruct:free"
+DEFAULT_MODEL = "x-ai/grok-4.1-fast"
 
 # API timeout (seconds)
 API_TIMEOUT = 30

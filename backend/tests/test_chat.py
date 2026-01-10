@@ -45,9 +45,9 @@ class TestChatMessage:
 
         assert response.status_code == 200
         data = response.json()
-        assert "response" in data
+        assert "message" in data
         assert "context_used" in data
-        assert isinstance(data["response"], str)
+        assert isinstance(data["message"], str)
 
     def test_send_message_with_session(self, client: TestClient, auth_headers: dict):
         """Test sending a message with session ID for conversation continuity."""
@@ -62,7 +62,7 @@ class TestChatMessage:
 
         assert response.status_code == 200
         data = response.json()
-        assert "response" in data
+        assert "message" in data
 
     def test_send_message_empty(self, client: TestClient, auth_headers: dict):
         """Test sending empty message fails."""
@@ -106,34 +106,36 @@ class TestChatMessage:
 
             assert response.status_code == 200
             data = response.json()
-            assert "response" in data
-            assert len(data["response"]) > 0
+            assert "message" in data
+            assert len(data["message"]) > 0
 
 
 class TestChatImage:
     """Test chat with image endpoint."""
 
     def test_send_image_success(self, client: TestClient, auth_headers: dict):
-        """Test sending image in chat."""
-        img = create_test_image()
+        """Test sending image URL in chat."""
         response = client.post(
             "/api/v1/chat/image",
             headers=auth_headers,
-            files={"image": ("test.jpg", img, "image/jpeg")},
-            data={"message": "What pest is this?"}
+            json={
+                "image_url": "/uploads/test.jpg",
+                "message": "What pest is this?"
+            }
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert "response" in data or "detection" in data
+        assert "message" in data or "detection" in data
 
     def test_send_image_no_message(self, client: TestClient, auth_headers: dict):
         """Test sending image without message."""
-        img = create_test_image()
         response = client.post(
             "/api/v1/chat/image",
             headers=auth_headers,
-            files={"image": ("test.jpg", img, "image/jpeg")}
+            json={
+                "image_url": "/uploads/test.jpg"
+            }
         )
 
         # Should work - message is optional
@@ -141,10 +143,9 @@ class TestChatImage:
 
     def test_send_image_no_auth(self, client: TestClient):
         """Test sending image without authentication fails."""
-        img = create_test_image()
         response = client.post(
             "/api/v1/chat/image",
-            files={"image": ("test.jpg", img, "image/jpeg")}
+            json={"image_url": "/uploads/test.jpg"}
         )
 
         assert response.status_code == 403
@@ -163,7 +164,7 @@ class TestChatStatus:
         assert response.status_code == 200
         data = response.json()
         assert "status" in data
-        assert "ai_available" in data
+        assert "ai_service_available" in data
 
     def test_get_status_no_auth(self, client: TestClient):
         """Test getting status without authentication fails."""
@@ -202,7 +203,7 @@ class TestChatContext:
         assert response.status_code == 200
         data = response.json()
         # Response should be relevant to the user's crop type
-        assert "response" in data
+        assert "message" in data
 
 
 class TestChatErrorHandling:
@@ -210,11 +211,11 @@ class TestChatErrorHandling:
 
     def test_malformed_json(self, client: TestClient, auth_headers: dict):
         """Test sending malformed JSON."""
+        headers = {**auth_headers, "Content-Type": "application/json"}
         response = client.post(
             "/api/v1/chat/message",
-            headers=auth_headers,
-            content="not valid json",
-            headers_override={"Content-Type": "application/json"}
+            headers=headers,
+            content="not valid json"
         )
 
         # Should return error

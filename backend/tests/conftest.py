@@ -33,10 +33,10 @@ from utils.security import create_access_token
 
 # Use PostgreSQL for testing - defaults to main agrisense database
 # Set TEST_DATABASE_URL environment variable to override
-# Password matches root .env: agrisense_dev_password_123
+# Password matches root .env: strongpassword
 SQLALCHEMY_TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://agrisense_user:agrisense_dev_password_123@localhost:5432/agrisense"
+    "postgresql://agrisense_user:strongpassword@localhost:5432/agrisense"
 )
 
 # Create test engine
@@ -210,12 +210,14 @@ def test_pest_detection(db: Session, test_user: User) -> PestDetection:
     Returns:
         PestDetection object with mock data
     """
+    from models.pest_detection import SeverityLevel
+
     pest = PestDetection(
         user_id=test_user.id,
-        image_path="uploads/test_image.jpg",
+        image_url="uploads/test_image.jpg",
         pest_type="Aphid",
-        confidence=0.85,
-        severity="medium",
+        confidence_score=0.85,
+        severity_level=SeverityLevel.MEDIUM,
         recommendations="Apply neem oil spray"
     )
     db.add(pest)
@@ -262,13 +264,13 @@ def test_pest_weather_correlation(db: Session):
 
     correlation = PestWeatherCorrelation(
         pest_name="Rice Stem Borer",
-        crop_type="rice",
-        weather_conditions={
-            "temperature_min": 25,
-            "temperature_max": 35,
+        affected_crops=["rice"],
+        risk_conditions={
+            "temp_min": 25,
+            "temp_max": 35,
             "humidity_min": 70,
             "humidity_max": 95,
-            "recent_rain": True
+            "trigger": "after_rain"
         },
         risk_level="high",
         risk_message="Warm, humid conditions following recent rain increase stem borer activity.",
@@ -277,7 +279,7 @@ def test_pest_weather_correlation(db: Session):
             "Apply biological control (Trichogramma)",
             "Avoid excessive nitrogen fertilization"
         ],
-        source="MARDI Research"
+        data_source="MARDI Research"
     )
     db.add(correlation)
     db.commit()

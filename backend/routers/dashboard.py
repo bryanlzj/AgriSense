@@ -118,8 +118,8 @@ async def get_dashboard(
             "recent": [
                 {
                     "id": alert.id,
-                    "type": alert.type,
-                    "severity": alert.severity,
+                    "type": alert.alert_type.value if alert.alert_type else None,
+                    "severity": alert.severity.value if alert.severity else None,
                     "title": alert.title,
                     "message": alert.message[:100] + "..." if len(alert.message) > 100 else alert.message,
                     "is_read": alert.is_read,
@@ -142,12 +142,12 @@ async def get_dashboard(
 
         recent_detections = db.query(PestDetection).filter(
             PestDetection.user_id == current_user.id,
-            PestDetection.created_at >= seven_days_ago
-        ).order_by(desc(PestDetection.created_at)).limit(3).all()
+            PestDetection.detected_at >= seven_days_ago
+        ).order_by(desc(PestDetection.detected_at)).limit(3).all()
 
         total_recent = db.query(PestDetection).filter(
             PestDetection.user_id == current_user.id,
-            PestDetection.created_at >= seven_days_ago
+            PestDetection.detected_at >= seven_days_ago
         ).count()
 
         response_data["detections"] = {
@@ -158,7 +158,7 @@ async def get_dashboard(
                     "pest_type": detection.pest_type,
                     "confidence": round(detection.confidence_score, 2) if detection.confidence_score else None,
                     "image_url": detection.image_url,
-                    "detected_at": detection.created_at.isoformat() if detection.created_at else None
+                    "detected_at": detection.detected_at.isoformat() if detection.detected_at else None
                 }
                 for detection in recent_detections
             ]
@@ -241,7 +241,7 @@ async def get_quick_dashboard(
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     recent_detections = db.query(PestDetection).filter(
         PestDetection.user_id == current_user.id,
-        PestDetection.created_at >= seven_days_ago
+        PestDetection.detected_at >= seven_days_ago
     ).count()
 
     return {

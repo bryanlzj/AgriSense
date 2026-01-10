@@ -37,24 +37,24 @@ class PestDetectionCreate(BaseModel):
     Used when saving detection results to database.
     """
     pest_type: str = Field(..., description="Type of pest detected")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)")
-    image_path: str = Field(..., description="Path to uploaded image")
-    notes: Optional[str] = Field(None, description="Additional notes or observations")
-    
-    @validator('confidence')
+    confidence_score: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)")
+    image_url: str = Field(..., description="URL to uploaded image")
+    recommendations: Optional[str] = Field(None, description="Treatment recommendations")
+
+    @validator('confidence_score')
     def validate_confidence(cls, v):
         """Ensure confidence is between 0 and 1"""
         if not 0.0 <= v <= 1.0:
             raise ValueError('Confidence must be between 0.0 and 1.0')
         return v
-    
+
     class Config:
         json_schema_extra = {
             "example": {
                 "pest_type": "Fall Armyworm",
-                "confidence": 0.87,
-                "image_path": "uploads/abc123.jpg",
-                "notes": "Detected on corn leaves"
+                "confidence_score": 0.87,
+                "image_url": "uploads/abc123.jpg",
+                "recommendations": "Apply neem oil spray"
             }
         }
 
@@ -66,13 +66,12 @@ class PestDetectionResponse(BaseModel):
     """
     id: int = Field(..., description="Detection record ID")
     user_id: int = Field(..., description="ID of user who uploaded image")
-    pest_type: str = Field(..., description="Type of pest detected")
-    confidence: float = Field(..., description="Confidence score (0-1)")
-    image_path: str = Field(..., description="Path to uploaded image")
+    pest_type: Optional[str] = Field(None, description="Type of pest detected")
+    confidence_score: Optional[float] = Field(None, description="Confidence score (0-1)")
     image_url: str = Field(..., description="URL to access image")
-    notes: Optional[str] = Field(None, description="Additional notes")
-    created_at: datetime = Field(..., description="Detection timestamp")
-    
+    recommendations: Optional[str] = Field(None, description="Treatment recommendations")
+    detected_at: datetime = Field(..., description="Detection timestamp")
+
     class Config:
         from_attributes = True
         json_schema_extra = {
@@ -80,11 +79,10 @@ class PestDetectionResponse(BaseModel):
                 "id": 1,
                 "user_id": 1,
                 "pest_type": "Fall Armyworm",
-                "confidence": 0.87,
-                "image_path": "uploads/abc123.jpg",
+                "confidence_score": 0.87,
                 "image_url": "http://localhost:8000/uploads/abc123.jpg",
-                "notes": "Detected on corn leaves",
-                "created_at": "2025-01-04T10:30:00"
+                "recommendations": "Apply neem oil spray",
+                "detected_at": "2025-01-04T10:30:00"
             }
         }
 

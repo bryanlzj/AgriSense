@@ -1,5 +1,5 @@
 """
-Weather service for fetching and processing weather data from OpenWeatherMap API.
+Weather service for fetching and processing weather data from WeatherAPI.com.
 
 This module provides functions to:
 - Fetch current weather data
@@ -41,9 +41,11 @@ from schemas.weather import (
 # CONFIGURATION
 # ============================================================================
 
-# OpenWeatherMap API configuration
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
-OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5"
+# WeatherAPI.com API configuration
+from config import settings
+
+WEATHERAPI_KEY = settings.weatherapi_key
+WEATHERAPI_BASE_URL = settings.weatherapi_base_url
 
 # Cache configuration (simple in-memory cache)
 _weather_cache = {}
@@ -76,21 +78,26 @@ def _set_cached_data(cache_key: str, data: dict):
     _weather_cache[cache_key] = (data, datetime.now())
 
 
+def _is_api_configured() -> bool:
+    """Check if WeatherAPI is properly configured."""
+    return bool(WEATHERAPI_KEY and WEATHERAPI_KEY != "your_weatherapi_key_here")
+
+
 # ============================================================================
 # WEATHER DATA FETCHING
 # ============================================================================
 
 async def fetch_current_weather(latitude: float, longitude: float) -> dict:
     """
-    Fetch current weather data from OpenWeatherMap API.
-    
+    Fetch current weather data from WeatherAPI.com.
+
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
-        
+
     Returns:
         dict: Raw weather data from API
-        
+
     Raises:
         httpx.HTTPError: If API request fails
     """
@@ -98,15 +105,18 @@ async def fetch_current_weather(latitude: float, longitude: float) -> dict:
     cached = _get_cached_data(cache_key)
     if cached:
         return cached
-    
-    url = f"{OPENWEATHER_BASE_URL}/weather"
+
+    if not _is_api_configured():
+        logger.warning("WeatherAPI key not configured, returning mock data")
+        return _get_mock_current_weather(latitude, longitude)
+
+    url = f"{WEATHERAPI_BASE_URL}/current.json"
     params = {
-        "lat": latitude,
-        "lon": longitude,
-        "appid": OPENWEATHER_API_KEY,
-        "units": "metric"  # Celsius
+        "key": WEATHERAPI_KEY,
+        "q": f"{latitude},{longitude}",
+        "aqi": "no"  # Air quality index not needed
     }
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(url, params=params)
         response.raise_for_status()
@@ -115,17 +125,18 @@ async def fetch_current_weather(latitude: float, longitude: float) -> dict:
         return data
 
 
-async def fetch_weather_forecast(latitude: float, longitude: float) -> dict:
+async def fetch_weather_forecast(latitude: float, longitude: float, days: int = 7) -> dict:
     """
-    Fetch 5-day weather forecast from OpenWeatherMap API.
-    
+    Fetch weather forecast from WeatherAPI.com.
+
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
-        
+        days: Number of days to forecast (1-10)
+
     Returns:
-        dict: Raw forecast data from API (3-hour intervals)
-        
+        dict: Raw forecast data from API
+
     Raises:
         httpx.HTTPError: If API request fails
     """
@@ -133,21 +144,111 @@ async def fetch_weather_forecast(latitude: float, longitude: float) -> dict:
     cached = _get_cached_data(cache_key)
     if cached:
         return cached
-    
-    url = f"{OPENWEATHER_BASE_URL}/forecast"
+
+    if not _is_api_configured():
+        logger.warning("WeatherAPI key not configured, returning mock data")
+        return _get_mock_forecast(latitude, longitude)
+
+    url = f"{WEATHERAPI_BASE_URL}/forecast.json"
     params = {
-        "lat": latitude,
-        "lon": longitude,
-        "appid": OPENWEATHER_API_KEY,
-        "units": "metric"  # Celsius
+        "key": WEATHERAPI_KEY,
+        "q": f"{latitude},{longitude}",
+        "days": min(days, 10),  # WeatherAPI free tier supports up to 3 days
+        "aqi": "no",
+        "alerts": "no"
     }
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
         _set_cached_data(cache_key, data)
         return data
+
+
+# ============================================================================
+# MOCK DATA (When API not configured)
+# ============================================================================
+
+def _get_mock_current_weather(latitude: float, longitude: float) -> dict:
+    """Generate mock current weather data for testing."""
+    return {
+        "location": {
+            "name": "Mock Location",
+            "region": "Test Region",
+            "country": "Malaysia",
+            "lat": latitude,
+            "lon": longitude,
+            "localtime": datetime.now().strftime("%Y-%m-%d %H:%M")
+        },
+        "current": {
+            "temp_c": 30.0,
+            "feelslike_c": 34.0,
+            "humidity": 75,
+            "pressure_mb": 1010.0,
+            "wind_kph": 15.0,
+            "wind_degree": 180,
+            "wind_dir": "S",
+            "cloud": 50,
+            "vis_km": 10.0,
+            "precip_mm": 0.0,
+            "condition": {
+                "text": "Partly cloudy",
+                "code": 1003
+            }
+        }
+    }
+
+
+def _get_mock_forecast(latitude: float, longitude: float) -> dict:
+    """Generate mock forecast data for testing."""
+    base_data = _get_mock_current_weather(latitude, longitude)
+
+    forecast_days = []
+    for i in range(3):
+        date = datetime.now() + timedelta(days=i)
+        hours = []
+        for h in range(24):
+            hour_time = date.replace(hour=h, minute=0, second=0)
+            hours.append({
+                "time_epoch": int(hour_time.timestamp()),
+                "time": hour_time.strftime("%Y-%m-%d %H:%M"),
+                "temp_c": 28.0 + (h % 8) - 4,
+                "feelslike_c": 30.0 + (h % 8) - 4,
+                "humidity": 70 + (h % 20),
+                "wind_kph": 10.0 + (h % 10),
+                "wind_dir": "S",
+                "pressure_mb": 1010.0,
+                "precip_mm": 0.0 if h % 6 != 0 else 2.0,
+                "cloud": 40 + (h % 40),
+                "chance_of_rain": 20 if h % 6 == 0 else 10,
+                "condition": {
+                    "text": "Partly cloudy",
+                    "code": 1003
+                }
+            })
+
+        forecast_days.append({
+            "date": date.strftime("%Y-%m-%d"),
+            "date_epoch": int(date.timestamp()),
+            "day": {
+                "maxtemp_c": 34.0,
+                "mintemp_c": 26.0,
+                "avgtemp_c": 30.0,
+                "maxwind_kph": 20.0,
+                "totalprecip_mm": 5.0,
+                "avghumidity": 75,
+                "daily_chance_of_rain": 40,
+                "condition": {
+                    "text": "Partly cloudy",
+                    "code": 1003
+                }
+            },
+            "hour": hours
+        })
+
+    base_data["forecast"] = {"forecastday": forecast_days}
+    return base_data
 
 
 # ============================================================================
@@ -156,70 +257,71 @@ async def fetch_weather_forecast(latitude: float, longitude: float) -> dict:
 
 def transform_current_weather(data: dict) -> WeatherCondition:
     """
-    Transform OpenWeatherMap current weather data to WeatherCondition schema.
-    
+    Transform WeatherAPI.com current weather data to WeatherCondition schema.
+
     Args:
         data: Raw API response
-        
+
     Returns:
         WeatherCondition: Transformed weather data
     """
-    main = data["main"]
-    wind = data["wind"]
-    clouds = data["clouds"]
-    weather = data["weather"][0]
-    rain = data.get("rain", {})
-    
+    current = data["current"]
+
+    # Convert wind from kph to m/s (1 kph = 0.277778 m/s)
+    wind_speed_ms = current.get("wind_kph", 0) * 0.277778
+
     return WeatherCondition(
-        temperature=main["temp"],
-        feels_like=main["feels_like"],
-        humidity=main["humidity"],
-        pressure=main["pressure"],
-        wind_speed=wind["speed"],
-        wind_direction=wind.get("deg", 0),
-        clouds=clouds["all"],
-        visibility=data.get("visibility", 10000),
-        weather_main=weather["main"],
-        weather_description=weather["description"],
-        rain_1h=rain.get("1h"),
-        rain_3h=rain.get("3h")
+        temperature=current["temp_c"],
+        feels_like=current["feelslike_c"],
+        humidity=current["humidity"],
+        pressure=current["pressure_mb"],
+        wind_speed=wind_speed_ms,
+        wind_direction=current.get("wind_degree", 0),
+        clouds=current.get("cloud", 0),
+        visibility=current.get("vis_km", 10) * 1000,  # Convert km to meters
+        weather_main=current["condition"]["text"],
+        weather_description=current["condition"]["text"],
+        rain_1h=current.get("precip_mm"),
+        rain_3h=None  # WeatherAPI doesn't provide 3h rain data in current
     )
 
 
 def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
     """
-    Transform OpenWeatherMap forecast data to list of WeatherForecastItem.
-    
+    Transform WeatherAPI.com forecast data to list of WeatherForecastItem.
+
     Args:
         data: Raw API response
-        
+
     Returns:
         List[WeatherForecastItem]: List of forecast items
     """
     forecast_list = []
-    
-    for item in data["list"]:
-        main = item["main"]
-        wind = item["wind"]
-        clouds = item["clouds"]
-        weather = item["weather"][0]
-        rain = item.get("rain", {})
-        
-        forecast_item = WeatherForecastItem(
-            forecast_time=datetime.fromtimestamp(item["dt"]),
-            temperature=main["temp"],
-            feels_like=main["feels_like"],
-            humidity=main["humidity"],
-            pressure=main["pressure"],
-            wind_speed=wind["speed"],
-            clouds=clouds["all"],
-            weather_main=weather["main"],
-            weather_description=weather["description"],
-            rain_probability=item.get("pop", 0),  # Probability of precipitation
-            rain_volume=rain.get("3h")
-        )
-        forecast_list.append(forecast_item)
-    
+
+    if "forecast" not in data or "forecastday" not in data["forecast"]:
+        return forecast_list
+
+    for day in data["forecast"]["forecastday"]:
+        # Get hourly data for more granular forecasts
+        for hour in day.get("hour", []):
+            # Convert wind from kph to m/s
+            wind_speed_ms = hour.get("wind_kph", 0) * 0.277778
+
+            forecast_item = WeatherForecastItem(
+                forecast_time=datetime.fromtimestamp(hour["time_epoch"]),
+                temperature=hour["temp_c"],
+                feels_like=hour["feelslike_c"],
+                humidity=hour["humidity"],
+                pressure=hour["pressure_mb"],
+                wind_speed=wind_speed_ms,
+                clouds=hour.get("cloud", 0),
+                weather_main=hour["condition"]["text"],
+                weather_description=hour["condition"]["text"],
+                rain_probability=hour.get("chance_of_rain", 0) / 100,  # Convert % to 0-1
+                rain_volume=hour.get("precip_mm")
+            )
+            forecast_list.append(forecast_item)
+
     return forecast_list
 
 
@@ -233,20 +335,20 @@ def generate_weather_alerts(
 ) -> List[WeatherAlert]:
     """
     Generate weather alerts based on current conditions and forecast.
-    
+
     This is a simplified alert system for the student project.
     In production, you would use official weather alert APIs.
-    
+
     Args:
         current: Current weather conditions
         forecast: Weather forecast data
-        
+
     Returns:
         List[WeatherAlert]: List of generated alerts
     """
     alerts = []
     now = datetime.now()
-    
+
     # Heavy rain alert
     if current.rain_1h and current.rain_1h > 10:
         alerts.append(WeatherAlert(
@@ -263,7 +365,7 @@ def generate_weather_alerts(
                 "Monitor for signs of waterlogging"
             ]
         ))
-    
+
     # Strong wind alert
     if current.wind_speed > 10:  # > 10 m/s (36 km/h)
         alerts.append(WeatherAlert(
@@ -280,7 +382,7 @@ def generate_weather_alerts(
                 "Monitor for physical crop damage"
             ]
         ))
-    
+
     # High temperature alert
     if current.temperature > 35:
         alerts.append(WeatherAlert(
@@ -297,7 +399,7 @@ def generate_weather_alerts(
                 "Monitor plants for wilting signs"
             ]
         ))
-    
+
     # Forecast-based: Heavy rain expected
     heavy_rain_forecast = [f for f in forecast[:8] if f.rain_probability > 0.7]  # Next 24 hours
     if heavy_rain_forecast:
@@ -315,7 +417,7 @@ def generate_weather_alerts(
                 "Harvest mature crops if possible"
             ]
         ))
-    
+
     return alerts
 
 
@@ -330,17 +432,17 @@ def generate_agricultural_recommendations(
 ) -> List[AgriculturalRecommendation]:
     """
     Generate agricultural recommendations based on weather conditions.
-    
+
     Args:
         current: Current weather conditions
         forecast: Weather forecast data
         alerts: Active weather alerts
-        
+
     Returns:
         List[AgriculturalRecommendation]: List of recommendations
     """
     recommendations = []
-    
+
     # Irrigation recommendations
     if current.rain_1h and current.rain_1h > 5:
         recommendations.append(AgriculturalRecommendation(
@@ -369,7 +471,7 @@ def generate_agricultural_recommendations(
                 "Apply mulch to retain moisture"
             ]
         ))
-    
+
     # Pest control recommendations
     if current.humidity > 80 and current.temperature > 25:
         recommendations.append(AgriculturalRecommendation(
@@ -385,7 +487,7 @@ def generate_agricultural_recommendations(
                 "Remove infected plant material"
             ]
         ))
-    
+
     # Spraying recommendations
     if current.wind_speed > 5:
         recommendations.append(AgriculturalRecommendation(
@@ -400,7 +502,7 @@ def generate_agricultural_recommendations(
                 "Check weather forecast for calm periods"
             ]
         ))
-    elif current.rain_probability > 0.5 and forecast:
+    elif forecast:
         next_rain = next((f for f in forecast if f.rain_probability > 0.5), None)
         if next_rain:
             hours_until_rain = (next_rain.forecast_time - datetime.now()).total_seconds() / 3600
@@ -417,22 +519,23 @@ def generate_agricultural_recommendations(
                         "Check forecast before spraying"
                     ]
                 ))
-    
+
     # Harvesting recommendations
-    if current.weather_main == "Clear" and current.humidity < 70:
-        recommendations.append(AgriculturalRecommendation(
-            category="harvesting",
-            priority="medium",
-            title="Good Harvesting Conditions",
-            description="Clear weather and low humidity are ideal for harvesting.",
-            reason=f"Weather: {current.weather_main}, Humidity: {current.humidity}%",
-            actions=[
-                "Harvest mature crops",
-                "Ensure proper drying conditions",
-                "Store harvested crops in dry place"
-            ]
-        ))
-    
+    if current.weather_main == "Clear" or "sunny" in current.weather_main.lower():
+        if current.humidity < 70:
+            recommendations.append(AgriculturalRecommendation(
+                category="harvesting",
+                priority="medium",
+                title="Good Harvesting Conditions",
+                description="Clear weather and low humidity are ideal for harvesting.",
+                reason=f"Weather: {current.weather_main}, Humidity: {current.humidity}%",
+                actions=[
+                    "Harvest mature crops",
+                    "Ensure proper drying conditions",
+                    "Store harvested crops in dry place"
+                ]
+            ))
+
     return recommendations
 
 
@@ -447,32 +550,32 @@ async def get_current_weather(
 ) -> CurrentWeatherResponse:
     """
     Get current weather with alerts and recommendations.
-    
+
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
         location_name: Optional location name
-        
+
     Returns:
         CurrentWeatherResponse: Complete current weather data
     """
     # Fetch data
     weather_data = await fetch_current_weather(latitude, longitude)
-    
+
     # Transform data
     current = transform_current_weather(weather_data)
-    
+
     # Generate alerts and recommendations
     alerts = generate_weather_alerts(current, [])
     recommendations = generate_agricultural_recommendations(current, [], alerts)
-    
+
     # Build response
     location = LocationInput(
         latitude=latitude,
         longitude=longitude,
         location_name=location_name
     )
-    
+
     return CurrentWeatherResponse(
         location=location,
         current=current,
@@ -489,21 +592,21 @@ async def get_weather_forecast(
 ) -> WeatherForecastResponse:
     """
     Get weather forecast with alerts and recommendations.
-    
+
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
         location_name: Optional location name
-        
+
     Returns:
         WeatherForecastResponse: Complete forecast data
     """
     # Fetch data
     forecast_data = await fetch_weather_forecast(latitude, longitude)
-    
+
     # Transform data
     forecast = transform_forecast_data(forecast_data)
-    
+
     # Generate alerts and recommendations (using first forecast item as "current")
     if forecast:
         mock_current = WeatherCondition(
@@ -525,14 +628,14 @@ async def get_weather_forecast(
     else:
         alerts = []
         recommendations = []
-    
+
     # Build response
     location = LocationInput(
         latitude=latitude,
         longitude=longitude,
         location_name=location_name
     )
-    
+
     return WeatherForecastResponse(
         location=location,
         forecast=forecast,
@@ -549,34 +652,34 @@ async def get_weather_summary(
 ) -> WeatherSummaryResponse:
     """
     Get complete weather summary (current + forecast + alerts + recommendations).
-    
+
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
         location_name: Optional location name
-        
+
     Returns:
         WeatherSummaryResponse: Complete weather summary
     """
     # Fetch both current and forecast data
     weather_data = await fetch_current_weather(latitude, longitude)
     forecast_data = await fetch_weather_forecast(latitude, longitude)
-    
+
     # Transform data
     current = transform_current_weather(weather_data)
     forecast = transform_forecast_data(forecast_data)
-    
+
     # Generate alerts and recommendations
     alerts = generate_weather_alerts(current, forecast)
     recommendations = generate_agricultural_recommendations(current, forecast, alerts)
-    
+
     # Build response
     location = LocationInput(
         latitude=latitude,
         longitude=longitude,
         location_name=location_name
     )
-    
+
     return WeatherSummaryResponse(
         location=location,
         current=current,
@@ -753,3 +856,45 @@ async def get_weather_summary_with_ai(
         )
 
     return summary
+
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+def is_weather_api_configured() -> bool:
+    """Check if weather API is properly configured."""
+    return _is_api_configured()
+
+
+async def test_weather_api_connection() -> dict:
+    """Test connection to WeatherAPI.com."""
+    if not _is_api_configured():
+        return {
+            "status": "not_configured",
+            "message": "WeatherAPI key not configured",
+            "using_mock": True
+        }
+
+    try:
+        # Test with default location (Kuala Lumpur)
+        data = await fetch_current_weather(3.1390, 101.6869)
+        if "current" in data:
+            return {
+                "status": "connected",
+                "message": "WeatherAPI.com is working",
+                "using_mock": False,
+                "location": data.get("location", {}).get("name", "Unknown")
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Unexpected response format",
+                "using_mock": True
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "using_mock": True
+        }
