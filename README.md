@@ -28,7 +28,7 @@ AgriSense provides farmers with:
 ### Backend
 | Component | Technology |
 |-----------|------------|
-| Framework | FastAPI (Python 3.10+) |
+| Framework | FastAPI (Python 3.11 or 3.12) |
 | Database | PostgreSQL 15 |
 | Authentication | JWT (7-day expiration) |
 | ORM | SQLAlchemy |
@@ -99,10 +99,14 @@ AgriSense/
 
 ### Prerequisites
 
-- **Python 3.10+** - https://www.python.org/downloads
-- **Docker Desktop** - https://www.docker.com/products/docker-desktop
-- **Flutter SDK 3.0+** - https://docs.flutter.dev/get-started/install
-- **Git** - https://git-scm.com/downloads
+| Requirement | Version | Download |
+|-------------|---------|----------|
+| **Python** | **3.11 or 3.12** (NOT 3.13) | https://www.python.org/downloads |
+| **Docker Desktop** | Latest | https://www.docker.com/products/docker-desktop |
+| **Flutter SDK** | 3.0+ | https://docs.flutter.dev/get-started/install |
+| **Git** | Latest | https://git-scm.com/downloads |
+
+> **Important:** Python 3.13 is NOT supported. Many dependencies don't have pre-built wheels for Python 3.13 yet, causing installation failures. Use Python 3.11 or 3.12.
 
 ### 1. Clone Repository
 
@@ -113,19 +117,30 @@ cd AgriSense
 
 ### 2. Start Database
 
+> **Note:** Ensure Docker Desktop is running before executing this command.
+
 ```bash
 docker compose up postgres adminer -d
 ```
+
+Wait ~10 seconds for PostgreSQL to initialize.
 
 ### 3. Backend Setup
 
 ```bash
 cd backend
 
-# Create and activate virtual environment
-python -m venv venv
+# Create virtual environment (use py launcher on Windows if multiple Python versions installed)
+python -m venv venv          # If Python 3.11/3.12 is default
+# py -3.12 -m venv venv      # Windows: explicitly use Python 3.12
+# py -3.11 -m venv venv      # Windows: explicitly use Python 3.11
+
+# Activate virtual environment
 venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux/Mac
+
+# Verify Python version (should be 3.11.x or 3.12.x)
+python --version
 
 # Install dependencies
 pip install -r requirements.txt
@@ -336,10 +351,14 @@ docker compose down
 
 | Issue | Solution |
 |-------|----------|
+| `pip install` fails with Rust/Cargo errors | You're using Python 3.13. Install Python 3.11 or 3.12 instead |
+| `pip install` fails building wheels | You're using Python 3.13. Install Python 3.11 or 3.12 instead |
+| `docker compose` connection refused | Docker Desktop is not running. Start Docker Desktop first |
 | Port 5432 in use | Stop existing PostgreSQL or change port in docker-compose.yml |
 | Database connection failed | Ensure Docker is running: `docker compose up postgres -d` |
 | Tests failing | Apply migrations: `alembic upgrade head` |
 | Module not found | Activate venv and reinstall: `pip install -r requirements.txt` |
+| Wrong Python version in venv | Delete `venv` folder, create new venv with `py -3.12 -m venv venv` |
 
 ---
 
