@@ -48,7 +48,7 @@ services:
       PORT: 8000
       
       # Database (PostgreSQL)
-      DATABASE_URL: postgresql://${POSTGRES_USER:-agrisense_user}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agrisense}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agrisense_user}:${POSTGRES_PASSWORD:-strongpassword}@postgres:5432/${POSTGRES_DB:-agrisense}
       
       # Authentication
       SECRET_KEY: ${SECRET_KEY}
