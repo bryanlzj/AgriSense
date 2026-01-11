@@ -115,9 +115,13 @@ git clone <repository-url>
 cd AgriSense
 ```
 
-### 2. Start Database
+### 2. Configure Environment
 
-> **Note:** Ensure Docker Desktop is running before executing this command.
+Copy `backend/.env.example` to `backend/.env` and configure API keys (or get `.env` from Notion).
+
+### 3. Start Database
+
+> **Note:** Ensure Docker/Rancher Desktop is running before executing this command.
 
 ```bash
 docker compose up postgres adminer -d
@@ -125,7 +129,7 @@ docker compose up postgres adminer -d
 
 Wait ~10 seconds for PostgreSQL to initialize.
 
-### 3. Backend Setup
+### 4. Backend Setup
 
 ```bash
 cd backend
@@ -145,10 +149,6 @@ python --version
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment file and configure
-cp .env.example .env
-# Edit .env with your API keys (see Environment Variables section)
-
 # Run database migrations
 alembic upgrade head
 
@@ -156,14 +156,14 @@ alembic upgrade head
 python run.py
 ```
 
-### 4. Verify Setup
+### 5. Verify Setup
 
 ```bash
 # Run tests (should pass 118/118)
 python -m pytest -v
 ```
 
-### 5. Access Points
+### 6. Access Points
 
 | Service | URL |
 |---------|-----|
