@@ -19,13 +19,13 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: agrisense_user
-          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: agrisense_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -47,7 +47,7 @@ jobs:
 
       - name: Run tests
         env:
-          TEST_DATABASE_URL: postgresql://agrisense_user:testpassword@localhost:5432/agrisense_test
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/agrisense_test
           SECRET_KEY: test-secret-key-for-ci
           WEATHERAPI_KEY: ${{ secrets.WEATHERAPI_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
