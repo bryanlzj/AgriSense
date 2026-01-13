@@ -47,7 +47,7 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://agrisense_user:testpassword@localhost:5432/agrisense_test
+          TEST_DATABASE_URL: postgresql://agrisense_user:testpassword@localhost:5432/agrisense_test
           SECRET_KEY: test-secret-key-for-ci
           WEATHERAPI_KEY: ${{ secrets.WEATHERAPI_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
