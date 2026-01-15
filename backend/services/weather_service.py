@@ -1,5 +1,5 @@
 """
-Weather service for fetching and processing weather data from WeatherAPI.com.
+Weather service for fetching and processing weather data from Open-Meteo API.
 
 This module provides functions to:
 - Fetch current weather data
@@ -9,6 +9,7 @@ This module provides functions to:
 
 Learning Notes:
 - Uses httpx for async HTTP requests
+- Open-Meteo is free, no API key required
 - Implements error handling for API failures
 - Caches API responses to reduce API calls
 - Generates mock alerts and recommendations for student project
@@ -41,11 +42,10 @@ from schemas.weather import (
 # CONFIGURATION
 # ============================================================================
 
-# WeatherAPI.com API configuration
+# Open-Meteo API configuration (free, no API key required)
 from config import settings
 
-WEATHERAPI_KEY = settings.weatherapi_key
-WEATHERAPI_BASE_URL = settings.weatherapi_base_url
+OPENMETEO_BASE_URL = settings.openmeteo_base_url
 
 # Cache configuration (simple in-memory cache)
 _weather_cache = {}
@@ -53,6 +53,20 @@ CACHE_DURATION = timedelta(minutes=10)  # Cache for 10 minutes
 
 # Logger
 logger = logging.getLogger(__name__)
+
+# WMO Weather Code descriptions (simplified for Malaysian agriculture)
+WMO_WEATHER_CODES = {
+    0: ("Clear sky", "clear"),
+    1: ("Mainly clear", "clear"),
+    2: ("Partly cloudy", "cloudy"),
+    3: ("Overcast", "cloudy"),
+    51: ("Light drizzle", "drizzle"),
+    53: ("Moderate drizzle", "drizzle"),
+    55: ("Dense drizzle", "drizzle"),
+    61: ("Slight rain", "rain"),
+    63: ("Moderate rain", "rain"),
+    65: ("Heavy rain", "rain"),
+}
 
 
 # ============================================================================
@@ -78,9 +92,9 @@ def _set_cached_data(cache_key: str, data: dict):
     _weather_cache[cache_key] = (data, datetime.now())
 
 
-def _is_api_configured() -> bool:
-    """Check if WeatherAPI is properly configured."""
-    return bool(WEATHERAPI_KEY and WEATHERAPI_KEY != "your_weatherapi_key_here")
+def _get_weather_description(code: int) -> Tuple[str, str]:
+    """Get weather description and category from WMO code."""
+    return WMO_WEATHER_CODES.get(code, ("Unknown", "unknown"))
 
 
 # ============================================================================
@@ -89,7 +103,7 @@ def _is_api_configured() -> bool:
 
 async def fetch_current_weather(latitude: float, longitude: float) -> dict:
     """
-    Fetch current weather data from WeatherAPI.com.
+    Fetch current weather data from Open-Meteo API.
 
     Args:
         latitude: Latitude coordinate
@@ -106,33 +120,45 @@ async def fetch_current_weather(latitude: float, longitude: float) -> dict:
     if cached:
         return cached
 
-    if not _is_api_configured():
-        logger.warning("WeatherAPI key not configured, returning mock data")
-        return _get_mock_current_weather(latitude, longitude)
-
-    url = f"{WEATHERAPI_BASE_URL}/current.json"
+    url = f"{OPENMETEO_BASE_URL}/forecast"
     params = {
-        "key": WEATHERAPI_KEY,
-        "q": f"{latitude},{longitude}",
-        "aqi": "no"  # Air quality index not needed
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": [
+            "temperature_2m",
+            "relative_humidity_2m",
+            "apparent_temperature",
+            "precipitation",
+            "rain",
+            "weather_code",
+            "surface_pressure",
+            "wind_speed_10m",
+            "wind_direction_10m",
+            "cloud_cover"
+        ],
+        "timezone": "auto"
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        _set_cached_data(cache_key, data)
-        return data
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            _set_cached_data(cache_key, data)
+            return data
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch current weather from Open-Meteo: {e}")
+        return _get_mock_current_weather(latitude, longitude)
 
 
 async def fetch_weather_forecast(latitude: float, longitude: float, days: int = 7) -> dict:
     """
-    Fetch weather forecast from WeatherAPI.com.
+    Fetch weather forecast from Open-Meteo API.
 
     Args:
         latitude: Latitude coordinate
         longitude: Longitude coordinate
-        days: Number of days to forecast (1-10)
+        days: Number of days to forecast (1-16)
 
     Returns:
         dict: Raw forecast data from API
@@ -145,57 +171,68 @@ async def fetch_weather_forecast(latitude: float, longitude: float, days: int = 
     if cached:
         return cached
 
-    if not _is_api_configured():
-        logger.warning("WeatherAPI key not configured, returning mock data")
-        return _get_mock_forecast(latitude, longitude)
-
-    url = f"{WEATHERAPI_BASE_URL}/forecast.json"
+    url = f"{OPENMETEO_BASE_URL}/forecast"
     params = {
-        "key": WEATHERAPI_KEY,
-        "q": f"{latitude},{longitude}",
-        "days": min(days, 10),  # WeatherAPI free tier supports up to 3 days
-        "aqi": "no",
-        "alerts": "no"
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": [
+            "temperature_2m",
+            "relative_humidity_2m",
+            "apparent_temperature",
+            "precipitation_probability",
+            "precipitation",
+            "rain",
+            "weather_code",
+            "surface_pressure",
+            "wind_speed_10m",
+            "cloud_cover"
+        ],
+        "daily": [
+            "weather_code",
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "precipitation_probability_max",
+            "wind_speed_10m_max"
+        ],
+        "timezone": "auto",
+        "forecast_days": min(days, 16)
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        _set_cached_data(cache_key, data)
-        return data
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            _set_cached_data(cache_key, data)
+            return data
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch weather forecast from Open-Meteo: {e}")
+        return _get_mock_forecast(latitude, longitude)
 
 
 # ============================================================================
-# MOCK DATA (When API not configured)
+# MOCK DATA (When API not available)
 # ============================================================================
 
 def _get_mock_current_weather(latitude: float, longitude: float) -> dict:
     """Generate mock current weather data for testing."""
     return {
-        "location": {
-            "name": "Mock Location",
-            "region": "Test Region",
-            "country": "Malaysia",
-            "lat": latitude,
-            "lon": longitude,
-            "localtime": datetime.now().strftime("%Y-%m-%d %H:%M")
-        },
+        "latitude": latitude,
+        "longitude": longitude,
+        "timezone": "Asia/Kuala_Lumpur",
         "current": {
-            "temp_c": 30.0,
-            "feelslike_c": 34.0,
-            "humidity": 75,
-            "pressure_mb": 1010.0,
-            "wind_kph": 15.0,
-            "wind_degree": 180,
-            "wind_dir": "S",
-            "cloud": 50,
-            "vis_km": 10.0,
-            "precip_mm": 0.0,
-            "condition": {
-                "text": "Partly cloudy",
-                "code": 1003
-            }
+            "time": datetime.now().strftime("%Y-%m-%dT%H:%M"),
+            "temperature_2m": 30.0,
+            "relative_humidity_2m": 75,
+            "apparent_temperature": 34.0,
+            "precipitation": 0.0,
+            "rain": 0.0,
+            "weather_code": 2,
+            "surface_pressure": 1010.0,
+            "wind_speed_10m": 15.0,
+            "wind_direction_10m": 180,
+            "cloud_cover": 50
         }
     }
 
@@ -204,50 +241,76 @@ def _get_mock_forecast(latitude: float, longitude: float) -> dict:
     """Generate mock forecast data for testing."""
     base_data = _get_mock_current_weather(latitude, longitude)
 
-    forecast_days = []
+    # Generate hourly data for 3 days
+    hourly_times = []
+    hourly_temp = []
+    hourly_humidity = []
+    hourly_apparent = []
+    hourly_precip_prob = []
+    hourly_precip = []
+    hourly_rain = []
+    hourly_weather_code = []
+    hourly_pressure = []
+    hourly_wind = []
+    hourly_cloud = []
+
+    for i in range(72):  # 3 days * 24 hours
+        time = datetime.now() + timedelta(hours=i)
+        hourly_times.append(time.strftime("%Y-%m-%dT%H:00"))
+        hourly_temp.append(28.0 + (i % 8) - 4)
+        hourly_humidity.append(70 + (i % 20))
+        hourly_apparent.append(30.0 + (i % 8) - 4)
+        hourly_precip_prob.append(20 if i % 6 == 0 else 10)
+        hourly_precip.append(0.0 if i % 6 != 0 else 2.0)
+        hourly_rain.append(0.0 if i % 6 != 0 else 2.0)
+        hourly_weather_code.append(61 if i % 6 == 0 else 2)
+        hourly_pressure.append(1010.0)
+        hourly_wind.append(10.0 + (i % 10))
+        hourly_cloud.append(40 + (i % 40))
+
+    base_data["hourly"] = {
+        "time": hourly_times,
+        "temperature_2m": hourly_temp,
+        "relative_humidity_2m": hourly_humidity,
+        "apparent_temperature": hourly_apparent,
+        "precipitation_probability": hourly_precip_prob,
+        "precipitation": hourly_precip,
+        "rain": hourly_rain,
+        "weather_code": hourly_weather_code,
+        "surface_pressure": hourly_pressure,
+        "wind_speed_10m": hourly_wind,
+        "cloud_cover": hourly_cloud
+    }
+
+    # Generate daily data
+    daily_times = []
+    daily_weather_code = []
+    daily_temp_max = []
+    daily_temp_min = []
+    daily_precip_sum = []
+    daily_precip_prob = []
+    daily_wind_max = []
+
     for i in range(3):
         date = datetime.now() + timedelta(days=i)
-        hours = []
-        for h in range(24):
-            hour_time = date.replace(hour=h, minute=0, second=0)
-            hours.append({
-                "time_epoch": int(hour_time.timestamp()),
-                "time": hour_time.strftime("%Y-%m-%d %H:%M"),
-                "temp_c": 28.0 + (h % 8) - 4,
-                "feelslike_c": 30.0 + (h % 8) - 4,
-                "humidity": 70 + (h % 20),
-                "wind_kph": 10.0 + (h % 10),
-                "wind_dir": "S",
-                "pressure_mb": 1010.0,
-                "precip_mm": 0.0 if h % 6 != 0 else 2.0,
-                "cloud": 40 + (h % 40),
-                "chance_of_rain": 20 if h % 6 == 0 else 10,
-                "condition": {
-                    "text": "Partly cloudy",
-                    "code": 1003
-                }
-            })
+        daily_times.append(date.strftime("%Y-%m-%d"))
+        daily_weather_code.append(2)
+        daily_temp_max.append(34.0)
+        daily_temp_min.append(26.0)
+        daily_precip_sum.append(5.0)
+        daily_precip_prob.append(40)
+        daily_wind_max.append(20.0)
 
-        forecast_days.append({
-            "date": date.strftime("%Y-%m-%d"),
-            "date_epoch": int(date.timestamp()),
-            "day": {
-                "maxtemp_c": 34.0,
-                "mintemp_c": 26.0,
-                "avgtemp_c": 30.0,
-                "maxwind_kph": 20.0,
-                "totalprecip_mm": 5.0,
-                "avghumidity": 75,
-                "daily_chance_of_rain": 40,
-                "condition": {
-                    "text": "Partly cloudy",
-                    "code": 1003
-                }
-            },
-            "hour": hours
-        })
+    base_data["daily"] = {
+        "time": daily_times,
+        "weather_code": daily_weather_code,
+        "temperature_2m_max": daily_temp_max,
+        "temperature_2m_min": daily_temp_min,
+        "precipitation_sum": daily_precip_sum,
+        "precipitation_probability_max": daily_precip_prob,
+        "wind_speed_10m_max": daily_wind_max
+    }
 
-    base_data["forecast"] = {"forecastday": forecast_days}
     return base_data
 
 
@@ -257,7 +320,7 @@ def _get_mock_forecast(latitude: float, longitude: float) -> dict:
 
 def transform_current_weather(data: dict) -> WeatherCondition:
     """
-    Transform WeatherAPI.com current weather data to WeatherCondition schema.
+    Transform Open-Meteo current weather data to WeatherCondition schema.
 
     Args:
         data: Raw API response
@@ -265,30 +328,35 @@ def transform_current_weather(data: dict) -> WeatherCondition:
     Returns:
         WeatherCondition: Transformed weather data
     """
-    current = data["current"]
+    current = data.get("current", {})
 
-    # Convert wind from kph to m/s (1 kph = 0.277778 m/s)
-    wind_speed_ms = current.get("wind_kph", 0) * 0.277778
+    # Get weather description from code
+    weather_code = current.get("weather_code", 0)
+    weather_desc, weather_main = _get_weather_description(weather_code)
+
+    # Convert wind from km/h to m/s (1 km/h = 0.277778 m/s)
+    wind_speed_ms = current.get("wind_speed_10m", 0) * 0.277778
 
     return WeatherCondition(
-        temperature=current["temp_c"],
-        feels_like=current["feelslike_c"],
-        humidity=current["humidity"],
-        pressure=current["pressure_mb"],
+        temperature=current.get("temperature_2m", 25.0),
+        feels_like=current.get("apparent_temperature", 25.0),
+        relative_humidity=current.get("relative_humidity_2m", 70),
+        pressure=current.get("surface_pressure", 1010.0),
         wind_speed=wind_speed_ms,
-        wind_direction=current.get("wind_degree", 0),
-        clouds=current.get("cloud", 0),
-        visibility=current.get("vis_km", 10) * 1000,  # Convert km to meters
-        weather_main=current["condition"]["text"],
-        weather_description=current["condition"]["text"],
-        rain_1h=current.get("precip_mm"),
-        rain_3h=None  # WeatherAPI doesn't provide 3h rain data in current
+        wind_direction=current.get("wind_direction_10m", 0),
+        clouds=current.get("cloud_cover", 0),
+        visibility=10000,  # Open-Meteo doesn't provide visibility in current
+        weather_main=weather_main.title(),
+        weather_description=weather_desc,
+        rain=current.get("rain", 0.0),
+        rain_1h=current.get("rain", 0.0),
+        rain_3h=None
     )
 
 
 def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
     """
-    Transform WeatherAPI.com forecast data to list of WeatherForecastItem.
+    Transform Open-Meteo forecast data to list of WeatherForecastItem.
 
     Args:
         data: Raw API response
@@ -298,29 +366,43 @@ def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
     """
     forecast_list = []
 
-    if "forecast" not in data or "forecastday" not in data["forecast"]:
+    hourly = data.get("hourly", {})
+    if not hourly:
         return forecast_list
 
-    for day in data["forecast"]["forecastday"]:
-        # Get hourly data for more granular forecasts
-        for hour in day.get("hour", []):
-            # Convert wind from kph to m/s
-            wind_speed_ms = hour.get("wind_kph", 0) * 0.277778
+    times = hourly.get("time", [])
+    temps = hourly.get("temperature_2m", [])
+    feels_like = hourly.get("apparent_temperature", [])
+    humidity = hourly.get("relative_humidity_2m", [])
+    pressure = hourly.get("surface_pressure", [])
+    wind_speed = hourly.get("wind_speed_10m", [])
+    clouds = hourly.get("cloud_cover", [])
+    weather_codes = hourly.get("weather_code", [])
+    precip_prob = hourly.get("precipitation_probability", [])
+    rain = hourly.get("rain", [])
 
-            forecast_item = WeatherForecastItem(
-                forecast_time=datetime.fromtimestamp(hour["time_epoch"]),
-                temperature=hour["temp_c"],
-                feels_like=hour["feelslike_c"],
-                humidity=hour["humidity"],
-                pressure=hour["pressure_mb"],
-                wind_speed=wind_speed_ms,
-                clouds=hour.get("cloud", 0),
-                weather_main=hour["condition"]["text"],
-                weather_description=hour["condition"]["text"],
-                rain_probability=hour.get("chance_of_rain", 0) / 100,  # Convert % to 0-1
-                rain_volume=hour.get("precip_mm")
-            )
-            forecast_list.append(forecast_item)
+    for i in range(len(times)):
+        # Convert wind from km/h to m/s
+        wind_ms = wind_speed[i] * 0.277778 if i < len(wind_speed) else 0
+
+        # Get weather description
+        code = weather_codes[i] if i < len(weather_codes) else 0
+        weather_desc, weather_main = _get_weather_description(code)
+
+        forecast_item = WeatherForecastItem(
+            forecast_time=datetime.fromisoformat(times[i]),
+            temperature=temps[i] if i < len(temps) else 25.0,
+            feels_like=feels_like[i] if i < len(feels_like) else 25.0,
+            humidity=humidity[i] if i < len(humidity) else 70,
+            pressure=pressure[i] if i < len(pressure) else 1010.0,
+            wind_speed=wind_ms,
+            clouds=clouds[i] if i < len(clouds) else 0,
+            weather_main=weather_main.title(),
+            weather_description=weather_desc,
+            rain_probability=(precip_prob[i] / 100) if i < len(precip_prob) else 0,
+            rain_volume=rain[i] if i < len(rain) else 0
+        )
+        forecast_list.append(forecast_item)
 
     return forecast_list
 
@@ -350,12 +432,13 @@ def generate_weather_alerts(
     now = datetime.now()
 
     # Heavy rain alert
-    if current.rain_1h and current.rain_1h > 10:
+    rain_amount = current.rain_1h or current.rain or 0
+    if rain_amount > 10:
         alerts.append(WeatherAlert(
             alert_type="Heavy Rain",
             severity="high",
             title="Heavy Rain Warning",
-            description=f"Heavy rainfall detected ({current.rain_1h:.1f}mm in last hour). Risk of waterlogging.",
+            description=f"Heavy rainfall detected ({rain_amount:.1f}mm). Risk of waterlogging.",
             start_time=now,
             end_time=now + timedelta(hours=3),
             recommendations=[
@@ -401,7 +484,7 @@ def generate_weather_alerts(
         ))
 
     # Forecast-based: Heavy rain expected
-    heavy_rain_forecast = [f for f in forecast[:8] if f.rain_probability > 0.7]  # Next 24 hours
+    heavy_rain_forecast = [f for f in forecast[:24] if f.rain_probability > 0.7]  # Next 24 hours
     if heavy_rain_forecast:
         alerts.append(WeatherAlert(
             alert_type="Heavy Rain Forecast",
@@ -444,26 +527,27 @@ def generate_agricultural_recommendations(
     recommendations = []
 
     # Irrigation recommendations
-    if current.rain_1h and current.rain_1h > 5:
+    rain_amount = current.rain_1h or current.rain or 0
+    if rain_amount > 5:
         recommendations.append(AgriculturalRecommendation(
             category="irrigation",
             priority="high",
             title="Suspend Irrigation",
             description="Recent rainfall provides sufficient water. Suspend irrigation to avoid waterlogging.",
-            reason=f"Recent rainfall: {current.rain_1h:.1f}mm in last hour",
+            reason=f"Recent rainfall: {rain_amount:.1f}mm",
             actions=[
                 "Turn off irrigation systems",
                 "Check soil moisture levels",
                 "Resume irrigation only when soil dries"
             ]
         ))
-    elif current.temperature > 30 and current.humidity < 50:
+    elif current.temperature > 30 and current.relative_humidity < 50:
         recommendations.append(AgriculturalRecommendation(
             category="irrigation",
             priority="high",
             title="Increase Irrigation",
             description="Hot and dry conditions increase water demand. Increase irrigation frequency.",
-            reason=f"Temperature: {current.temperature:.1f}°C, Humidity: {current.humidity}%",
+            reason=f"Temperature: {current.temperature:.1f}°C, Humidity: {current.relative_humidity}%",
             actions=[
                 "Water early morning or late evening",
                 "Increase irrigation frequency",
@@ -473,13 +557,13 @@ def generate_agricultural_recommendations(
         ))
 
     # Pest control recommendations
-    if current.humidity > 80 and current.temperature > 25:
+    if current.relative_humidity > 80 and current.temperature > 25:
         recommendations.append(AgriculturalRecommendation(
             category="pest_control",
             priority="medium",
             title="Monitor for Fungal Diseases",
             description="High humidity and warm temperature favor fungal disease development.",
-            reason=f"Humidity: {current.humidity}%, Temperature: {current.temperature:.1f}°C",
+            reason=f"Humidity: {current.relative_humidity}%, Temperature: {current.temperature:.1f}°C",
             actions=[
                 "Inspect plants for disease symptoms",
                 "Improve air circulation",
@@ -521,14 +605,14 @@ def generate_agricultural_recommendations(
                 ))
 
     # Harvesting recommendations
-    if current.weather_main == "Clear" or "sunny" in current.weather_main.lower():
-        if current.humidity < 70:
+    if current.weather_main.lower() in ["clear", "sunny"] or "clear" in current.weather_description.lower():
+        if current.relative_humidity < 70:
             recommendations.append(AgriculturalRecommendation(
                 category="harvesting",
                 priority="medium",
                 title="Good Harvesting Conditions",
                 description="Clear weather and low humidity are ideal for harvesting.",
-                reason=f"Weather: {current.weather_main}, Humidity: {current.humidity}%",
+                reason=f"Weather: {current.weather_main}, Humidity: {current.relative_humidity}%",
                 actions=[
                     "Harvest mature crops",
                     "Ensure proper drying conditions",
@@ -612,7 +696,7 @@ async def get_weather_forecast(
         mock_current = WeatherCondition(
             temperature=forecast[0].temperature,
             feels_like=forecast[0].feels_like,
-            humidity=forecast[0].humidity,
+            relative_humidity=forecast[0].humidity,
             pressure=forecast[0].pressure,
             wind_speed=forecast[0].wind_speed,
             wind_direction=0,
@@ -620,6 +704,7 @@ async def get_weather_forecast(
             visibility=10000,
             weather_main=forecast[0].weather_main,
             weather_description=forecast[0].weather_description,
+            rain=forecast[0].rain_volume,
             rain_1h=forecast[0].rain_volume,
             rain_3h=None
         )
@@ -863,38 +948,32 @@ async def get_weather_summary_with_ai(
 # ============================================================================
 
 def is_weather_api_configured() -> bool:
-    """Check if weather API is properly configured."""
-    return _is_api_configured()
+    """Check if weather API is properly configured (Open-Meteo is always available)."""
+    return True  # Open-Meteo requires no API key
 
 
 async def test_weather_api_connection() -> dict:
-    """Test connection to WeatherAPI.com."""
-    if not _is_api_configured():
-        return {
-            "status": "not_configured",
-            "message": "WeatherAPI key not configured",
-            "using_mock": True
-        }
-
+    """Test connection to Open-Meteo API."""
     try:
         # Test with default location (Kuala Lumpur)
         data = await fetch_current_weather(3.1390, 101.6869)
         if "current" in data:
             return {
-                "status": "connected",
-                "message": "WeatherAPI.com is working",
-                "using_mock": False,
-                "location": data.get("location", {}).get("name", "Unknown")
+                "status": "ok",
+                "message": "Open-Meteo API is working",
+                "sample_data": {
+                    "temperature": data["current"].get("temperature_2m"),
+                    "humidity": data["current"].get("relative_humidity_2m"),
+                    "weather_code": data["current"].get("weather_code")
+                }
             }
         else:
             return {
                 "status": "error",
-                "message": "Unexpected response format",
-                "using_mock": True
+                "message": "Unexpected response format from Open-Meteo"
             }
     except Exception as e:
         return {
             "status": "error",
-            "message": str(e),
-            "using_mock": True
+            "message": str(e)
         }

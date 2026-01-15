@@ -203,24 +203,32 @@ def seed_test_data():
         logger.info(f"✓ Created {len(created_users)} test users")
         
         # Create sensor readings (7 days of hourly data)
+        # Fields aligned with Open-Meteo API parameters
         sensor_readings = []
         end_time = datetime.utcnow()
         start_time = end_time - timedelta(days=7)
-        
+
+        # WMO weather codes for random selection
+        weather_codes = [0, 1, 2, 3, 45, 51, 61, 80, 95]
+
         for user in created_users:
             current_time = start_time
             while current_time <= end_time:
                 reading = SensorReading(
                     user_id=user.id,
                     temperature=round(random.uniform(22, 32), 1),
-                    humidity=round(random.uniform(50, 85), 1),
-                    soil_moisture=round(random.uniform(30, 70), 1),
-                    light_intensity=round(random.uniform(200, 900), 1),
+                    relative_humidity=round(random.uniform(50, 85), 1),
+                    rain=round(random.uniform(0, 5), 1) if random.random() < 0.2 else 0.0,
+                    wind_speed=round(random.uniform(5, 30), 1),
+                    solar_radiation=round(random.uniform(0, 800), 1) if 6 <= current_time.hour <= 18 else 0.0,
+                    soil_temperature=round(random.uniform(24, 30), 1),
+                    soil_moisture=round(random.uniform(0.2, 0.45), 4),
+                    weather_code=random.choice(weather_codes),
                     timestamp=current_time
                 )
                 sensor_readings.append(reading)
                 current_time += timedelta(hours=1)
-        
+
         db.bulk_save_objects(sensor_readings)
         db.commit()
         logger.info(f"✓ Created {len(sensor_readings)} sensor readings")

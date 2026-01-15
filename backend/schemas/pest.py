@@ -345,9 +345,9 @@ class UnknownDetectionResponse(BaseModel):
 # ============================================================================
 
 class WeatherSummarySchema(BaseModel):
-    """Current weather conditions used for risk assessment."""
+    """Current weather conditions used for risk assessment (aligned with Open-Meteo)."""
     temperature: float = Field(..., description="Current temperature in Celsius")
-    humidity: float = Field(..., description="Current humidity percentage")
+    relative_humidity: float = Field(..., description="Current relative humidity percentage")
     weather_main: str = Field(..., description="Main weather condition")
     weather_description: str = Field(..., description="Detailed weather description")
     recent_rain: bool = Field(False, description="Whether there was recent rainfall")
@@ -357,7 +357,7 @@ class WeatherSummarySchema(BaseModel):
         json_schema_extra = {
             "example": {
                 "temperature": 28.5,
-                "humidity": 85,
+                "relative_humidity": 85,
                 "weather_main": "Clouds",
                 "weather_description": "scattered clouds",
                 "recent_rain": True,

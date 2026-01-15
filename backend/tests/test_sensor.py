@@ -28,24 +28,32 @@ class TestCreateSensorData:
     """Test creating sensor data."""
     
     def test_create_sensor_data_success(self, client: TestClient, auth_headers: dict, test_user):
-        """Test successful sensor data creation."""
+        """Test successful sensor data creation with Open-Meteo aligned fields."""
         response = client.post(
             "/api/v1/sensor/",
             headers=auth_headers,
             json={
                 "temperature": 28.5,
-                "humidity": 70.0,
-                "soil_moisture": 50.0,
-                "light_intensity": 50000.0
+                "relative_humidity": 70.0,
+                "rain": 0.5,
+                "wind_speed": 15.0,
+                "solar_radiation": 500.0,
+                "soil_temperature": 26.0,
+                "soil_moisture": 0.35,  # Volumetric m³/m³
+                "weather_code": 1
             }
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["temperature"] == 28.5
-        assert data["humidity"] == 70.0
-        assert data["soil_moisture"] == 50.0
-        assert data["light_intensity"] == 50000.0
+        assert data["relative_humidity"] == 70.0
+        assert data["rain"] == 0.5
+        assert data["wind_speed"] == 15.0
+        assert data["solar_radiation"] == 500.0
+        assert data["soil_temperature"] == 26.0
+        assert data["soil_moisture"] == 0.35
+        assert data["weather_code"] == 1
         assert data["user_id"] == test_user.id
         assert "id" in data
         assert "timestamp" in data
@@ -56,38 +64,55 @@ class TestCreateSensorData:
             "/api/v1/sensor/",
             json={
                 "temperature": 28.5,
-                "humidity": 70.0,
-                "soil_moisture": 50.0,
-                "light_intensity": 50000.0
+                "relative_humidity": 70.0,
+                "rain": 0.0,
+                "wind_speed": 10.0,
+                "soil_moisture": 0.35
             }
         )
-        
+
         assert response.status_code == 403
-    
+
     def test_create_sensor_data_invalid_values(self, client: TestClient, auth_headers: dict):
         """Test creating sensor data with invalid values fails."""
-        # Negative humidity
+        # Negative relative_humidity
         response = client.post(
             "/api/v1/sensor/",
             headers=auth_headers,
             json={
                 "temperature": 28.5,
-                "humidity": -10.0,
-                "soil_moisture": 50.0,
-                "light_intensity": 50000.0
+                "relative_humidity": -10.0,
+                "rain": 0.0,
+                "wind_speed": 10.0,
+                "soil_moisture": 0.35
             }
         )
         assert response.status_code == 422
-        
-        # Humidity > 100
+
+        # relative_humidity > 100
         response = client.post(
             "/api/v1/sensor/",
             headers=auth_headers,
             json={
                 "temperature": 28.5,
-                "humidity": 150.0,
-                "soil_moisture": 50.0,
-                "light_intensity": 50000.0
+                "relative_humidity": 150.0,
+                "rain": 0.0,
+                "wind_speed": 10.0,
+                "soil_moisture": 0.35
+            }
+        )
+        assert response.status_code == 422
+
+        # soil_moisture > 1.0 (invalid for volumetric m³/m³)
+        response = client.post(
+            "/api/v1/sensor/",
+            headers=auth_headers,
+            json={
+                "temperature": 28.5,
+                "relative_humidity": 70.0,
+                "rain": 0.0,
+                "wind_speed": 10.0,
+                "soil_moisture": 1.5
             }
         )
         assert response.status_code == 422
@@ -112,23 +137,24 @@ class TestListSensorData:
             sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=20.0 + i,
-                humidity=60.0,
-                soil_moisture=40.0,
-                light_intensity=50000.0
+                relative_humidity=60.0,
+                rain=0.0,
+                wind_speed=10.0,
+                soil_moisture=0.35
             )
             db.add(sensor)
         db.commit()
-        
+
         # Get first 2
         response = client.get("/api/v1/sensor/?skip=0&limit=2", headers=auth_headers)
         assert response.status_code == 200
         assert len(response.json()) == 2
-        
+
         # Get next 2
         response = client.get("/api/v1/sensor/?skip=2&limit=2", headers=auth_headers)
         assert response.status_code == 200
         assert len(response.json()) == 2
-    
+
     def test_list_sensor_data_temperature_filter(self, client: TestClient, auth_headers: dict, db: Session, test_user):
         """Test filtering by temperature range."""
         # Create sensor data with different temperatures
@@ -136,19 +162,20 @@ class TestListSensorData:
             sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=temp,
-                humidity=60.0,
-                soil_moisture=40.0,
-                light_intensity=50000.0
+                relative_humidity=60.0,
+                rain=0.0,
+                wind_speed=10.0,
+                soil_moisture=0.35
             )
             db.add(sensor)
         db.commit()
-        
+
         # Filter for temperature between 20 and 30
         response = client.get(
             "/api/v1/sensor/?min_temperature=20&max_temperature=30",
             headers=auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
@@ -191,17 +218,21 @@ class TestUpdateSensorData:
             headers=auth_headers,
             json={
                 "temperature": 30.0,
-                "humidity": 75.0,
-                "soil_moisture": 55.0,
-                "light_intensity": 60000.0
+                "relative_humidity": 75.0,
+                "rain": 2.5,
+                "wind_speed": 20.0,
+                "soil_moisture": 0.40
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["temperature"] == 30.0
-        assert data["humidity"] == 75.0
-    
+        assert data["relative_humidity"] == 75.0
+        assert data["rain"] == 2.5
+        assert data["wind_speed"] == 20.0
+        assert data["soil_moisture"] == 0.40
+
     def test_update_sensor_data_not_found(self, client: TestClient, auth_headers: dict):
         """Test updating non-existent sensor data fails."""
         response = client.put(
@@ -209,9 +240,10 @@ class TestUpdateSensorData:
             headers=auth_headers,
             json={
                 "temperature": 30.0,
-                "humidity": 75.0,
-                "soil_moisture": 55.0,
-                "light_intensity": 60000.0
+                "relative_humidity": 75.0,
+                "rain": 0.0,
+                "wind_speed": 10.0,
+                "soil_moisture": 0.35
             }
         )
         assert response.status_code == 404
@@ -242,28 +274,37 @@ class TestDeleteSensorData:
 
 class TestSensorStatistics:
     """Test sensor statistics endpoint."""
-    
+
     def test_get_statistics(self, client: TestClient, auth_headers: dict, db: Session, test_user):
-        """Test getting sensor statistics."""
+        """Test getting sensor statistics with Open-Meteo aligned fields."""
         # Create multiple sensor data entries
         for temp in [20.0, 25.0, 30.0]:
             sensor = SensorReading(
                 user_id=test_user.id,
                 temperature=temp,
-                humidity=60.0,
-                soil_moisture=40.0,
-                light_intensity=50000.0
+                relative_humidity=60.0,
+                rain=1.0,
+                wind_speed=15.0,
+                solar_radiation=400.0,
+                soil_temperature=24.0,
+                soil_moisture=0.35
             )
             db.add(sensor)
         db.commit()
-        
+
         response = client.get("/api/v1/sensor/stats/summary", headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.json()
+        # Check all Open-Meteo aligned fields
         assert "temperature" in data
-        assert "humidity" in data
+        assert "relative_humidity" in data
+        assert "rain" in data
+        assert "wind_speed" in data
+        assert "solar_radiation" in data
+        assert "soil_temperature" in data
         assert "soil_moisture" in data
+        # Verify temperature statistics
         assert data["temperature"]["average"] == 25.0
         assert data["temperature"]["minimum"] == 20.0
         assert data["temperature"]["maximum"] == 30.0

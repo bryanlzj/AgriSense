@@ -25,12 +25,12 @@ from datetime import datetime
 
 class WeatherCondition(BaseModel):
     """
-    Current weather condition details.
-    
+    Current weather condition details (aligned with Open-Meteo API).
+
     Attributes:
         temperature: Temperature in Celsius
         feels_like: Perceived temperature in Celsius
-        humidity: Humidity percentage (0-100)
+        relative_humidity: Relative humidity percentage (0-100)
         pressure: Atmospheric pressure in hPa
         wind_speed: Wind speed in m/s
         wind_direction: Wind direction in degrees (0-360)
@@ -38,32 +38,34 @@ class WeatherCondition(BaseModel):
         visibility: Visibility in meters
         weather_main: Main weather condition (e.g., "Rain", "Clear")
         weather_description: Detailed weather description
+        rain: Current rain in mm (optional)
         rain_1h: Rain volume for last hour in mm (optional)
         rain_3h: Rain volume for last 3 hours in mm (optional)
     """
     temperature: float = Field(..., description="Temperature in Celsius")
     feels_like: float = Field(..., description="Perceived temperature in Celsius")
-    humidity: int = Field(..., ge=0, le=100, description="Humidity percentage")
-    pressure: int = Field(..., description="Atmospheric pressure in hPa")
+    relative_humidity: int = Field(..., ge=0, le=100, description="Relative humidity percentage")
+    pressure: float = Field(..., description="Atmospheric pressure in hPa")
     wind_speed: float = Field(..., ge=0, description="Wind speed in m/s")
     wind_direction: int = Field(..., ge=0, le=360, description="Wind direction in degrees")
     clouds: int = Field(..., ge=0, le=100, description="Cloudiness percentage")
     visibility: int = Field(..., ge=0, description="Visibility in meters")
     weather_main: str = Field(..., description="Main weather condition")
     weather_description: str = Field(..., description="Detailed weather description")
+    rain: Optional[float] = Field(None, description="Current rain in mm")
     rain_1h: Optional[float] = Field(None, description="Rain volume for last hour in mm")
     rain_3h: Optional[float] = Field(None, description="Rain volume for last 3 hours in mm")
 
 
 class WeatherForecastItem(BaseModel):
     """
-    Single forecast item for a specific time.
-    
+    Single forecast item for a specific time (aligned with Open-Meteo API).
+
     Attributes:
         forecast_time: Time of the forecast
         temperature: Temperature in Celsius
         feels_like: Perceived temperature in Celsius
-        humidity: Humidity percentage
+        humidity: Relative humidity percentage
         pressure: Atmospheric pressure in hPa
         wind_speed: Wind speed in m/s
         clouds: Cloudiness percentage
@@ -75,8 +77,8 @@ class WeatherForecastItem(BaseModel):
     forecast_time: datetime = Field(..., description="Time of the forecast")
     temperature: float = Field(..., description="Temperature in Celsius")
     feels_like: float = Field(..., description="Perceived temperature in Celsius")
-    humidity: int = Field(..., ge=0, le=100, description="Humidity percentage")
-    pressure: int = Field(..., description="Atmospheric pressure in hPa")
+    humidity: int = Field(..., ge=0, le=100, description="Relative humidity percentage")
+    pressure: float = Field(..., description="Atmospheric pressure in hPa")
     wind_speed: float = Field(..., ge=0, description="Wind speed in m/s")
     clouds: int = Field(..., ge=0, le=100, description="Cloudiness percentage")
     weather_main: str = Field(..., description="Main weather condition")

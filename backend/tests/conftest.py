@@ -185,16 +185,22 @@ def auth_headers(test_user_token: str) -> dict:
 def test_sensor_data(db: Session, test_user: User) -> SensorReading:
     """
     Create sample sensor data for testing.
-    
+
     Returns:
-        SensorReading object with realistic values
+        SensorReading object with realistic values aligned with Open-Meteo API.
+        Fields: temperature, relative_humidity, rain, wind_speed, solar_radiation,
+                soil_temperature, soil_moisture (volumetric m³/m³), weather_code
     """
     sensor_data = SensorReading(
         user_id=test_user.id,
         temperature=25.5,
-        humidity=65.0,
-        soil_moisture=45.0,
-        light_intensity=50000.0
+        relative_humidity=65.0,
+        rain=0.0,
+        wind_speed=12.5,
+        solar_radiation=450.0,
+        soil_temperature=24.0,
+        soil_moisture=0.35,  # Volumetric m³/m³
+        weather_code=1  # Mainly clear
     )
     db.add(sensor_data)
     db.commit()

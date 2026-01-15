@@ -86,7 +86,7 @@ def get_correlations_for_crop(
 def assess_pest_risk(
     correlations: List[PestWeatherCorrelation],
     temperature: float,
-    humidity: float,
+    relative_humidity: float,
     recent_rain: bool = False
 ) -> Dict[str, Any]:
     """
@@ -95,7 +95,7 @@ def assess_pest_risk(
     Args:
         correlations: List of pest-weather correlations to check
         temperature: Current temperature in Celsius
-        humidity: Current humidity percentage
+        relative_humidity: Current relative humidity percentage
         recent_rain: Whether there was recent rainfall
 
     Returns:
@@ -107,7 +107,7 @@ def assess_pest_risk(
     matching_risks = []
 
     for correlation in correlations:
-        if correlation.matches_weather(temperature, humidity, recent_rain):
+        if correlation.matches_weather(temperature, relative_humidity, recent_rain):
             risk_info = {
                 "pest_name": correlation.pest_name,
                 "scientific_name": correlation.scientific_name,
@@ -140,7 +140,7 @@ def assess_pest_risk(
         "total_risks": len(matching_risks),
         "conditions_checked": {
             "temperature": temperature,
-            "humidity": humidity,
+            "relative_humidity": relative_humidity,
             "recent_rain": recent_rain
         },
         "assessed_at": datetime.utcnow().isoformat()
@@ -180,12 +180,12 @@ async def get_pest_risk_assessment(
         current_weather = transform_current_weather(weather_data)
 
         temperature = current_weather.temperature
-        humidity = current_weather.humidity
-        recent_rain = bool(current_weather.rain_1h and current_weather.rain_1h > 0)
+        relative_humidity = current_weather.relative_humidity
+        recent_rain = bool(current_weather.rain and current_weather.rain > 0)
 
         weather_summary = {
             "temperature": temperature,
-            "humidity": humidity,
+            "relative_humidity": relative_humidity,
             "weather_main": current_weather.weather_main,
             "weather_description": current_weather.weather_description,
             "recent_rain": recent_rain,
@@ -226,7 +226,7 @@ async def get_pest_risk_assessment(
     assessment = assess_pest_risk(
         correlations=correlations,
         temperature=temperature,
-        humidity=humidity,
+        relative_humidity=relative_humidity,
         recent_rain=recent_rain
     )
 
@@ -341,12 +341,12 @@ async def check_and_generate_pest_risk_alerts(
         current_weather = transform_current_weather(weather_data)
 
         temperature = current_weather.temperature
-        humidity = current_weather.humidity
-        recent_rain = bool(current_weather.rain_1h and current_weather.rain_1h > 0)
+        relative_humidity = current_weather.relative_humidity
+        recent_rain = bool(current_weather.rain and current_weather.rain > 0)
 
         weather_conditions = {
             "temperature": temperature,
-            "humidity": humidity,
+            "relative_humidity": relative_humidity,
             "recent_rain": recent_rain,
             "timestamp": datetime.utcnow().isoformat()
         }
@@ -359,7 +359,7 @@ async def check_and_generate_pest_risk_alerts(
 
     # Check each correlation and create alerts
     for correlation in correlations:
-        if correlation.matches_weather(temperature, humidity, recent_rain):
+        if correlation.matches_weather(temperature, relative_humidity, recent_rain):
             # Check if we already have a recent alert for this pest
             six_hours_ago = datetime.utcnow() - timedelta(hours=6)
             existing = db.query(Alert).filter(
