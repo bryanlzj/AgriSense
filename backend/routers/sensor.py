@@ -37,35 +37,43 @@ def create_sensor_data(
 ):
     """
     Create a new sensor data reading.
-    
+
     This endpoint allows authenticated users to submit new sensor readings.
     The reading is automatically associated with the current user.
-    
+    Fields aligned with Open-Meteo API parameters.
+
     Args:
         sensor_data: The sensor data to create
         current_user: The authenticated user (from JWT token)
         db: Database session
-        
+
     Returns:
         The created sensor data with ID and timestamps
-        
+
     Example:
         POST /api/v1/sensor/
         {
             "temperature": 28.5,
-            "humidity": 75.0,
-            "rainfall": 12.5,
-            "soil_moisture": 65.0,
-            "wind_speed": 15.0
+            "relative_humidity": 75.0,
+            "rain": 0.0,
+            "wind_speed": 12.5,
+            "solar_radiation": 650.0,
+            "soil_temperature": 26.0,
+            "soil_moisture": 0.35,
+            "weather_code": 1
         }
     """
     # Create new sensor data record
     db_sensor_data = SensorReading(
         user_id=current_user.id,
         temperature=sensor_data.temperature,
-        humidity=sensor_data.humidity,
+        relative_humidity=sensor_data.relative_humidity,
+        rain=sensor_data.rain,
+        wind_speed=sensor_data.wind_speed,
+        solar_radiation=sensor_data.solar_radiation,
+        soil_temperature=sensor_data.soil_temperature,
         soil_moisture=sensor_data.soil_moisture,
-        light_intensity=sensor_data.light_intensity
+        weather_code=sensor_data.weather_code
     )
     
     db.add(db_sensor_data)
@@ -302,21 +310,26 @@ def get_sensor_statistics(
         )
     )
     
-    # Get aggregated statistics
+    # Get aggregated statistics (aligned with Open-Meteo fields)
     stats = db.query(
         func.count(SensorReading.id).label('count'),
         func.avg(SensorReading.temperature).label('avg_temperature'),
         func.min(SensorReading.temperature).label('min_temperature'),
         func.max(SensorReading.temperature).label('max_temperature'),
-        func.avg(SensorReading.humidity).label('avg_humidity'),
-        func.min(SensorReading.humidity).label('min_humidity'),
-        func.max(SensorReading.humidity).label('max_humidity'),
+        func.avg(SensorReading.relative_humidity).label('avg_humidity'),
+        func.min(SensorReading.relative_humidity).label('min_humidity'),
+        func.max(SensorReading.relative_humidity).label('max_humidity'),
+        func.avg(SensorReading.rain).label('avg_rain'),
+        func.sum(SensorReading.rain).label('total_rain'),
+        func.max(SensorReading.rain).label('max_rain'),
+        func.avg(SensorReading.wind_speed).label('avg_wind_speed'),
+        func.max(SensorReading.wind_speed).label('max_wind_speed'),
+        func.avg(SensorReading.solar_radiation).label('avg_solar_radiation'),
+        func.max(SensorReading.solar_radiation).label('max_solar_radiation'),
+        func.avg(SensorReading.soil_temperature).label('avg_soil_temperature'),
         func.avg(SensorReading.soil_moisture).label('avg_soil_moisture'),
         func.min(SensorReading.soil_moisture).label('min_soil_moisture'),
-        func.max(SensorReading.soil_moisture).label('max_soil_moisture'),
-        func.avg(SensorReading.light_intensity).label('avg_light_intensity'),
-        func.min(SensorReading.light_intensity).label('min_light_intensity'),
-        func.max(SensorReading.light_intensity).label('max_light_intensity')
+        func.max(SensorReading.soil_moisture).label('max_soil_moisture')
     ).filter(
         and_(
             SensorReading.user_id == current_user.id,
@@ -324,7 +337,7 @@ def get_sensor_statistics(
             SensorReading.timestamp <= end_date
         )
     ).first()
-    
+
     # Return formatted statistics
     return {
         "period": {
@@ -338,19 +351,30 @@ def get_sensor_statistics(
             "minimum": round(stats.min_temperature, 2) if stats.min_temperature else None,
             "maximum": round(stats.max_temperature, 2) if stats.max_temperature else None
         },
-        "humidity": {
+        "relative_humidity": {
             "average": round(stats.avg_humidity, 2) if stats.avg_humidity else None,
             "minimum": round(stats.min_humidity, 2) if stats.min_humidity else None,
             "maximum": round(stats.max_humidity, 2) if stats.max_humidity else None
         },
-        "soil_moisture": {
-            "average": round(stats.avg_soil_moisture, 2) if stats.avg_soil_moisture else None,
-            "minimum": round(stats.min_soil_moisture, 2) if stats.min_soil_moisture else None,
-            "maximum": round(stats.max_soil_moisture, 2) if stats.max_soil_moisture else None
+        "rain": {
+            "average": round(stats.avg_rain, 2) if stats.avg_rain else None,
+            "total": round(stats.total_rain, 2) if stats.total_rain else 0,
+            "maximum": round(stats.max_rain, 2) if stats.max_rain else None
         },
-        "light_intensity": {
-            "average": round(stats.avg_light_intensity, 2) if stats.avg_light_intensity else None,
-            "minimum": round(stats.min_light_intensity, 2) if stats.min_light_intensity else None,
-            "maximum": round(stats.max_light_intensity, 2) if stats.max_light_intensity else None
+        "wind_speed": {
+            "average": round(stats.avg_wind_speed, 2) if stats.avg_wind_speed else None,
+            "maximum": round(stats.max_wind_speed, 2) if stats.max_wind_speed else None
+        },
+        "solar_radiation": {
+            "average": round(stats.avg_solar_radiation, 2) if stats.avg_solar_radiation else None,
+            "maximum": round(stats.max_solar_radiation, 2) if stats.max_solar_radiation else None
+        },
+        "soil_temperature": {
+            "average": round(stats.avg_soil_temperature, 2) if stats.avg_soil_temperature else None
+        },
+        "soil_moisture": {
+            "average": round(stats.avg_soil_moisture, 4) if stats.avg_soil_moisture else None,
+            "minimum": round(stats.min_soil_moisture, 4) if stats.min_soil_moisture else None,
+            "maximum": round(stats.max_soil_moisture, 4) if stats.max_soil_moisture else None
         }
     }

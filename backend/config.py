@@ -63,15 +63,11 @@ class Settings(BaseSettings):
     )
 
     # ===================================
-    # Weather API (WeatherAPI.com)
+    # Open-Meteo API (Free, no API key required)
     # ===================================
-    weatherapi_key: str = Field(
-        default="",
-        env="WEATHERAPI_KEY"
-    )
-    weatherapi_base_url: str = Field(
-        default="https://api.weatherapi.com/v1",
-        env="WEATHERAPI_BASE_URL"
+    openmeteo_base_url: str = Field(
+        default="https://api.open-meteo.com/v1",
+        env="OPENMETEO_BASE_URL"
     )
     default_latitude: float = Field(default=3.1390, env="DEFAULT_LATITUDE")
     default_longitude: float = Field(default=101.6869, env="DEFAULT_LONGITUDE")
@@ -104,17 +100,28 @@ class Settings(BaseSettings):
     )
     
     # ===================================
-    # Sensor Data Simulation
+    # Sensor Data Simulation (Open-Meteo aligned)
     # ===================================
     sensor_poll_interval: int = Field(default=30, env="SENSOR_POLL_INTERVAL")
     temp_min: float = Field(default=20.0, env="TEMP_MIN")
     temp_max: float = Field(default=35.0, env="TEMP_MAX")
     humidity_min: float = Field(default=40.0, env="HUMIDITY_MIN")
     humidity_max: float = Field(default=90.0, env="HUMIDITY_MAX")
-    soil_moisture_min: float = Field(default=20.0, env="SOIL_MOISTURE_MIN")
-    soil_moisture_max: float = Field(default=80.0, env="SOIL_MOISTURE_MAX")
-    light_min: float = Field(default=100.0, env="LIGHT_MIN")
-    light_max: float = Field(default=1000.0, env="LIGHT_MAX")
+    # Soil moisture in volumetric units (m³/m³), typical range 0.1-0.5
+    soil_moisture_min: float = Field(default=0.1, env="SOIL_MOISTURE_MIN")
+    soil_moisture_max: float = Field(default=0.5, env="SOIL_MOISTURE_MAX")
+    # Rain in mm
+    rain_min: float = Field(default=0.0, env="RAIN_MIN")
+    rain_max: float = Field(default=50.0, env="RAIN_MAX")
+    # Wind speed in km/h
+    wind_speed_min: float = Field(default=0.0, env="WIND_SPEED_MIN")
+    wind_speed_max: float = Field(default=60.0, env="WIND_SPEED_MAX")
+    # Solar radiation (GHI) in W/m²
+    solar_radiation_min: float = Field(default=0.0, env="SOLAR_RADIATION_MIN")
+    solar_radiation_max: float = Field(default=1000.0, env="SOLAR_RADIATION_MAX")
+    # Soil temperature in °C
+    soil_temp_min: float = Field(default=20.0, env="SOIL_TEMP_MIN")
+    soil_temp_max: float = Field(default=35.0, env="SOIL_TEMP_MAX")
     
     # ===================================
     # Alert System Configuration
@@ -122,9 +129,20 @@ class Settings(BaseSettings):
     temp_high_threshold: float = Field(default=32.0, env="TEMP_HIGH_THRESHOLD")
     temp_low_threshold: float = Field(default=18.0, env="TEMP_LOW_THRESHOLD")
     humidity_high_threshold: float = Field(default=85.0, env="HUMIDITY_HIGH_THRESHOLD")
+    # Soil moisture threshold in volumetric units (m³/m³)
     soil_moisture_low_threshold: float = Field(
-        default=30.0,
+        default=0.2,
         env="SOIL_MOISTURE_LOW_THRESHOLD"
+    )
+    # Wind speed threshold in km/h
+    wind_speed_high_threshold: float = Field(
+        default=50.0,
+        env="WIND_SPEED_HIGH_THRESHOLD"
+    )
+    # Rain threshold in mm (heavy rain)
+    rain_heavy_threshold: float = Field(
+        default=10.0,
+        env="RAIN_HEAVY_THRESHOLD"
     )
     pest_confidence_threshold: float = Field(
         default=0.80,

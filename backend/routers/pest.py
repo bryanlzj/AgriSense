@@ -670,7 +670,7 @@ async def get_pest_risk(
         ws = assessment["weather_summary"]
         weather_summary = WeatherSummarySchema(
             temperature=ws["temperature"],
-            humidity=ws["humidity"],
+            relative_humidity=ws["relative_humidity"],
             weather_main=ws["weather_main"],
             weather_description=ws["weather_description"],
             recent_rain=ws.get("recent_rain", False),

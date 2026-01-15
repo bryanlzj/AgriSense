@@ -46,7 +46,9 @@ class AlertService:
     TEMP_HIGH_THRESHOLD = 32.0
     TEMP_LOW_THRESHOLD = 18.0
     HUMIDITY_HIGH_THRESHOLD = 85.0
-    SOIL_MOISTURE_LOW_THRESHOLD = 30.0
+    SOIL_MOISTURE_LOW_THRESHOLD = 0.2  # Volumetric m³/m³
+    WIND_SPEED_HIGH_THRESHOLD = 50.0  # km/h
+    RAIN_HEAVY_THRESHOLD = 10.0  # mm
     PEST_CONFIDENCE_THRESHOLD = 0.80
     
     @staticmethod
@@ -177,14 +179,14 @@ class AlertService:
                 alerts.append(alert)
         
         # High humidity alert
-        if recent_data.humidity > AlertService.HUMIDITY_HIGH_THRESHOLD:
+        if recent_data.relative_humidity > AlertService.HUMIDITY_HIGH_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
                 Alert.alert_type == AlertType.SENSOR.value,
                 Alert.title.like("%High Humidity%"),
                 Alert.created_at >= recent_alert_time
             ).first()
-            
+
             if not existing:
                 alert = AlertService.create_alert(
                     db=db,
@@ -192,18 +194,72 @@ class AlertService:
                     alert_type=AlertType.SENSOR,
                     severity=AlertSeverity.WARNING,
                     title="High Humidity Alert",
-                    message=f"Humidity has reached {recent_data.humidity}%, exceeding the threshold of {AlertService.HUMIDITY_HIGH_THRESHOLD}%. Increased risk of fungal diseases.",
+                    message=f"Humidity has reached {recent_data.relative_humidity}%, exceeding the threshold of {AlertService.HUMIDITY_HIGH_THRESHOLD}%. Increased risk of fungal diseases.",
                     source_id=recent_data.id,
                     source_type="sensor_data",
                     metadata={
-                        "humidity": recent_data.humidity,
+                        "relative_humidity": recent_data.relative_humidity,
                         "threshold": AlertService.HUMIDITY_HIGH_THRESHOLD,
                         "timestamp": recent_data.timestamp.isoformat()
                     }
                 )
                 alerts.append(alert)
-        
-        # Low soil moisture alert (CRITICAL)
+
+        # High wind speed alert
+        if recent_data.wind_speed > AlertService.WIND_SPEED_HIGH_THRESHOLD:
+            existing = db.query(Alert).filter(
+                Alert.user_id == user_id,
+                Alert.alert_type == AlertType.SENSOR.value,
+                Alert.title.like("%Strong Wind%"),
+                Alert.created_at >= recent_alert_time
+            ).first()
+
+            if not existing:
+                alert = AlertService.create_alert(
+                    db=db,
+                    user_id=user_id,
+                    alert_type=AlertType.SENSOR,
+                    severity=AlertSeverity.WARNING,
+                    title="Strong Wind Alert",
+                    message=f"Wind speed has reached {recent_data.wind_speed} km/h, exceeding the threshold of {AlertService.WIND_SPEED_HIGH_THRESHOLD} km/h. Consider protecting vulnerable crops.",
+                    source_id=recent_data.id,
+                    source_type="sensor_data",
+                    metadata={
+                        "wind_speed": recent_data.wind_speed,
+                        "threshold": AlertService.WIND_SPEED_HIGH_THRESHOLD,
+                        "timestamp": recent_data.timestamp.isoformat()
+                    }
+                )
+                alerts.append(alert)
+
+        # Heavy rain alert
+        if recent_data.rain > AlertService.RAIN_HEAVY_THRESHOLD:
+            existing = db.query(Alert).filter(
+                Alert.user_id == user_id,
+                Alert.alert_type == AlertType.SENSOR.value,
+                Alert.title.like("%Heavy Rain%"),
+                Alert.created_at >= recent_alert_time
+            ).first()
+
+            if not existing:
+                alert = AlertService.create_alert(
+                    db=db,
+                    user_id=user_id,
+                    alert_type=AlertType.SENSOR,
+                    severity=AlertSeverity.WARNING,
+                    title="Heavy Rain Alert",
+                    message=f"Rainfall has reached {recent_data.rain} mm, exceeding the threshold of {AlertService.RAIN_HEAVY_THRESHOLD} mm. Check drainage and potential flooding.",
+                    source_id=recent_data.id,
+                    source_type="sensor_data",
+                    metadata={
+                        "rain": recent_data.rain,
+                        "threshold": AlertService.RAIN_HEAVY_THRESHOLD,
+                        "timestamp": recent_data.timestamp.isoformat()
+                    }
+                )
+                alerts.append(alert)
+
+        # Low soil moisture alert (CRITICAL) - now in volumetric units
         if recent_data.soil_moisture < AlertService.SOIL_MOISTURE_LOW_THRESHOLD:
             existing = db.query(Alert).filter(
                 Alert.user_id == user_id,
@@ -219,7 +275,7 @@ class AlertService:
                     alert_type=AlertType.SENSOR,
                     severity=AlertSeverity.CRITICAL,
                     title="Low Soil Moisture Alert",
-                    message=f"Soil moisture has dropped to {recent_data.soil_moisture}%, below the critical threshold of {AlertService.SOIL_MOISTURE_LOW_THRESHOLD}%. Immediate irrigation required.",
+                    message=f"Soil moisture has dropped to {recent_data.soil_moisture:.3f} m³/m³, below the critical threshold of {AlertService.SOIL_MOISTURE_LOW_THRESHOLD} m³/m³. Immediate irrigation required.",
                     source_id=recent_data.id,
                     source_type="sensor_data",
                     metadata={
@@ -229,7 +285,7 @@ class AlertService:
                     }
                 )
                 alerts.append(alert)
-        
+
         return alerts
     
     @staticmethod
