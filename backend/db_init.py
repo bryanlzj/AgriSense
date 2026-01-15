@@ -208,8 +208,8 @@ def seed_test_data():
         end_time = datetime.utcnow()
         start_time = end_time - timedelta(days=7)
 
-        # WMO weather codes for random selection
-        weather_codes = [0, 1, 2, 3, 45, 51, 61, 80, 95]
+        # WMO weather codes for random selection (simplified for Malaysian agriculture)
+        weather_codes = [0, 1, 2, 3, 51, 53, 55, 61, 63, 65]
 
         for user in created_users:
             current_time = start_time
