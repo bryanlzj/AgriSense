@@ -15,6 +15,11 @@ extension ExtString on String {
     return passwordRegExp.hasMatch(this);
   }
 
+  /// Validates username: 3-50 chars, alphanumeric + underscore only.
+  bool get isValidUsername {
+    return RegExp(r'^[a-zA-Z0-9_]{3,50}$').hasMatch(this);
+  }
+
 }
 
 // -={}[]|\:";'<>,.?/!@#$%^&*()_+

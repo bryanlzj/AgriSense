@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fyp_prototype/services/auth_service.dart';
 import 'package:fyp_prototype/utils/extensions.dart';
+import 'package:fyp_prototype/utils/token_storage.dart';
 import 'package:fyp_prototype/widgets/custom_form_field.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -12,8 +14,47 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final token = await AuthService.login(
+        usernameController.text.trim(),
+        passwordController.text,
+      );
+
+      await TokenStorage.saveToken(token);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +85,14 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 20),
                   CustomFormField(
-                    controller: emailController,
-                    hintText: 'Enter your email',
+                    controller: usernameController,
+                    hintText: 'Enter your username',
                     validator: (val) {
-                      if (!val!.isValidEmail) {
-                        return 'Enter a valid email';
+                      if (val == null || val.isEmpty) {
+                        return 'Username is required';
+                      }
+                      if (!val.isValidUsername) {
+                        return 'Username must be 3-50 chars (letters, numbers, underscore)';
                       }
                       return null;
                     },
@@ -58,9 +102,11 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Enter your password',
                     isPassword: true,
                     validator: (val) {
-                      if (!val!.isValidPassword) {
-                        return 'Password must be 8+ chars, include upper, lower, number, special';
-                        //Password must be 8+ chars, include upper, lower, number, special
+                      if (val == null || val.isEmpty) {
+                        return 'Password is required';
+                      }
+                      if (val.length < 6) {
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
@@ -69,12 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          Navigator.pushReplacementNamed(context, '/main');
-                        }
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF4BAE4F),
                         foregroundColor: Color(0xFFFFFFFF),
@@ -82,13 +123,23 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadiusGeometry.circular(8),
                         ),
                       ),
-                      child: Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   //SizedBox(height: 10),
@@ -171,7 +222,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-/*
-
-*/
