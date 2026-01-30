@@ -120,7 +120,7 @@ async def weather_check_job():
                     alerts_created += alert_count
 
                 # High humidity alert (fungal disease risk)
-                if current.humidity > 90 and current.temperature > 25:
+                if current.relative_humidity > 90 and current.temperature > 25:
                     alert_count = await _create_weather_alert_for_location(
                         db=db,
                         users=users,
@@ -129,8 +129,8 @@ async def weather_check_job():
                         alert_type="High Humidity",
                         severity="info",
                         title="High Humidity - Disease Risk",
-                        message=f"Humidity at {current.humidity}%. High risk of fungal diseases. Monitor crops closely.",
-                        threshold_value=current.humidity
+                        message=f"Humidity at {current.relative_humidity}%. High risk of fungal diseases. Monitor crops closely.",
+                        threshold_value=current.relative_humidity
                     )
                     alerts_created += alert_count
 

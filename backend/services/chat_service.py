@@ -50,7 +50,7 @@ async def build_weather_context(
 
         return (
             f"Temperature: {current.temperature:.1f}°C, "
-            f"Humidity: {current.humidity}%, "
+            f"Humidity: {current.relative_humidity}%, "
             f"Conditions: {current.weather_description}"
         )
     except Exception as e:

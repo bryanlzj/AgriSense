@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:fyp_prototype/data/mock_home_data.dart';
 import 'package:fyp_prototype/pages/about_agrisense_page.dart';
 import 'package:fyp_prototype/pages/chatbot_page.dart';
 import 'package:fyp_prototype/pages/farm_management_page.dart';
 import 'package:fyp_prototype/pages/forgot_password_page.dart';
 import 'package:fyp_prototype/pages/help_support_page.dart';
-import 'package:fyp_prototype/pages/home_page.dart';
 import 'package:fyp_prototype/pages/import_dataset_page.dart';
 import 'package:fyp_prototype/pages/login_page.dart';
 import 'package:fyp_prototype/pages/main_page.dart';
@@ -29,7 +27,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // keep your route map as before
+    // Route map - MainPage now fetches its own data
     final routes = {
       '/signUp': (context) => SignUpPage(),
       '/login': (context) => LoginPage(),
@@ -37,12 +35,10 @@ class MyApp extends StatelessWidget {
       '/otp': (context) => OtpPage(),
       '/resetPassword': (context) => ResetPasswordPage(),
       '/success': (context) => SuccessPage(),
-      '/main': (context) => MainPage(homePageData: mockData),
-      '/home': (context) => HomePage(homePageData: mockData),
+      '/main': (context) => MainPage(),
       '/weather': (context) => WeatherPage(),
       '/pests': (context) => PestsPage(),
       '/settings': (context) => SettingsPage(),
-      // 👇 keep ChatbotPage here so it still exists in the map
       '/chatbot': (context) => ChatbotPage(),
       '/farm': (context) => FarmManagementPage(),
       '/notification': (context) => NotificationPage(),

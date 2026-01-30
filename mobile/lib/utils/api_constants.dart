@@ -7,8 +7,11 @@ class ApiConstants {
   // Change this for physical device testing
   static const String physicalDevice = 'http://192.168.1.100:8000';
 
+  // Production server
+  static const String production = 'https://agrisense.bryanlzj.work';
+
   // Current active base URL (change as needed)
-  static const String baseUrl = androidEmulator;
+  static const String baseUrl = production;
 
   // API version prefix
   static const String apiPrefix = '/api/v1';
@@ -17,4 +20,8 @@ class ApiConstants {
   static const String login = '$apiPrefix/auth/login';
   static const String register = '$apiPrefix/auth/register';
   static const String me = '$apiPrefix/auth/me';
+
+  // Dashboard endpoints
+  static const String dashboard = '$apiPrefix/dashboard';
+  static const String dashboardQuick = '$apiPrefix/dashboard/quick';
 }
