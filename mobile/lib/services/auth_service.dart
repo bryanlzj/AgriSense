@@ -1,68 +1,110 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../utils/constants.dart';
-import '../utils/storage.dart';
+import 'package:fyp_prototype/models/user.dart';
+import 'package:fyp_prototype/utils/api_constants.dart';
 
-/// Authentication service for API calls
+/// Service for handling authentication API calls.
 class AuthService {
-  /// Register new user
-  /// 
-  /// POST /api/v1/auth/register
-  /// 
-  /// TODO: Implement registration
-  /// - Send username, password, full_name to backend
-  /// - Return success/error message
-  /// - Handle validation errors
-  Future<Map<String, dynamic>> register({
+  /// Login with username and password.
+  /// Returns the access token on success.
+  /// Throws an exception with error message on failure.
+  static Future<String> login(String username, String password) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.login}');
+
+    // OAuth2 password flow uses form-urlencoded format
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'username': username,
+        'password': password,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['access_token'] as String;
+    } else if (response.statusCode == 401) {
+      throw Exception('Invalid username or password');
+    } else {
+      final data = json.decode(response.body);
+      final detail = data['detail'] ?? 'Login failed';
+      throw Exception(detail);
+    }
+  }
+
+  /// Register a new user.
+  /// Returns the created User on success.
+  /// Throws an exception with error message on failure.
+  static Future<User> register({
     required String username,
     required String password,
-    required String fullName,
+    String? fullName,
+    String farmLocationName = 'Kuala Lumpur',
+    double farmLocationLat = 3.1390,
+    double farmLocationLng = 101.6869,
+    String cropType = 'rice',
   }) async {
-    // TODO: Implement
-    throw UnimplementedError('AuthService.register() not implemented');
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.register}');
+
+    final body = {
+      'username': username,
+      'password': password,
+      'farm_location_name': farmLocationName,
+      'farm_location_lat': farmLocationLat,
+      'farm_location_lng': farmLocationLng,
+      'crop_type': cropType,
+    };
+
+    if (fullName != null) {
+      body['full_name'] = fullName;
+    }
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = json.decode(response.body);
+      return User.fromJson(data);
+    } else if (response.statusCode == 400) {
+      final data = json.decode(response.body);
+      final detail = data['detail'] ?? 'Registration failed';
+      throw Exception(detail);
+    } else {
+      final data = json.decode(response.body);
+      final detail = data['detail'] ?? 'Registration failed';
+      throw Exception(detail);
+    }
   }
 
-  /// Login user
-  /// 
-  /// POST /api/v1/auth/login
-  /// 
-  /// TODO: Implement login
-  /// - Send username and password to backend
-  /// - Receive JWT access token
-  /// - Save token to StorageService
-  /// - Return user data
-  Future<Map<String, dynamic>> login({
-    required String username,
-    required String password,
-  }) async {
-    // TODO: Implement
-    throw UnimplementedError('AuthService.login() not implemented');
-  }
+  /// Get the current authenticated user's profile.
+  /// Requires a valid JWT token.
+  /// Returns the User on success.
+  /// Throws an exception on failure.
+  static Future<User> getCurrentUser(String token) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.me}');
 
-  /// Get current user
-  /// 
-  /// GET /api/v1/auth/me
-  /// 
-  /// TODO: Implement get current user
-  /// - Get JWT token from StorageService
-  /// - Send token in Authorization header
-  /// - Return user data
-  Future<Map<String, dynamic>> getCurrentUser() async {
-    // TODO: Implement
-    throw UnimplementedError('AuthService.getCurrentUser() not implemented');
-  }
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-  /// Logout user
-  /// 
-  /// TODO: Implement logout
-  /// - Clear JWT token from StorageService
-  /// - Clear user data
-  Future<void> logout() async {
-    await StorageService.clearUserSession();
-  }
-
-  /// Check if user is logged in
-  Future<bool> isLoggedIn() async {
-    return await StorageService.isLoggedIn();
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return User.fromJson(data);
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired. Please login again.');
+    } else {
+      throw Exception('Failed to get user profile');
+    }
   }
 }

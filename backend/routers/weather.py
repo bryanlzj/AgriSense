@@ -371,7 +371,7 @@ async def test_weather_api(
             "sample_data": {
                 "temperature": weather_data.current.temperature,
                 "weather": weather_data.current.weather_main,
-                "humidity": weather_data.current.humidity
+                "humidity": weather_data.current.relative_humidity
             }
         }
     except Exception as e:

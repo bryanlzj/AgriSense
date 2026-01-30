@@ -87,7 +87,7 @@ async def get_dashboard(
 
         response_data["weather"] = {
             "temperature": round(current_weather.temperature, 1),
-            "humidity": current_weather.humidity,
+            "humidity": current_weather.relative_humidity,
             "weather_main": current_weather.weather_main,
             "weather_description": current_weather.weather_description,
             "feels_like": round(current_weather.feels_like, 1),
