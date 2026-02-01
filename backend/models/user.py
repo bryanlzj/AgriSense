@@ -153,6 +153,14 @@ class User(Base):
         lazy="dynamic"
     )
 
+    # One user can have many farm sectors
+    sectors = relationship(
+        "Sector",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+
     # Indexes for performance
     # Composite index for common query patterns
     __table_args__ = (

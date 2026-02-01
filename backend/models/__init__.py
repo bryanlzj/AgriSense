@@ -13,6 +13,7 @@ from .alert import Alert, AlertType, AlertSeverity
 from .pest_report import PestReport, ObservedSeverity, ReportStatus
 from .pest_weather_correlation import PestWeatherCorrelation
 from .weather_cache import WeatherCache
+from .sector import Sector
 
 # Export all models
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "ReportStatus",
     "PestWeatherCorrelation",
     "WeatherCache",
+    "Sector",
 ]
