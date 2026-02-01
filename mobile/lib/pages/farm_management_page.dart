@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fyp_prototype/services/mock_sector_service.dart';
+import 'package:fyp_prototype/services/sector_service.dart';
 import 'package:fyp_prototype/widgets/sector_dialog.dart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_app_bar.dart';
@@ -14,55 +14,92 @@ class FarmManagementPage extends StatefulWidget {
 }
 
 class _FarmManagementPageState extends State<FarmManagementPage> {
-  final List<Sector> _sectors = [];
+  List<Sector> _sectors = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadMockSectors();
+    _loadSectors();
   }
 
-  Future<void> _loadMockSectors() async {
-    final sectors = await MockSectorService.fetchSectors();
+  Future<void> _loadSectors() async {
     setState(() {
-      _sectors.clear();
-      _sectors.addAll(sectors);
+      _isLoading = true;
+      _error = null;
     });
-  }
-  Future<void> _deleteSector(int index) async {
-    await MockSectorService.deleteSector(index);
-    _loadMockSectors(); // refresh after deletion
-  }
 
-  void _addOrEditSector(Sector sector, [int? index]) async {
-    if (index != null) {
-      await MockSectorService.updateSector(index, sector);
-    } else {
-      await MockSectorService.addSector(sector);
+    try {
+      final sectors = await SectorService.fetchSectors();
+      setState(() {
+        _sectors = sectors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
     }
-    _loadMockSectors(); // refresh after change
   }
 
+  Future<void> _deleteSector(Sector sector) async {
+    if (sector.id == null) return;
 
-  void _showSectorDialog({Sector? sector, int? index}) {
+    try {
+      await SectorService.deleteSector(sector.id!);
+      _loadSectors(); // refresh after deletion
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete sector: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addOrEditSector(Sector sector, [Sector? existingSector]) async {
+    try {
+      if (existingSector != null && existingSector.id != null) {
+        // Update existing sector
+        await SectorService.updateSector(existingSector.id!, sector);
+      } else {
+        // Create new sector
+        await SectorService.createSector(sector);
+      }
+      _loadSectors(); // refresh after change
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save sector: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showSectorDialog({Sector? sector}) {
     showDialog(
       context: context,
       builder: (_) => SectorDialog(
         initialSector: sector,
         onSave: (newSector) {
-          _addOrEditSector(newSector, index);
-          
+          _addOrEditSector(newSector, sector);
         },
-        onDelete: index != null
+        onDelete: sector != null && sector.id != null
             ? () {
-                _deleteSector(index);
-                
+                _deleteSector(sector);
               }
             : null,
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -86,20 +123,7 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
             ),
             const SizedBox(height: 15),
             Expanded(
-              child: _sectors.isEmpty
-                  ? const Center(child: Text('No sectors added yet'))
-                  : ListView.builder(
-                      itemCount: _sectors.length,
-                      itemBuilder: (context, index) {
-                        return FarmSectorCard(
-                          sector: _sectors[index],
-                          onEdit: () => _showSectorDialog(
-                            sector: _sectors[index],
-                            index: index,
-                          ),
-                        );
-                      },
-                    ),
+              child: _buildContent(),
             ),
           ],
         ),
@@ -110,6 +134,80 @@ class _FarmManagementPageState extends State<FarmManagementPage> {
         onPressed: () => _showSectorDialog(),
         icon: const Icon(Icons.add),
         label: const Text('Add Sector'),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF53AD64)),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: GoogleFonts.inter(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadSectors,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF53AD64),
+              ),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_sectors.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.grass, color: Colors.grey[400], size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'No sectors added yet',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the button below to add your first sector',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadSectors,
+      color: const Color(0xFF53AD64),
+      child: ListView.builder(
+        itemCount: _sectors.length,
+        itemBuilder: (context, index) {
+          return FarmSectorCard(
+            sector: _sectors[index],
+            onEdit: () => _showSectorDialog(sector: _sectors[index]),
+          );
+        },
       ),
     );
   }

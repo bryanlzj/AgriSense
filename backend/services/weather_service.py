@@ -54,18 +54,43 @@ CACHE_DURATION = timedelta(minutes=10)  # Cache for 10 minutes
 # Logger
 logger = logging.getLogger(__name__)
 
-# WMO Weather Code descriptions (simplified for Malaysian agriculture)
+# WMO Weather Code descriptions (comprehensive for Malaysian agriculture)
 WMO_WEATHER_CODES = {
-    0: ("Clear sky", "clear"),
-    1: ("Mainly clear", "clear"),
-    2: ("Partly cloudy", "cloudy"),
-    3: ("Overcast", "cloudy"),
-    51: ("Light drizzle", "drizzle"),
-    53: ("Moderate drizzle", "drizzle"),
-    55: ("Dense drizzle", "drizzle"),
-    61: ("Slight rain", "rain"),
-    63: ("Moderate rain", "rain"),
-    65: ("Heavy rain", "rain"),
+    # Clear/Cloudy
+    0: ("Clear sky", "Clear"),
+    1: ("Mainly clear", "Clear"),
+    2: ("Partly cloudy", "Cloudy"),
+    3: ("Overcast", "Cloudy"),
+    # Fog/Mist
+    45: ("Foggy", "Fog"),
+    48: ("Depositing rime fog", "Fog"),
+    # Drizzle
+    51: ("Light drizzle", "Drizzle"),
+    53: ("Moderate drizzle", "Drizzle"),
+    55: ("Dense drizzle", "Drizzle"),
+    56: ("Light freezing drizzle", "Drizzle"),
+    57: ("Dense freezing drizzle", "Drizzle"),
+    # Rain
+    61: ("Slight rain", "Rain"),
+    63: ("Moderate rain", "Rain"),
+    65: ("Heavy rain", "Rain"),
+    66: ("Light freezing rain", "Rain"),
+    67: ("Heavy freezing rain", "Rain"),
+    # Snow (rare in Malaysia but included for completeness)
+    71: ("Slight snow fall", "Snow"),
+    73: ("Moderate snow fall", "Snow"),
+    75: ("Heavy snow fall", "Snow"),
+    77: ("Snow grains", "Snow"),
+    # Showers
+    80: ("Slight rain showers", "Rain"),
+    81: ("Moderate rain showers", "Rain"),
+    82: ("Violent rain showers", "Rain"),
+    85: ("Slight snow showers", "Snow"),
+    86: ("Heavy snow showers", "Snow"),
+    # Thunderstorm
+    95: ("Thunderstorm", "Thunderstorm"),
+    96: ("Thunderstorm with slight hail", "Thunderstorm"),
+    99: ("Thunderstorm with heavy hail", "Thunderstorm"),
 }
 
 

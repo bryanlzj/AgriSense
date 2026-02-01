@@ -36,7 +36,7 @@ from routers.weather import router as weather_router
 from routers.alert import router as alert_router
 from routers.chat import router as chat_router
 from routers.dashboard import router as dashboard_router
-# Additional routers will be imported as they are created:
+from routers.sector import router as sector_router
 
 
 @asynccontextmanager
@@ -107,7 +107,7 @@ app.include_router(weather_router, prefix="/api/v1")
 app.include_router(alert_router, prefix="/api/v1")
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
-# Additional routers will be registered as they are created:
+app.include_router(sector_router, prefix="/api/v1")
 
 
 @app.get("/")

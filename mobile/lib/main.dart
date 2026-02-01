@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fyp_prototype/pages/about_agrisense_page.dart';
+import 'package:fyp_prototype/pages/alerts_page.dart';
 import 'package:fyp_prototype/pages/chatbot_page.dart';
 import 'package:fyp_prototype/pages/farm_management_page.dart';
 import 'package:fyp_prototype/pages/forgot_password_page.dart';
@@ -44,7 +45,8 @@ class MyApp extends StatelessWidget {
       '/notification': (context) => NotificationPage(),
       '/import': (context) => ImportDatasetPage(),
       '/help': (context) => HelpSupportPage(),
-      '/about': (context) => AboutAgrisensePage()
+      '/about': (context) => AboutAgrisensePage(),
+      '/alerts': (context) => AlertsPage(),
     };
 
     return MaterialApp(

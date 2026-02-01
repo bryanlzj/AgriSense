@@ -24,4 +24,18 @@ class ApiConstants {
   // Dashboard endpoints
   static const String dashboard = '$apiPrefix/dashboard';
   static const String dashboardQuick = '$apiPrefix/dashboard/quick';
+
+  // Weather endpoints
+  static const String weatherCurrent = '$apiPrefix/weather/current';
+  static const String weatherForecast = '$apiPrefix/weather/forecast';
+  static const String weatherSummary = '$apiPrefix/weather/summary';
+
+  // Alert endpoints (note: trailing slash required for list endpoint)
+  static const String alerts = '$apiPrefix/alert/';
+  static const String alertsBulk = '$apiPrefix/alert/bulk';
+  static const String alertsStats = '$apiPrefix/alert/stats/summary';
+
+  // Sector endpoints
+  static const String sectors = '$apiPrefix/sector/';
+  static const String sectorStats = '$apiPrefix/sector/stats/summary';
 }
