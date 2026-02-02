@@ -30,9 +30,10 @@ from config import settings
 OPENROUTER_API_KEY = settings.openrouter_api_key
 OPENROUTER_BASE_URL = settings.openrouter_base_url
 
-# Model to use (free tier model)
-# Using Llama 3.1 8B Instruct - free and good for agricultural advice
-DEFAULT_MODEL = "x-ai/grok-4.1-fast"
+# Model to use - configurable via OPENROUTER_MODEL env var
+# Free models: meta-llama/llama-3.1-8b-instruct:free, google/gemma-2-9b-it:free
+# Paid models: anthropic/claude-3.5-sonnet, openai/gpt-4o, x-ai/grok-4.1-fast
+DEFAULT_MODEL = settings.openrouter_model
 
 # API timeout (seconds)
 API_TIMEOUT = 30

@@ -61,6 +61,12 @@ class Settings(BaseSettings):
         default="https://openrouter.ai/api/v1",
         env="OPENROUTER_BASE_URL"
     )
+    # Free models: meta-llama/llama-3.1-8b-instruct:free, google/gemma-2-9b-it:free
+    # Paid models: anthropic/claude-3.5-sonnet, openai/gpt-4o, x-ai/grok-4.1-fast
+    openrouter_model: str = Field(
+        default="meta-llama/llama-3.1-8b-instruct:free",
+        env="OPENROUTER_MODEL"
+    )
 
     # ===================================
     # Open-Meteo API (Free, no API key required)
