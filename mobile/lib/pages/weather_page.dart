@@ -80,14 +80,6 @@ class _WeatherPageState extends State<WeatherPage> {
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Weather',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(

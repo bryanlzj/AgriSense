@@ -38,4 +38,17 @@ class ApiConstants {
   // Sector endpoints
   static const String sectors = '$apiPrefix/sector/';
   static const String sectorStats = '$apiPrefix/sector/stats/summary';
+
+  // Pest detection endpoints
+  static const String pestDetect = '$apiPrefix/pest/detect';
+  static const String pestDetectEnhanced = '$apiPrefix/pest/detect/enhanced';
+  static const String pestList = '$apiPrefix/pest/';
+  static const String pestStats = '$apiPrefix/pest/stats/summary';
+  static const String pestRisk = '$apiPrefix/pest/risk';
+  static const String pestRiskSummary = '$apiPrefix/pest/risk/summary';
+
+  // Chat endpoints
+  static const String chatMessage = '$apiPrefix/chat/message';
+  static const String chatImage = '$apiPrefix/chat/image';
+  static const String chatStatus = '$apiPrefix/chat/status';
 }
