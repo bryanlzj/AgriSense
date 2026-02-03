@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fyp_prototype/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/utils/extensions.dart';
-import 'package:fyp_prototype/utils/token_storage.dart';
 import 'package:fyp_prototype/widgets/custom_form_field.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -16,48 +16,46 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    final authProvider = context.read<AuthProvider>();
 
-    try {
-      final token = await AuthService.login(
-        usernameController.text.trim(),
-        passwordController.text,
+    final success = await authProvider.login(
+      usernameController.text.trim(),
+      passwordController.text,
+    );
+
+    if (success && mounted) {
+      // Navigation is handled by AuthWrapper, but we can also explicitly navigate
+      Navigator.pushReplacementNamed(context, '/main');
+    } else if (!success && mounted) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Login failed'),
+          backgroundColor: Colors.red,
+        ),
       );
-
-      await TokenStorage.saveToken(token);
-
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/main');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      authProvider.clearError();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -115,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
+                      onPressed: isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF4BAE4F),
                         foregroundColor: Color(0xFFFFFFFF),
@@ -123,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadiusGeometry.circular(8),
                         ),
                       ),
-                      child: _isLoading
+                      child: isLoading
                           ? SizedBox(
                               height: 20,
                               width: 20,
@@ -142,7 +140,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                     ),
                   ),
-                  //SizedBox(height: 10),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -150,7 +147,6 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.pushNamed(context, '/forgotPassword');
                       },
                       style: TextButton.styleFrom(
-                        //side: BorderSide(color: Colors.black),
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                       ),
@@ -160,7 +156,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  //SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -202,7 +197,6 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushReplacementNamed(context, '/signUp');
                         },
                         style: TextButton.styleFrom(
-                          //side: BorderSide(color: Colors.black),
                           padding: EdgeInsets.zero,
                           minimumSize: Size.zero,
                         ),

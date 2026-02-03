@@ -28,15 +28,15 @@ from models.user import User
 from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from models.alert import Alert
+from models.sector import Sector
 from utils.password import get_password_hash
 from utils.security import create_access_token
 
-# Use PostgreSQL for testing - defaults to main agrisense database
+# Use PostgreSQL for testing - defaults to hosted agrisense database
 # Set TEST_DATABASE_URL environment variable to override
-# Password matches root .env: strongpassword
 SQLALCHEMY_TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://agrisense_user:strongpassword@localhost:5432/agrisense"
+    "postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense"
 )
 
 # Create test engine
@@ -293,12 +293,45 @@ def test_pest_weather_correlation(db: Session):
     return correlation
 
 
+@pytest.fixture(scope="function")
+def test_sector(db: Session, test_user: User) -> Sector:
+    """
+    Create sample sector for testing.
+
+    Returns:
+        Sector object with test data:
+        - name: "Test Sector 1"
+        - location: "North Field"
+        - area: "2 acres"
+        - area_value: 2.0
+        - area_unit: "acres"
+        - crop: "rice"
+        - planted_date: current UTC time
+    """
+    from datetime import datetime
+
+    sector = Sector(
+        user_id=test_user.id,
+        name="Test Sector 1",
+        location="North Field",
+        area="2 acres",
+        area_value=2.0,
+        area_unit="acres",
+        crop="rice",
+        planted_date=datetime.utcnow()
+    )
+    db.add(sector)
+    db.commit()
+    db.refresh(sector)
+    return sector
+
+
 # Environment variable fixtures
 @pytest.fixture(scope="session", autouse=True)
 def set_test_env():
     """
     Set test environment variables.
-    
+
     This fixture runs once per test session and sets up
     environment variables needed for testing.
     """

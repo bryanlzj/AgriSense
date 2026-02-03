@@ -190,9 +190,8 @@ SECRET_KEY=your_generated_secret_key_here
 # 2. SET SECURE DATABASE PASSWORD
 POSTGRES_PASSWORD=your_secure_database_password_here
 
-# 3. ADD YOUR OPENWEATHER API KEY
-# Get free API key from: https://openweathermap.org/api
-OPENWEATHER_API_KEY=your_openweather_api_key_here
+# 3. WEATHER API - No key required!
+# Uses Open-Meteo API which is free and needs no API key
 
 # 4. SET YOUR DOMAIN (if you have one)
 CORS_ORIGINS=["http://YOUR_SERVER_IP:5000","https://yourdomain.com"]
@@ -209,7 +208,7 @@ DEBUG=false
 
 **Verify your .env file:**
 ```bash
-cat .env | grep -E "SECRET_KEY|POSTGRES_PASSWORD|OPENWEATHER_API_KEY"
+cat .env | grep -E "SECRET_KEY|POSTGRES_PASSWORD|OPENROUTER_API_KEY"
 ```
 
 Make sure none of these show the example values!
@@ -595,7 +594,7 @@ git pull origin main
 - [ ] .env file configured with secure values
 - [ ] SECRET_KEY generated (32-byte hex)
 - [ ] POSTGRES_PASSWORD set (strong password)
-- [ ] OPENWEATHER_API_KEY added
+- [x] Weather API: Uses Open-Meteo (no key required)
 - [ ] Deployment script executed successfully
 - [ ] Health endpoint responding
 - [ ] API documentation accessible

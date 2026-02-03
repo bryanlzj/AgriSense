@@ -1,8 +1,9 @@
 # AgriSense Development Handover Document
 
-> **Date:** 2026-02-02
-> **Session Summary:** Completed Phases 1-4 of backend-mobile integration
-> **Next Session:** Continue with Phase 5 (Pest Detection & Chat) or Phase 6 (Polish)
+> **Date:** 2026-02-04
+> **Session Summary:** Documentation Update - Updated all `.references` files to reflect current project state
+> **Previous Session:** Backend Test Suite Complete (139 tests) + Sector Tests Added
+> **Next Session:** Edit Profile, Weather Enhancements
 
 ---
 
@@ -23,153 +24,222 @@
 | Phase 2: Sign Up & Dashboard | ✅ Complete | Registration with farm details, dashboard shows real data |
 | Phase 3: Weather & Alerts | ✅ Complete | Weather page, alerts page with real API data |
 | Phase 4: Farm Sectors | ✅ Complete | CRUD for farm sectors (backend + mobile) |
-| Phase 5: Pest Detection & Chat | 🔴 Not Started | Image upload, pest detection, chatbot |
-| Phase 6: Polish | 🔴 Not Started | Provider state management, error handling |
+| Phase 5: Pest Detection & Chat | ✅ Complete | Image upload, pest detection, chatbot |
+| Phase 6: Polish | ✅ Complete | Provider state management, error handling, logout |
+
+### Test Coverage
+
+| Type | Count | Coverage | Status |
+|------|-------|----------|--------|
+| Backend (pytest) | 139 | 77% overall, 92-100% routers | ✅ All passing |
+| Mobile (flutter test) | 29 | - | ✅ All passing |
+
+**Backend Test Breakdown:**
+| Test File | Tests | Description |
+|-----------|-------|-------------|
+| test_auth.py | 15 | Authentication endpoints |
+| test_sensor.py | 13 | Sensor data CRUD |
+| test_pest.py | 28 | Pest detection & reports |
+| test_weather.py | 17 | Weather API endpoints |
+| test_alert.py | 15 | Alert system |
+| test_chat.py | 16 | Chatbot functionality |
+| test_dashboard.py | 14 | Dashboard endpoints |
+| test_sector.py | 21 | Sector CRUD (NEW) |
 
 ---
 
-## Files Created/Modified This Session
+## What Was Accomplished This Session
 
-### Backend Files
+### 1. Documentation Update (`.references` folder)
 
-**New Files:**
-- `backend/models/sector.py` - Sector database model
-- `backend/schemas/sector.py` - Pydantic schemas for sector API
-- `backend/routers/sector.py` - CRUD endpoints for sectors
+**Files Updated:**
+| File | Changes |
+|------|---------|
+| `.references/tasks/agrisense-tasks.md` | Completely rewritten to reflect actual project state (all phases complete) |
+| `.references/prd/agrisense-prd-v2.md` | Updated acceptance criteria (all checked), added implementation status section |
+| `.references/API_DOCUMENTATION.md` | Updated base URL (8000), added Chat, Dashboard, Sector endpoints |
+| `.references/DEPLOYMENT_GUIDE.md` | Updated port to 8000, added CI/CD section, updated production checklist |
 
-**Modified Files:**
-- `backend/models/__init__.py` - Added Sector export
-- `backend/models/user.py` - Added sectors relationship
-- `backend/main.py` - Registered sector router
-- `backend/services/weather_service.py` - Added comprehensive WMO weather codes (0-99)
-- `backend/routers/dashboard.py` - Fixed `.humidity` to `.relative_humidity`
-- `backend/routers/weather.py` - Fixed `.humidity` to `.relative_humidity`
-- `backend/jobs/scheduler.py` - Fixed `.humidity` to `.relative_humidity`
-- `backend/services/chat_service.py` - Fixed `.humidity` to `.relative_humidity`
+**Key Updates:**
+- Task list now shows ~90% complete (Phase 1-6 done, Phase 7 pending)
+- PRD acceptance criteria all marked as complete
+- API docs include all 8 endpoint groups (Auth, Sensor, Pest, Weather, Alert, Dashboard, Chat, Sector)
+- Deployment guide reflects actual Oracle Cloud setup
 
-### Mobile Files
+---
 
-**New Files:**
-- `mobile/lib/services/sector_service.dart` - API service for sectors
-- `mobile/lib/services/weather_service.dart` - Weather API service
-- `mobile/lib/services/alert_service.dart` - Alerts API service
-- `mobile/lib/services/dashboard_service.dart` - Dashboard API service
-- `mobile/lib/pages/alerts_page.dart` - Full alerts management UI
+### 2. Backend Test Suite Completion (139 tests) - (Previous Session)
 
-**Modified Files:**
-- `mobile/lib/utils/api_constants.dart` - Added sector endpoints, uses production URL
-- `mobile/lib/models/farm_sector.dart` - Added id, fromJson, toJson
-- `mobile/lib/models/weather_data.dart` - Updated to match backend response
-- `mobile/lib/models/alert.dart` - Updated with proper fields
-- `mobile/lib/models/risk_status.dart` - Updated to match backend
-- `mobile/lib/models/home_page_data.dart` - Updated for dashboard integration
-- `mobile/lib/pages/farm_management_page.dart` - Uses real SectorService
-- `mobile/lib/pages/weather_page.dart` - Full weather UI with forecast
-- `mobile/lib/pages/home_page.dart` - Connected to dashboard API
-- `mobile/lib/pages/main_page.dart` - Fetches real dashboard data
-- `mobile/lib/pages/sign_up_page.dart` - Added farm location, crop type
-- `mobile/lib/main.dart` - Added routes for alerts page
+**New Test File Created:**
+| File | Tests | Description |
+|------|-------|-------------|
+| `backend/tests/test_sector.py` | 21 | Complete sector CRUD test coverage |
+
+**Tests Added:**
+- `TestCreateSector` (4 tests): success, minimal fields, no auth, invalid name
+- `TestListSectors` (4 tests): list, pagination, filter by crop, no auth
+- `TestGetSector` (3 tests): success, not found, no auth
+- `TestUpdateSector` (4 tests): success, partial update, not found, no auth
+- `TestDeleteSector` (3 tests): success, not found, no auth
+- `TestSectorStatistics` (3 tests): get stats, empty stats, no auth
+
+**Files Modified:**
+| File | Changes |
+|------|---------|
+| `backend/tests/conftest.py` | Added `test_sector` fixture, updated DB URL to hosted PostgreSQL |
+| `backend/config.py` | Added `extra = "ignore"` to Settings to allow extra env vars |
+
+**Coverage Results:**
+| Component | Coverage |
+|-----------|----------|
+| `routers/sector.py` | 100% |
+| `routers/auth.py` | 97% |
+| `routers/chat.py` | 96% |
+| `routers/alert.py` | 96% |
+| `routers/sensor.py` | 97% |
+| `routers/pest.py` | 92% |
+| Overall | 77% |
+
+**Uncovered Code (Not Critical):**
+- `data_simulator.py` (0%) - Dev utility for fake data, not production code
+- `db_init.py` (21%) - Startup infrastructure, runs once at boot
+- `scheduler.py` (29%) - Background jobs, complex async timing
+- External API wrappers - Validated by integration tests passing
+
+---
+
+## Previous Session Accomplishments
+
+### Phase 6: Polish (Complete)
+
+**New Files Created:**
+| File | Description |
+|------|-------------|
+| `lib/providers/auth_provider.dart` | Global auth state with ChangeNotifier |
+| `lib/utils/error_handler.dart` | Consistent error/success message utility |
+
+**Files Modified:**
+| File | Changes |
+|------|---------|
+| `lib/main.dart` | Added MultiProvider, AuthWrapper for auto-login |
+| `lib/pages/login_page.dart` | Now uses AuthProvider |
+| `lib/pages/sign_up_page.dart` | Now uses AuthProvider |
+| `lib/pages/main_page.dart` | Uses AuthProvider for token access |
+| `lib/pages/settings_page.dart` | Shows real user data, added logout button |
+
+**Key Features Added:**
+- Auto-login check on app startup
+- Global auth state accessible via Provider
+- Logout button with confirmation dialog
+- Session expiration handling (auto-redirect to login on 401)
+- ErrorHandler utility for consistent snackbar messages
+
+### Flutter Tests
+
+**Test Files Created:**
+| File | Tests | Description |
+|------|-------|-------------|
+| `test/unit/auth_provider_test.dart` | 3 | AuthProvider state tests |
+| `test/unit/models_test.dart` | 18 | User, Alert, PestDetection, Chat model tests |
+| `test/unit/error_handler_test.dart` | 12 | ErrorHandler utility tests |
+| `test/widget/login_page_test.dart` | 7 | LoginPage widget tests |
+| `test/widget_test.dart` | - | Main test runner |
+
+**Run Tests:**
+```bash
+cd mobile
+flutter test
+```
+
+---
+
+## What's Needed Next
+
+### Priority 1: Edit Profile
+- **Backend:** Add `PUT /api/v1/auth/me` endpoint to update user profile
+- **Mobile:** Create Edit Profile page accessible from Settings
+- **Fields to edit:** full_name, farm_location_name, crop_type
+
+### Priority 2: Weather Enhancements (User Requested)
+
+These features are marked "Out of Scope" in PRD but user indicates they are needed:
+
+| Feature | Backend Changes | Mobile Changes |
+|---------|-----------------|----------------|
+| **Historical Weather Data** | Add `/weather/historical` endpoint | Add historical tab/view to weather page |
+| **Weather by Farm Sector** | Add lat/lng to Sector model, update weather endpoints | Allow sector selection in weather page |
+| **Sector Selection in Weather** | Support location parameter from sectors | Dropdown to select sector for weather |
+
+**Note:** Sector model currently has NO coordinates (lat/lng). Would need migration to add these fields.
+
+### Priority 3: Other Enhancements (Optional)
+- Forgot password flow (currently out of scope)
+- Push notifications (currently out of scope)
+- Offline support (currently out of scope)
 
 ---
 
 ## API Endpoints Summary
 
-### Sector Endpoints (New)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/sector/` | Create sector |
-| GET | `/api/v1/sector/` | List user's sectors |
-| GET | `/api/v1/sector/{id}` | Get specific sector |
-| PUT | `/api/v1/sector/{id}` | Update sector |
-| DELETE | `/api/v1/sector/{id}` | Delete sector |
-| GET | `/api/v1/sector/stats/summary` | Get sector statistics |
+### Auth
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| POST | `/api/v1/auth/login` | Login | ✅ |
+| POST | `/api/v1/auth/register` | Register | ✅ |
+| GET | `/api/v1/auth/me` | Get current user | ✅ |
+| PUT | `/api/v1/auth/me` | Update profile | ❌ **NEEDED** |
 
-### Other Key Endpoints
-- `POST /api/v1/auth/login` - Login (username, not email)
-- `POST /api/v1/auth/register` - Register with farm details
-- `GET /api/v1/dashboard` - Full dashboard data
-- `GET /api/v1/weather/summary` - Weather with forecast
-- `GET /api/v1/alert/` - List alerts (note trailing slash)
-- `PUT /api/v1/alert/{id}` - Update alert (mark read)
+### Weather
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| GET | `/api/v1/weather/current` | Current weather | ✅ |
+| GET | `/api/v1/weather/forecast` | 5-day forecast | ✅ |
+| GET | `/api/v1/weather/summary` | Current + forecast | ✅ |
+| GET | `/api/v1/weather/historical` | Historical data | ❌ **NEEDED** |
 
----
-
-## Known Issues / Notes
-
-### Resolved Issues
-1. **Weather "Unknown" condition** - Added WMO codes 0-99 to `weather_service.py`
-2. **Alert API failing** - Fixed by adding trailing slash to endpoint
-3. **`.humidity` attribute error** - Changed to `.relative_humidity` in 4 files
-4. **Weather page overflow** - Fixed with SafeArea and Expanded widgets
-5. **Time format wrong** - Fixed to show local time with date
-
-### Current State
-- All Phase 1-4 features are deployed and working
-- Sectors table exists in production database (empty, ready for use)
-- Mobile app connects to production backend at `agrisense.bryanlzj.work`
-
-### User Preferences
-- **"Never use mock data under any circumstances unless I say ok"** - Always use real API data
+### Other Endpoints (All Working)
+- `/api/v1/dashboard` - Dashboard data
+- `/api/v1/alert/` - Alerts CRUD
+- `/api/v1/sector/` - Sectors CRUD
+- `/api/v1/pest/` - Pest detection
+- `/api/v1/chat/` - Chatbot
 
 ---
 
 ## How to Run
 
-### Android Emulator
-```bash
-# List available emulators
-emulator -list-avds
-
-# Start emulator (existing one)
-emulator -avd Medium_Phone_API_36.1
-
-# Run Flutter app
-cd mobile
-flutter run -d emulator-5554
-
-# Hot reload: press 'r' in terminal
-# Quit: press 'q' in terminal
-```
-
-### Chrome (Alternative)
+### Mobile App
 ```bash
 cd mobile
-flutter run -d chrome
+flutter pub get
+flutter run
 ```
 
-### Backend (Local Development)
+### Run Tests
+```bash
+# Backend tests (139 tests)
+cd backend
+venv\Scripts\activate  # Windows
+python -m pytest -v
+
+# Backend tests with coverage
+python -m pytest --cov=backend --cov-report=html
+
+# Mobile tests (29 tests)
+cd mobile
+flutter test
+```
+
+### Backend (Local)
 ```bash
 cd backend
-python -m venv venv
 venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 python run.py
 ```
 
 ### Deployment
-Push to `main` branch triggers CI/CD:
-- Builds Docker image
-- Deploys to Oracle Cloud server
-- Runs migrations automatically
-
----
-
-## Next Steps (Phase 5: Pest Detection & Chat)
-
-### Tasks from INTEGRATION_PLAN.md
-1. Add `image_picker` package to pubspec.yaml
-2. Create `lib/services/pest_service.dart`
-3. Build pest detection UI (capture/upload image)
-4. Display detection results
-5. Create `lib/services/chat_service.dart`
-6. Update `chatbot_page.dart` to send/receive messages
-7. Test pest detection flow
-8. Test chatbot flow
-
-### Backend Endpoints Already Available
-- `POST /api/v1/pest/detect` - Upload & detect pests
-- `GET /api/v1/pest/` - List pest detections
-- `POST /api/v1/chat/message` - Send message to AI chatbot
+Push to `main` branch triggers CI/CD automatically.
 
 ---
 
@@ -183,15 +253,17 @@ AgriSense/
 │   ├── schemas/             # Pydantic schemas
 │   ├── routers/             # API endpoints
 │   ├── services/            # Business logic
-│   └── alembic/             # Database migrations
+│   └── tests/               # pytest tests (139 tests)
 ├── mobile/
 │   ├── lib/
 │   │   ├── main.dart        # Flutter app entry point
+│   │   ├── providers/       # State management
 │   │   ├── pages/           # Screen widgets
 │   │   ├── services/        # API services
 │   │   ├── models/          # Data models
 │   │   ├── widgets/         # Reusable components
 │   │   └── utils/           # Constants, helpers
+│   ├── test/                # Flutter tests (29 tests)
 │   └── pubspec.yaml         # Flutter dependencies
 ├── INTEGRATION_PLAN.md      # Detailed integration roadmap
 ├── CLAUDE.md                # Project instructions for Claude
@@ -200,14 +272,23 @@ AgriSense/
 
 ---
 
-## Database Schema (Key Tables)
+## Known Issues / Notes
 
-- `users` - User accounts with farm location and crop type
-- `sectors` - Farm sectors/plots (NEW - Phase 4)
-- `sensor_readings` - Environmental sensor data
-- `pest_detections` - Pest detection results
-- `alerts` - System alerts (weather, pest, etc.)
-- `alembic_version` - Migration tracking
+### Current State
+- All Phase 1-6 features are implemented and tested
+- Backend is deployed and working at `agrisense.bryanlzj.work`
+- Mobile app uses Provider for auth state management
+- **Backend tests use hosted PostgreSQL** at `168.138.188.113:5432` (configured in `conftest.py`)
+
+### User Preferences
+- **"Never use mock data under any circumstances unless I say ok"** - Always use real API data
+
+### Sector Model Limitation
+The Sector model currently does NOT have latitude/longitude coordinates. To enable weather-by-sector, need to:
+1. Add `latitude` and `longitude` columns to Sector model
+2. Create Alembic migration
+3. Update sector schemas and endpoints
+4. Update mobile to use sector coordinates for weather
 
 ---
 

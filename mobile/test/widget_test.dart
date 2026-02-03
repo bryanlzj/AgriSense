@@ -1,30 +1,30 @@
-// This is a basic Flutter widget test.
+// Main test file that runs all test suites
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// To run all tests:
+//   flutter test
+//
+// To run specific test file:
+//   flutter test test/unit/models_test.dart
+//
+// To run with coverage:
+//   flutter test --coverage
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:fyp_prototype/main.dart';
+// Import test files
+import 'unit/auth_provider_test.dart' as auth_provider_tests;
+import 'unit/models_test.dart' as models_tests;
+import 'unit/error_handler_test.dart' as error_handler_tests;
+import 'widget/login_page_test.dart' as login_page_tests;
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Unit Tests', () {
+    auth_provider_tests.main();
+    models_tests.main();
+    error_handler_tests.main();
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  group('Widget Tests', () {
+    login_page_tests.main();
   });
 }

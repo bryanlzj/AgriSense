@@ -272,7 +272,7 @@ See `.env.example` for all available configuration options:
 
 - **Database:** Connection settings
 - **Authentication:** JWT settings
-- **Weather API:** OpenWeatherMap integration
+- **Weather API:** Open-Meteo integration (free, no API key required)
 - **ML Service:** Pest detection service
 - **Alerts:** Threshold configurations
 - **File Uploads:** Size and type restrictions

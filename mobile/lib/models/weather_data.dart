@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class WeatherData {
   final double temperature;
   final int humidity;
@@ -30,26 +32,65 @@ class WeatherData {
     );
   }
 
-  /// Returns an icon emoji based on weather condition.
-  String get icon {
+  /// Returns an icon based on weather condition.
+  IconData get iconData {
     switch (weatherMain.toLowerCase()) {
       case 'clear':
-        return '☀️';
+      case 'sunny':
+        return Icons.wb_sunny;
       case 'clouds':
-        return '☁️';
+      case 'cloudy':
+      case 'partly cloudy':
+      case 'overcast':
+        return Icons.cloud;
       case 'rain':
       case 'drizzle':
-        return '🌧️';
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return Icons.water_drop;
       case 'thunderstorm':
-        return '⛈️';
+        return Icons.thunderstorm;
       case 'snow':
-        return '❄️';
+        return Icons.ac_unit;
       case 'mist':
       case 'fog':
       case 'haze':
-        return '🌫️';
+      case 'foggy':
+        return Icons.foggy;
       default:
-        return '🌤️';
+        return Icons.wb_cloudy;
+    }
+  }
+
+  /// Returns a color for the weather icon.
+  Color get iconColor {
+    switch (weatherMain.toLowerCase()) {
+      case 'clear':
+      case 'sunny':
+        return const Color(0xFFFFB300); // Amber/Yellow for sun
+      case 'clouds':
+      case 'cloudy':
+      case 'partly cloudy':
+      case 'overcast':
+        return const Color(0xFF78909C); // Blue grey for clouds
+      case 'rain':
+      case 'drizzle':
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return const Color(0xFF42A5F5); // Blue for rain
+      case 'thunderstorm':
+        return const Color(0xFF5C6BC0); // Indigo for storm
+      case 'snow':
+        return const Color(0xFF90CAF9); // Light blue for snow
+      case 'mist':
+      case 'fog':
+      case 'haze':
+      case 'foggy':
+        return const Color(0xFFB0BEC5); // Light grey for fog
+      default:
+        return const Color(0xFF53AD64); // Green default
     }
   }
 

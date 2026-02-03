@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/widgets/custom_bottom_nav_bar.dart';
 import 'package:fyp_prototype/models/home_page_data.dart';
 import 'package:fyp_prototype/pages/home_page.dart';
@@ -6,7 +8,6 @@ import 'package:fyp_prototype/pages/pests_page.dart';
 import 'package:fyp_prototype/pages/settings_page.dart';
 import 'package:fyp_prototype/pages/weather_page.dart';
 import 'package:fyp_prototype/services/dashboard_service.dart';
-import 'package:fyp_prototype/utils/token_storage.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -34,20 +35,19 @@ class _MainPageState extends State<MainPage> {
     });
 
     try {
-      final token = await TokenStorage.getToken();
+      final authProvider = context.read<AuthProvider>();
+      final token = authProvider.token;
+
       if (token == null) {
-        // No token, redirect to login
+        // No token, trigger logout
         if (mounted) {
+          await authProvider.handleSessionExpired();
           Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
 
       final dashboardData = await DashboardService.getDashboard(token);
-
-      // Debug: Print weather data to console
-      print('Dashboard weather data: ${dashboardData['weather']}');
-
       final homePageData = HomePageData.fromDashboardResponse(dashboardData);
 
       if (mounted) {
@@ -62,7 +62,8 @@ class _MainPageState extends State<MainPage> {
 
         // Check if session expired
         if (errorMsg.contains('Session expired') || errorMsg.contains('401')) {
-          await TokenStorage.deleteToken();
+          final authProvider = context.read<AuthProvider>();
+          await authProvider.handleSessionExpired();
           Navigator.pushReplacementNamed(context, '/login');
           return;
         }

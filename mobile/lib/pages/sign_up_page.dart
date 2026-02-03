@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/utils/extensions.dart';
 import 'package:fyp_prototype/widgets/custom_form_field.dart';
-import 'package:fyp_prototype/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -20,7 +21,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController farmLocationController = TextEditingController();
 
   String _selectedCropType = 'rice';
-  bool _isLoading = false;
   String? _errorMessage;
 
   final List<Map<String, String>> _cropTypes = [
@@ -37,23 +37,26 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     setState(() {
-      _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      await AuthService.register(
-        username: usernameController.text.trim(),
-        password: passwordController.text,
-        fullName: nameController.text.trim(),
-        farmLocationName: farmLocationController.text.trim().isEmpty
-            ? 'Kuala Lumpur'
-            : farmLocationController.text.trim(),
-        cropType: _selectedCropType,
-      );
+    final authProvider = context.read<AuthProvider>();
 
-      if (!mounted) return;
+    final success = await authProvider.register(
+      username: usernameController.text.trim(),
+      password: passwordController.text,
+      fullName: nameController.text.trim(),
+      farmLocationName: farmLocationController.text.trim().isEmpty
+          ? 'Kuala Lumpur'
+          : farmLocationController.text.trim(),
+      farmLocationLat: 3.1390, // Default to KL
+      farmLocationLng: 101.6869,
+      cropType: _selectedCropType,
+    );
 
+    if (!mounted) return;
+
+    if (success) {
       // Show success message and navigate to login
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -61,18 +64,12 @@ class _SignUpPageState extends State<SignUpPage> {
           backgroundColor: Color(0xFF4BAE4F),
         ),
       );
-
       Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
+    } else {
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = authProvider.errorMessage;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      authProvider.clearError();
     }
   }
 
@@ -88,6 +85,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -257,7 +257,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSignUp,
+                      onPressed: isLoading ? null : _handleSignUp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF4BAE4F),
                         foregroundColor: Color(0xFFFFFFFF),
@@ -266,7 +266,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadiusGeometry.circular(8),
                         ),
                       ),
-                      child: _isLoading
+                      child: isLoading
                           ? SizedBox(
                               height: 20,
                               width: 20,
@@ -296,7 +296,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: _isLoading
+                        onPressed: isLoading
                             ? null
                             : () {
                                 Navigator.pushReplacementNamed(context, '/login');
