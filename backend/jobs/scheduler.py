@@ -29,9 +29,11 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+import json
 from database import SessionLocal
 from models.user import User
-from models.alert import Alert
+from models.alert import Alert, AlertType, AlertSeverity
+from models.sensor_reading import SensorReading
 from services.weather_service import fetch_current_weather, transform_current_weather
 from services.pest_risk_service import check_and_generate_pest_risk_alerts
 
@@ -70,6 +72,7 @@ async def weather_check_job():
         # Track processed locations to avoid duplicate API calls
         processed_locations = set()
         alerts_created = 0
+        readings_created = 0
 
         for user in users:
             # Create location key for deduplication
@@ -88,6 +91,29 @@ async def weather_check_job():
                 )
                 current = transform_current_weather(weather_data)
 
+                # Save weather data as sensor readings for all users at this location
+                raw_current = weather_data.get("current", {})
+                location_users = [
+                    u for u in users
+                    if abs(u.farm_location_lat - user.farm_location_lat) < 0.01
+                    and abs(u.farm_location_lng - user.farm_location_lng) < 0.01
+                ]
+                for loc_user in location_users:
+                    reading = SensorReading(
+                        user_id=loc_user.id,
+                        temperature=current.temperature,
+                        relative_humidity=current.relative_humidity,
+                        rain=current.rain or 0.0,
+                        wind_speed=raw_current.get("wind_speed_10m", 0.0),  # km/h (raw from API)
+                        solar_radiation=current.shortwave_radiation,
+                        soil_temperature=current.soil_temperature,
+                        soil_moisture=current.soil_moisture if current.soil_moisture is not None else 0.0,
+                        weather_code=raw_current.get("weather_code")
+                    )
+                    db.add(reading)
+                    readings_created += 1
+                db.commit()
+
                 # Check thresholds and create alerts
                 # High temperature alert
                 if current.temperature > 35:
@@ -96,8 +122,8 @@ async def weather_check_job():
                         users=users,
                         lat=user.farm_location_lat,
                         lng=user.farm_location_lng,
-                        alert_type="High Temperature",
-                        severity="warning",
+                        alert_type=AlertType.EXTREME_HEAT,
+                        severity=AlertSeverity.HIGH,
                         title="High Temperature Warning",
                         message=f"Temperature has reached {current.temperature:.1f}°C. Consider shade protection and increase irrigation.",
                         threshold_value=current.temperature
@@ -111,8 +137,8 @@ async def weather_check_job():
                         users=users,
                         lat=user.farm_location_lat,
                         lng=user.farm_location_lng,
-                        alert_type="Heavy Rain",
-                        severity="warning",
+                        alert_type=AlertType.HEAVY_RAIN,
+                        severity=AlertSeverity.HIGH,
                         title="Heavy Rain Warning",
                         message=f"Heavy rainfall ({current.rain_1h:.1f}mm/hr). Check drainage and protect crops.",
                         threshold_value=current.rain_1h
@@ -126,8 +152,8 @@ async def weather_check_job():
                         users=users,
                         lat=user.farm_location_lat,
                         lng=user.farm_location_lng,
-                        alert_type="High Humidity",
-                        severity="info",
+                        alert_type=AlertType.HIGH_HUMIDITY,
+                        severity=AlertSeverity.MEDIUM,
                         title="High Humidity - Disease Risk",
                         message=f"Humidity at {current.relative_humidity}%. High risk of fungal diseases. Monitor crops closely.",
                         threshold_value=current.relative_humidity
@@ -138,7 +164,7 @@ async def weather_check_job():
                 logger.error(f"Error checking weather for location {location_key}: {e}")
                 continue
 
-        logger.info(f"Weather check completed. Locations checked: {len(processed_locations)}, Alerts created: {alerts_created}")
+        logger.info(f"Weather check completed. Locations checked: {len(processed_locations)}, Readings saved: {readings_created}, Alerts created: {alerts_created}")
 
     except Exception as e:
         logger.error(f"Weather check job failed: {e}")
@@ -196,8 +222,8 @@ async def _create_weather_alert_for_location(
     users,
     lat: float,
     lng: float,
-    alert_type: str,
-    severity: str,
+    alert_type: AlertType,
+    severity: AlertSeverity,
     title: str,
     message: str,
     threshold_value: float
@@ -208,7 +234,6 @@ async def _create_weather_alert_for_location(
     Returns count of alerts created.
     """
     from datetime import timedelta
-    from sqlalchemy import and_
 
     alerts_created = 0
     six_hours_ago = datetime.utcnow() - timedelta(hours=6)
@@ -220,10 +245,10 @@ async def _create_weather_alert_for_location(
     ]
 
     for user in location_users:
-        # Check for existing recent alert
+        # Check for existing recent alert (dedup within 6 hours)
         existing = db.query(Alert).filter(
             Alert.user_id == user.id,
-            Alert.type == "weather",
+            Alert.alert_type == alert_type,
             Alert.title == title,
             Alert.created_at >= six_hours_ago
         ).first()
@@ -231,17 +256,15 @@ async def _create_weather_alert_for_location(
         if not existing:
             alert = Alert(
                 user_id=user.id,
-                type="weather",
+                alert_type=alert_type,
                 severity=severity,
                 title=title,
                 message=message,
-                source_type="weather_check_job",
-                metadata={
-                    "alert_type": alert_type,
+                alert_metadata=json.dumps({
                     "threshold_value": threshold_value,
                     "location_lat": lat,
                     "location_lng": lng
-                },
+                }),
                 is_read=False,
                 is_acknowledged=False
             )

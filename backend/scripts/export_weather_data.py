@@ -52,14 +52,15 @@ def fetch_historical_weather(
         "hourly": [
             "temperature_2m",
             "relative_humidity_2m",
-            "apparent_temperature",
-            "precipitation",
             "rain",
-            "weather_code",
-            "surface_pressure",
             "wind_speed_10m",
-            "wind_direction_10m",
-            "cloud_cover"
+            "weather_code",
+            "shortwave_radiation",
+            "soil_temperature_0cm",
+            "soil_temperature_6cm",
+            "soil_moisture_0_to_1cm",
+            "soil_moisture_1_to_3cm",
+            "soil_moisture_3_to_9cm"
         ],
         "timezone": "auto"
     }
@@ -93,27 +94,26 @@ def export_to_csv(data: dict, output_path: str) -> int:
     times = hourly.get("time", [])
     temperature = hourly.get("temperature_2m", [])
     humidity = hourly.get("relative_humidity_2m", [])
-    apparent_temp = hourly.get("apparent_temperature", [])
-    precipitation = hourly.get("precipitation", [])
     rain = hourly.get("rain", [])
-    weather_code = hourly.get("weather_code", [])
-    pressure = hourly.get("surface_pressure", [])
     wind_speed = hourly.get("wind_speed_10m", [])
-    wind_direction = hourly.get("wind_direction_10m", [])
-    cloud_cover = hourly.get("cloud_cover", [])
+    weather_code = hourly.get("weather_code", [])
+    shortwave_radiation = hourly.get("shortwave_radiation", [])
+    soil_temp_0 = hourly.get("soil_temperature_0cm", [])
+    soil_temp_6 = hourly.get("soil_temperature_6cm", [])
+    sm_0_1 = hourly.get("soil_moisture_0_to_1cm", [])
+    sm_1_3 = hourly.get("soil_moisture_1_to_3cm", [])
+    sm_3_9 = hourly.get("soil_moisture_3_to_9cm", [])
 
     # CSV headers
     headers = [
-        "timestamp",
+        "time",
         "temperature_2m",
         "relative_humidity_2m",
-        "apparent_temperature",
-        "precipitation",
         "rain",
-        "surface_pressure",
         "wind_speed_10m",
-        "wind_direction_10m",
-        "cloud_cover",
+        "soil_temperature_0_to_7cm",
+        "soil_moisture_0_to_7cm",
+        "shortwave_radiation",
         "weather_code"  # Label (output)
     ]
 
@@ -128,17 +128,26 @@ def export_to_csv(data: dict, output_path: str) -> int:
             if i >= len(weather_code) or weather_code[i] is None:
                 continue
 
+            # Compute soil temperature 0-7cm (avg of 0cm and 6cm)
+            st0 = soil_temp_0[i] if i < len(soil_temp_0) else None
+            st6 = soil_temp_6[i] if i < len(soil_temp_6) else None
+            soil_temp = round((st0 + st6) / 2, 2) if st0 is not None and st6 is not None else ""
+
+            # Compute soil moisture 0-7cm (weighted avg by layer thickness)
+            m01 = sm_0_1[i] if i < len(sm_0_1) else None
+            m13 = sm_1_3[i] if i < len(sm_1_3) else None
+            m39 = sm_3_9[i] if i < len(sm_3_9) else None
+            soil_moist = round((1 * m01 + 2 * m13 + 4 * m39) / 7, 4) if m01 is not None and m13 is not None and m39 is not None else ""
+
             row = [
                 times[i] if i < len(times) else "",
                 temperature[i] if i < len(temperature) else "",
                 humidity[i] if i < len(humidity) else "",
-                apparent_temp[i] if i < len(apparent_temp) else "",
-                precipitation[i] if i < len(precipitation) else "",
                 rain[i] if i < len(rain) else "",
-                pressure[i] if i < len(pressure) else "",
                 wind_speed[i] if i < len(wind_speed) else "",
-                wind_direction[i] if i < len(wind_direction) else "",
-                cloud_cover[i] if i < len(cloud_cover) else "",
+                soil_temp,
+                soil_moist,
+                shortwave_radiation[i] if i < len(shortwave_radiation) else "",
                 weather_code[i]  # Label
             ]
             writer.writerow(row)
