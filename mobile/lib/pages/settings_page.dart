@@ -34,7 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (confirmed == true && mounted) {
       await context.read<AuthProvider>().logout();
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
 

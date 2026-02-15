@@ -18,10 +18,27 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController farmLocationController = TextEditingController();
-
+  String _selectedLocation = 'Kuala Lumpur';
   String _selectedCropType = 'rice';
   String? _errorMessage;
+
+  // Mirrors backend MALAYSIAN_LOCATIONS (backend/schemas/auth.py)
+  static const Map<String, Map<String, double>> _malaysianLocations = {
+    'Perlis': {'lat': 6.4449, 'lng': 100.2048},
+    'Kedah': {'lat': 6.1184, 'lng': 100.3685},
+    'Penang': {'lat': 5.4164, 'lng': 100.3327},
+    'Perak': {'lat': 4.5921, 'lng': 101.0901},
+    'Selangor': {'lat': 3.0738, 'lng': 101.5183},
+    'Negeri Sembilan': {'lat': 2.7258, 'lng': 101.9424},
+    'Melaka': {'lat': 2.1896, 'lng': 102.2501},
+    'Johor': {'lat': 1.4854, 'lng': 103.7618},
+    'Pahang': {'lat': 3.8126, 'lng': 103.3256},
+    'Terengganu': {'lat': 5.3117, 'lng': 103.1324},
+    'Kelantan': {'lat': 6.1254, 'lng': 102.2381},
+    'Sabah': {'lat': 5.9788, 'lng': 116.0753},
+    'Sarawak': {'lat': 1.5533, 'lng': 110.3592},
+    'Kuala Lumpur': {'lat': 3.1390, 'lng': 101.6869},
+  };
 
   final List<Map<String, String>> _cropTypes = [
     {'value': 'rice', 'label': 'Rice'},
@@ -42,15 +59,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
     final authProvider = context.read<AuthProvider>();
 
+    final coords = _malaysianLocations[_selectedLocation]!;
+
     final success = await authProvider.register(
       username: usernameController.text.trim(),
       password: passwordController.text,
       fullName: nameController.text.trim(),
-      farmLocationName: farmLocationController.text.trim().isEmpty
-          ? 'Kuala Lumpur'
-          : farmLocationController.text.trim(),
-      farmLocationLat: 3.1390, // Default to KL
-      farmLocationLng: 101.6869,
+      farmLocationName: _selectedLocation,
+      farmLocationLat: coords['lat']!,
+      farmLocationLng: coords['lng']!,
       cropType: _selectedCropType,
     );
 
@@ -79,7 +96,6 @@ class _SignUpPageState extends State<SignUpPage> {
     usernameController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    farmLocationController.dispose();
     super.dispose();
   }
 
@@ -171,14 +187,42 @@ class _SignUpPageState extends State<SignUpPage> {
                     },
                   ),
 
-                  // Farm Location
-                  CustomFormField(
-                    controller: farmLocationController,
-                    hintText: 'Farm location (e.g., Kuala Lumpur)',
-                    validator: (val) {
-                      // Optional field - no validation required
-                      return null;
-                    },
+                  // Farm Location Dropdown
+                  Padding(
+                    padding: EdgeInsetsGeometry.symmetric(vertical: 10),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedLocation,
+                      decoration: InputDecoration(
+                        hintText: 'Select farm location',
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        hintStyle: TextStyle(
+                          color: Color(0xFF828282),
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFF53AD64)),
+                        ),
+                      ),
+                      items: _malaysianLocations.keys.map((name) {
+                        return DropdownMenuItem<String>(
+                          value: name,
+                          child: Text(name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedLocation = value ?? 'Kuala Lumpur';
+                        });
+                      },
+                    ),
                   ),
 
                   // Crop Type Dropdown

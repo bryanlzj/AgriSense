@@ -117,7 +117,7 @@ void main() {
       expect(find.text('Forgot Password'), findsOneWidget);
     });
 
-    testWidgets('Continue button is disabled when loading', (WidgetTester tester) async {
+    testWidgets('Continue button is enabled in initial state', (WidgetTester tester) async {
       await tester.pumpWidget(createLoginPage());
 
       // Find the button

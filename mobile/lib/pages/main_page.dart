@@ -42,7 +42,7 @@ class _MainPageState extends State<MainPage> {
         // No token, trigger logout
         if (mounted) {
           await authProvider.handleSessionExpired();
-          Navigator.pushReplacementNamed(context, '/login');
+          if (mounted) Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
@@ -64,7 +64,7 @@ class _MainPageState extends State<MainPage> {
         if (errorMsg.contains('Session expired') || errorMsg.contains('401')) {
           final authProvider = context.read<AuthProvider>();
           await authProvider.handleSessionExpired();
-          Navigator.pushReplacementNamed(context, '/login');
+          if (mounted) Navigator.pushReplacementNamed(context, '/login');
           return;
         }
 

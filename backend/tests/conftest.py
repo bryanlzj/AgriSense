@@ -17,10 +17,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
+from dotenv import load_dotenv
 
 # Add parent directory to path to allow imports
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
+
+# Load .env from backend directory so TEST_DATABASE_URL is available
+load_dotenv(backend_dir / ".env")
 
 from database import Base, get_db
 from main import app
@@ -32,12 +36,16 @@ from models.sector import Sector
 from utils.password import get_password_hash
 from utils.security import create_access_token
 
-# Use PostgreSQL for testing - defaults to hosted agrisense database
-# Set TEST_DATABASE_URL environment variable to override
-SQLALCHEMY_TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense"
-)
+# Use PostgreSQL for testing - requires TEST_DATABASE_URL to be set
+# Set it in your .env file or export it before running tests
+# Example: TEST_DATABASE_URL=postgresql://agrisense_user:strongpassword@localhost:5432/agrisense
+SQLALCHEMY_TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+if not SQLALCHEMY_TEST_DATABASE_URL:
+    raise RuntimeError(
+        "TEST_DATABASE_URL environment variable is not set. "
+        "Set it to a local test database, e.g.: "
+        "TEST_DATABASE_URL=postgresql://agrisense_user:strongpassword@localhost:5432/agrisense"
+    )
 
 # Create test engine
 engine = create_engine(
