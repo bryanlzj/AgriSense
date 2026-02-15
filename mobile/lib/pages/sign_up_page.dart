@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/utils/extensions.dart';
 import 'package:fyp_prototype/widgets/custom_form_field.dart';
-import 'package:fyp_prototype/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -17,11 +18,27 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController farmLocationController = TextEditingController();
-
+  String _selectedLocation = 'Kuala Lumpur';
   String _selectedCropType = 'rice';
-  bool _isLoading = false;
   String? _errorMessage;
+
+  // Mirrors backend MALAYSIAN_LOCATIONS (backend/schemas/auth.py)
+  static const Map<String, Map<String, double>> _malaysianLocations = {
+    'Perlis': {'lat': 6.4449, 'lng': 100.2048},
+    'Kedah': {'lat': 6.1184, 'lng': 100.3685},
+    'Penang': {'lat': 5.4164, 'lng': 100.3327},
+    'Perak': {'lat': 4.5921, 'lng': 101.0901},
+    'Selangor': {'lat': 3.0738, 'lng': 101.5183},
+    'Negeri Sembilan': {'lat': 2.7258, 'lng': 101.9424},
+    'Melaka': {'lat': 2.1896, 'lng': 102.2501},
+    'Johor': {'lat': 1.4854, 'lng': 103.7618},
+    'Pahang': {'lat': 3.8126, 'lng': 103.3256},
+    'Terengganu': {'lat': 5.3117, 'lng': 103.1324},
+    'Kelantan': {'lat': 6.1254, 'lng': 102.2381},
+    'Sabah': {'lat': 5.9788, 'lng': 116.0753},
+    'Sarawak': {'lat': 1.5533, 'lng': 110.3592},
+    'Kuala Lumpur': {'lat': 3.1390, 'lng': 101.6869},
+  };
 
   final List<Map<String, String>> _cropTypes = [
     {'value': 'rice', 'label': 'Rice'},
@@ -37,23 +54,26 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     setState(() {
-      _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      await AuthService.register(
-        username: usernameController.text.trim(),
-        password: passwordController.text,
-        fullName: nameController.text.trim(),
-        farmLocationName: farmLocationController.text.trim().isEmpty
-            ? 'Kuala Lumpur'
-            : farmLocationController.text.trim(),
-        cropType: _selectedCropType,
-      );
+    final authProvider = context.read<AuthProvider>();
 
-      if (!mounted) return;
+    final coords = _malaysianLocations[_selectedLocation]!;
 
+    final success = await authProvider.register(
+      username: usernameController.text.trim(),
+      password: passwordController.text,
+      fullName: nameController.text.trim(),
+      farmLocationName: _selectedLocation,
+      farmLocationLat: coords['lat']!,
+      farmLocationLng: coords['lng']!,
+      cropType: _selectedCropType,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
       // Show success message and navigate to login
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -61,18 +81,12 @@ class _SignUpPageState extends State<SignUpPage> {
           backgroundColor: Color(0xFF4BAE4F),
         ),
       );
-
       Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
+    } else {
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = authProvider.errorMessage;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      authProvider.clearError();
     }
   }
 
@@ -82,12 +96,14 @@ class _SignUpPageState extends State<SignUpPage> {
     usernameController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    farmLocationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -171,14 +187,42 @@ class _SignUpPageState extends State<SignUpPage> {
                     },
                   ),
 
-                  // Farm Location
-                  CustomFormField(
-                    controller: farmLocationController,
-                    hintText: 'Farm location (e.g., Kuala Lumpur)',
-                    validator: (val) {
-                      // Optional field - no validation required
-                      return null;
-                    },
+                  // Farm Location Dropdown
+                  Padding(
+                    padding: EdgeInsetsGeometry.symmetric(vertical: 10),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedLocation,
+                      decoration: InputDecoration(
+                        hintText: 'Select farm location',
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        hintStyle: TextStyle(
+                          color: Color(0xFF828282),
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFF53AD64)),
+                        ),
+                      ),
+                      items: _malaysianLocations.keys.map((name) {
+                        return DropdownMenuItem<String>(
+                          value: name,
+                          child: Text(name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedLocation = value ?? 'Kuala Lumpur';
+                        });
+                      },
+                    ),
                   ),
 
                   // Crop Type Dropdown
@@ -257,7 +301,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSignUp,
+                      onPressed: isLoading ? null : _handleSignUp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF4BAE4F),
                         foregroundColor: Color(0xFFFFFFFF),
@@ -266,7 +310,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadiusGeometry.circular(8),
                         ),
                       ),
-                      child: _isLoading
+                      child: isLoading
                           ? SizedBox(
                               height: 20,
                               width: 20,
@@ -296,7 +340,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: _isLoading
+                        onPressed: isLoading
                             ? null
                             : () {
                                 Navigator.pushReplacementNamed(context, '/login');

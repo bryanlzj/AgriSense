@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/pages/about_agrisense_page.dart';
 import 'package:fyp_prototype/pages/alerts_page.dart';
 import 'package:fyp_prototype/pages/chatbot_page.dart';
@@ -19,7 +21,7 @@ import 'package:fyp_prototype/pages/weather_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // ✅ needed before async stuff
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -28,7 +30,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Route map - MainPage now fetches its own data
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const AgriSenseApp(),
+    );
+  }
+}
+
+class AgriSenseApp extends StatefulWidget {
+  const AgriSenseApp({super.key});
+
+  @override
+  State<AgriSenseApp> createState() => _AgriSenseAppState();
+}
+
+class _AgriSenseAppState extends State<AgriSenseApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth status after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().checkAuthStatus();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Route map
     final routes = {
       '/signUp': (context) => SignUpPage(),
       '/login': (context) => LoginPage(),
@@ -58,21 +88,17 @@ class MyApp extends StatelessWidget {
           selectionColor: Color(0x7060AC75),
           selectionHandleColor: Color(0xFF4BAE4F),
         ),
-        
       ),
-      initialRoute: '/login',
-
-      // keep your routes map
+      // Use AuthWrapper as home to handle auth-based routing
+      home: const AuthWrapper(),
       routes: routes,
-
-      // override only chatbot with custom animation
+      // Custom animation for chatbot
       onGenerateRoute: (settings) {
         if (settings.name == '/chatbot') {
           return PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 ChatbotPage(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              // slide from bottom to top
               const begin = Offset(0.0, 1.0);
               const end = Offset.zero;
               const curve = Curves.easeInOut;
@@ -89,7 +115,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // default: use your normal route map
+        // Default: use normal route map
         final builder = routes[settings.name];
         if (builder != null) {
           return MaterialPageRoute(
@@ -98,8 +124,60 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        return null; // if unknown route
+        return null;
       },
+    );
+  }
+}
+
+/// Wrapper that routes based on authentication state.
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        // Show loading while checking auth
+        if (auth.status == AuthStatus.initial || auth.isLoading) {
+          return const SplashScreen();
+        }
+
+        // Route based on auth status
+        if (auth.isAuthenticated) {
+          return const MainPage();
+        } else {
+          return const LoginPage();
+        }
+      },
+    );
+  }
+}
+
+/// Simple splash screen shown while checking auth.
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              width: 120,
+              height: 120,
+            ),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF53AD64)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

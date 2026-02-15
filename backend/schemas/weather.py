@@ -55,6 +55,9 @@ class WeatherCondition(BaseModel):
     rain: Optional[float] = Field(None, description="Current rain in mm")
     rain_1h: Optional[float] = Field(None, description="Rain volume for last hour in mm")
     rain_3h: Optional[float] = Field(None, description="Rain volume for last 3 hours in mm")
+    soil_temperature: Optional[float] = Field(None, description="Soil temperature 0-7cm in Celsius (avg of 0cm and 6cm depth)")
+    soil_moisture: Optional[float] = Field(None, description="Soil moisture 0-7cm in m³/m³ (avg of 0-1, 1-3, 3-9cm layers)")
+    shortwave_radiation: Optional[float] = Field(None, description="Shortwave radiation in W/m²")
 
 
 class WeatherForecastItem(BaseModel):
@@ -85,6 +88,9 @@ class WeatherForecastItem(BaseModel):
     weather_description: str = Field(..., description="Detailed weather description")
     rain_probability: float = Field(..., ge=0, le=1, description="Probability of precipitation")
     rain_volume: Optional[float] = Field(None, description="Expected rain volume in mm")
+    soil_temperature: Optional[float] = Field(None, description="Soil temperature 0-7cm in Celsius (avg of 0cm and 6cm depth)")
+    soil_moisture: Optional[float] = Field(None, description="Soil moisture 0-7cm in m³/m³ (avg of 0-1, 1-3, 3-9cm layers)")
+    shortwave_radiation: Optional[float] = Field(None, description="Shortwave radiation in W/m²")
 
 
 # ============================================================================

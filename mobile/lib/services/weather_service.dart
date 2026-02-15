@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
@@ -214,26 +215,63 @@ class CurrentWeather {
     );
   }
 
-  String get icon {
+  IconData get iconData {
     switch (weatherMain.toLowerCase()) {
       case 'clear':
-        return '☀️';
+      case 'sunny':
+        return Icons.wb_sunny;
       case 'clouds':
       case 'cloudy':
-        return '☁️';
+      case 'partly cloudy':
+      case 'overcast':
+        return Icons.cloud;
       case 'rain':
       case 'drizzle':
-        return '🌧️';
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return Icons.water_drop;
       case 'thunderstorm':
-        return '⛈️';
+        return Icons.thunderstorm;
       case 'snow':
-        return '❄️';
+        return Icons.ac_unit;
       case 'mist':
       case 'fog':
       case 'haze':
-        return '🌫️';
+      case 'foggy':
+        return Icons.foggy;
       default:
-        return '🌤️';
+        return Icons.wb_cloudy;
+    }
+  }
+
+  Color get iconColor {
+    switch (weatherMain.toLowerCase()) {
+      case 'clear':
+      case 'sunny':
+        return const Color(0xFFFFB300);
+      case 'clouds':
+      case 'cloudy':
+      case 'partly cloudy':
+      case 'overcast':
+        return const Color(0xFF78909C);
+      case 'rain':
+      case 'drizzle':
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return const Color(0xFF42A5F5);
+      case 'thunderstorm':
+        return const Color(0xFF5C6BC0);
+      case 'snow':
+        return const Color(0xFF90CAF9);
+      case 'mist':
+      case 'fog':
+      case 'haze':
+      case 'foggy':
+        return const Color(0xFFB0BEC5);
+      default:
+        return const Color(0xFF53AD64);
     }
   }
 }
@@ -281,20 +319,63 @@ class ForecastItem {
     );
   }
 
-  String get icon {
+  IconData get iconData {
     switch (weatherMain.toLowerCase()) {
       case 'clear':
-        return '☀️';
+      case 'sunny':
+        return Icons.wb_sunny;
       case 'clouds':
       case 'cloudy':
-        return '☁️';
+      case 'partly cloudy':
+      case 'overcast':
+        return Icons.cloud;
       case 'rain':
       case 'drizzle':
-        return '🌧️';
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return Icons.water_drop;
       case 'thunderstorm':
-        return '⛈️';
+        return Icons.thunderstorm;
+      case 'snow':
+        return Icons.ac_unit;
+      case 'mist':
+      case 'fog':
+      case 'haze':
+      case 'foggy':
+        return Icons.foggy;
       default:
-        return '🌤️';
+        return Icons.wb_cloudy;
+    }
+  }
+
+  Color get iconColor {
+    switch (weatherMain.toLowerCase()) {
+      case 'clear':
+      case 'sunny':
+        return const Color(0xFFFFB300);
+      case 'clouds':
+      case 'cloudy':
+      case 'partly cloudy':
+      case 'overcast':
+        return const Color(0xFF78909C);
+      case 'rain':
+      case 'drizzle':
+      case 'light rain':
+      case 'moderate rain':
+      case 'heavy rain':
+        return const Color(0xFF42A5F5);
+      case 'thunderstorm':
+        return const Color(0xFF5C6BC0);
+      case 'snow':
+        return const Color(0xFF90CAF9);
+      case 'mist':
+      case 'fog':
+      case 'haze':
+      case 'foggy':
+        return const Color(0xFFB0BEC5);
+      default:
+        return const Color(0xFF53AD64);
     }
   }
 }

@@ -1,8 +1,9 @@
 # AgriSense - Deployment Guide
 
-**Version:** 1.0  
-**Last Updated:** January 2025  
+**Version:** 1.1
+**Last Updated:** February 2026
 **Target Environment:** Production Server (Docker + PostgreSQL)
+**Current Deployment:** `https://agrisense.bryanlzj.work` (Oracle Cloud)
 
 ---
 
@@ -28,7 +29,7 @@
 - **CPU:** 2 cores
 - **RAM:** 4GB
 - **Storage:** 20GB SSD
-- **Network:** Public IP address with open ports 80, 443, 5000
+- **Network:** Public IP address with open ports 80, 443, 8000
 
 **Recommended Specifications:**
 - **OS:** Ubuntu 22.04 LTS
@@ -102,7 +103,7 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
 # Allow backend API (optional, if not using reverse proxy)
-sudo ufw allow 5000/tcp
+sudo ufw allow 8000/tcp
 
 # Check firewall status
 sudo ufw status
@@ -153,7 +154,7 @@ POSTGRES_DB=agrisense
 SECRET_KEY=YOUR_SECRET_KEY_HERE  # Generate with: openssl rand -hex 32
 
 # Weather API
-OPENWEATHER_API_KEY=your_openweather_api_key_here
+# Weather API uses Open-Meteo (free, no key required)
 
 # CORS (add your domain)
 CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
@@ -193,10 +194,10 @@ docker-compose ps
 docker-compose logs -f backend
 
 # Test health endpoint
-curl http://localhost:5000/health
+curl http://localhost:8000/health
 
 # Test API documentation
-curl http://localhost:5000/docs
+curl http://localhost:8000/docs
 ```
 
 **Expected Output:**
@@ -222,7 +223,7 @@ curl http://localhost:5000/docs
 |----------|-------------|---------|
 | `POSTGRES_PASSWORD` | Database password | `SecurePass123!` |
 | `SECRET_KEY` | JWT secret key | `abc123...` (64 chars) |
-| `OPENWEATHER_API_KEY` | Weather API key | `your_api_key` |
+| Weather API | Open-Meteo (free) | No key required |
 | `CORS_ORIGINS` | Allowed frontend URLs | `https://yourdomain.com` |
 | `DEBUG` | Debug mode (False in prod) | `False` |
 | `ENVIRONMENT` | Environment name | `production` |
@@ -302,7 +303,7 @@ docker-compose logs --tail=100 backend
 docker-compose ps
 
 # Check backend health
-curl http://localhost:5000/health
+curl http://localhost:8000/health
 
 # Check database connection
 docker-compose exec postgres pg_isready -U agrisense_user
@@ -348,7 +349,7 @@ docker-compose logs backend
 # Common issues:
 # 1. Database not ready - wait 30 seconds and retry
 # 2. Missing environment variables - check .env file
-# 3. Port already in use - check: sudo lsof -i :5000
+# 3. Port already in use - check: sudo lsof -i :8000
 ```
 
 ### Database Connection Failed
@@ -515,7 +516,7 @@ server {
     server_name yourdomain.com www.yourdomain.com;
 
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -546,27 +547,53 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 
 ---
 
-## 10. Production Checklist
+## 10. CI/CD Deployment (Current Setup)
+
+The project uses GitHub Actions for automated deployment:
+
+**Workflow File:** `.github/workflows/deploy.yml`
+
+**Trigger:** Push to `main` branch
+
+**Deployment Process:**
+1. GitHub Actions builds the Docker image
+2. SSH into Oracle Cloud server
+3. Pull latest code from Git
+4. Rebuild containers with `docker-compose`
+5. Run database migrations
+6. Restart services
+
+**Current Production URLs:**
+- **API:** `https://agrisense.bryanlzj.work`
+- **API Docs:** `https://agrisense.bryanlzj.work/docs`
+- **Database (Adminer):** `https://db.bryanlzj.work`
+
+---
+
+## 11. Production Checklist
 
 Before going live, verify:
 
-- [ ] `.env` file configured with secure passwords
-- [ ] `SECRET_KEY` generated with `openssl rand -hex 32`
-- [ ] `DEBUG=False` in production
-- [ ] `CORS_ORIGINS` set to your domain
-- [ ] OpenWeatherMap API key configured
-- [ ] Firewall configured (ports 80, 443, 22 only)
-- [ ] SSL certificate installed
-- [ ] Database backups scheduled (cron job)
-- [ ] Health check endpoint working
-- [ ] API documentation accessible
+- [x] `.env` file configured with secure passwords
+- [x] `SECRET_KEY` generated with `openssl rand -hex 32`
+- [x] `DEBUG=False` in production
+- [x] `CORS_ORIGINS` set to your domain
+- [x] Weather API: Uses Open-Meteo (free, no key required)
+- [x] OpenRouter API key configured (`OPENROUTER_API_KEY`)
+- [x] Firewall configured (ports 80, 443, 22 only)
+- [x] SSL certificate installed (Let's Encrypt)
+- [x] Database backups scheduled (cron job)
+- [x] Health check endpoint working (`/health`)
+- [x] API documentation accessible (`/docs`)
 - [ ] Logs being written to `/app/logs/`
 - [ ] Disk space monitored
 - [ ] Server monitoring set up (optional: Uptime Robot, Pingdom)
 
+**Status:** Production deployment at `agrisense.bryanlzj.work` is complete and operational.
+
 ---
 
-## 11. Quick Reference Commands
+## 12. Quick Reference Commands
 
 ```bash
 # Start services
@@ -591,7 +618,7 @@ docker-compose exec backend alembic upgrade head
 ./backend/scripts/restore.sh backups/backup_file.sql.gz
 
 # Check health
-curl http://localhost:5000/health
+curl http://localhost:8000/health
 
 # Access database
 docker-compose exec postgres psql -U agrisense_user agrisense
@@ -599,10 +626,10 @@ docker-compose exec postgres psql -U agrisense_user agrisense
 
 ---
 
-## 12. Support & Resources
+## 13. Support & Resources
 
 - **Documentation:** `/docs` folder
-- **API Docs:** `http://your-server:5000/docs`
+- **API Docs:** `http://your-server:8000/docs`
 - **GitHub Issues:** Report bugs and request features
 - **Email Support:** your-email@example.com
 

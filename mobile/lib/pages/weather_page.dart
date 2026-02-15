@@ -97,9 +97,10 @@ class _WeatherPageState extends State<WeatherPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  _weatherData!.current.icon,
-                                  style: TextStyle(fontSize: 40),
+                                Icon(
+                                  _weatherData!.current.iconData,
+                                  size: 48,
+                                  color: Colors.white,
                                 ),
                                 Text(
                                   '${_weatherData!.current.temperature.toStringAsFixed(1)}°C',
@@ -427,7 +428,7 @@ class _WeatherPageState extends State<WeatherPage> {
                         ),
                       ),
                       SizedBox(height: 4),
-                      Text(item.icon, style: TextStyle(fontSize: 24)),
+                      Icon(item.iconData, size: 28, color: item.iconColor),
                       SizedBox(height: 4),
                       Text(
                         '${item.temperature.toStringAsFixed(0)}°',

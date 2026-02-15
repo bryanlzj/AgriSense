@@ -21,7 +21,6 @@ from models.sensor_reading import SensorReading
 from models.pest_detection import PestDetection
 from models.alert import Alert
 from models.pest_weather_correlation import PestWeatherCorrelation
-from models.weather_cache import WeatherCache
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

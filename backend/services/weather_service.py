@@ -159,7 +159,13 @@ async def fetch_current_weather(latitude: float, longitude: float) -> dict:
             "surface_pressure",
             "wind_speed_10m",
             "wind_direction_10m",
-            "cloud_cover"
+            "cloud_cover",
+            "shortwave_radiation",
+            "soil_temperature_0cm",
+            "soil_temperature_6cm",
+            "soil_moisture_0_to_1cm",
+            "soil_moisture_1_to_3cm",
+            "soil_moisture_3_to_9cm"
         ],
         "timezone": "auto"
     }
@@ -210,7 +216,13 @@ async def fetch_weather_forecast(latitude: float, longitude: float, days: int = 
             "weather_code",
             "surface_pressure",
             "wind_speed_10m",
-            "cloud_cover"
+            "cloud_cover",
+            "shortwave_radiation",
+            "soil_temperature_0cm",
+            "soil_temperature_6cm",
+            "soil_moisture_0_to_1cm",
+            "soil_moisture_1_to_3cm",
+            "soil_moisture_3_to_9cm"
         ],
         "daily": [
             "weather_code",
@@ -257,7 +269,13 @@ def _get_mock_current_weather(latitude: float, longitude: float) -> dict:
             "surface_pressure": 1010.0,
             "wind_speed_10m": 15.0,
             "wind_direction_10m": 180,
-            "cloud_cover": 50
+            "cloud_cover": 50,
+            "shortwave_radiation": 450.0,
+            "soil_temperature_0cm": 28.0,
+            "soil_temperature_6cm": 27.0,
+            "soil_moisture_0_to_1cm": 0.30,
+            "soil_moisture_1_to_3cm": 0.32,
+            "soil_moisture_3_to_9cm": 0.35
         }
     }
 
@@ -278,6 +296,12 @@ def _get_mock_forecast(latitude: float, longitude: float) -> dict:
     hourly_pressure = []
     hourly_wind = []
     hourly_cloud = []
+    hourly_shortwave = []
+    hourly_soil_temp_0 = []
+    hourly_soil_temp_6 = []
+    hourly_sm_0_1 = []
+    hourly_sm_1_3 = []
+    hourly_sm_3_9 = []
 
     for i in range(72):  # 3 days * 24 hours
         time = datetime.now() + timedelta(hours=i)
@@ -292,6 +316,12 @@ def _get_mock_forecast(latitude: float, longitude: float) -> dict:
         hourly_pressure.append(1010.0)
         hourly_wind.append(10.0 + (i % 10))
         hourly_cloud.append(40 + (i % 40))
+        hourly_shortwave.append(max(0, 500.0 - abs(12 - (i % 24)) * 60))
+        hourly_soil_temp_0.append(27.0 + (i % 6) - 3)
+        hourly_soil_temp_6.append(26.0 + (i % 4) - 2)
+        hourly_sm_0_1.append(0.28 + (i % 5) * 0.02)
+        hourly_sm_1_3.append(0.30 + (i % 5) * 0.02)
+        hourly_sm_3_9.append(0.33 + (i % 5) * 0.01)
 
     base_data["hourly"] = {
         "time": hourly_times,
@@ -304,7 +334,13 @@ def _get_mock_forecast(latitude: float, longitude: float) -> dict:
         "weather_code": hourly_weather_code,
         "surface_pressure": hourly_pressure,
         "wind_speed_10m": hourly_wind,
-        "cloud_cover": hourly_cloud
+        "cloud_cover": hourly_cloud,
+        "shortwave_radiation": hourly_shortwave,
+        "soil_temperature_0cm": hourly_soil_temp_0,
+        "soil_temperature_6cm": hourly_soil_temp_6,
+        "soil_moisture_0_to_1cm": hourly_sm_0_1,
+        "soil_moisture_1_to_3cm": hourly_sm_1_3,
+        "soil_moisture_3_to_9cm": hourly_sm_3_9
     }
 
     # Generate daily data
@@ -362,6 +398,22 @@ def transform_current_weather(data: dict) -> WeatherCondition:
     # Convert wind from km/h to m/s (1 km/h = 0.277778 m/s)
     wind_speed_ms = current.get("wind_speed_10m", 0) * 0.277778
 
+    # Compute soil temperature 0-7cm (average of 0cm and 6cm depths)
+    soil_temp_0 = current.get("soil_temperature_0cm")
+    soil_temp_6 = current.get("soil_temperature_6cm")
+    soil_temperature = None
+    if soil_temp_0 is not None and soil_temp_6 is not None:
+        soil_temperature = round((soil_temp_0 + soil_temp_6) / 2, 2)
+
+    # Compute soil moisture 0-7cm (weighted average of 0-1, 1-3, 3-9cm layers)
+    sm_0_1 = current.get("soil_moisture_0_to_1cm")
+    sm_1_3 = current.get("soil_moisture_1_to_3cm")
+    sm_3_9 = current.get("soil_moisture_3_to_9cm")
+    soil_moisture = None
+    if sm_0_1 is not None and sm_1_3 is not None and sm_3_9 is not None:
+        # Weighted by layer thickness: 1cm + 2cm + 4cm = 7cm (using 3-7cm portion of 3-9cm)
+        soil_moisture = round((1 * sm_0_1 + 2 * sm_1_3 + 4 * sm_3_9) / 7, 4)
+
     return WeatherCondition(
         temperature=current.get("temperature_2m", 25.0),
         feels_like=current.get("apparent_temperature", 25.0),
@@ -375,7 +427,10 @@ def transform_current_weather(data: dict) -> WeatherCondition:
         weather_description=weather_desc,
         rain=current.get("rain", 0.0),
         rain_1h=current.get("rain", 0.0),
-        rain_3h=None
+        rain_3h=None,
+        soil_temperature=soil_temperature,
+        soil_moisture=soil_moisture,
+        shortwave_radiation=current.get("shortwave_radiation")
     )
 
 
@@ -405,6 +460,12 @@ def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
     weather_codes = hourly.get("weather_code", [])
     precip_prob = hourly.get("precipitation_probability", [])
     rain = hourly.get("rain", [])
+    shortwave_rad = hourly.get("shortwave_radiation", [])
+    soil_temp_0 = hourly.get("soil_temperature_0cm", [])
+    soil_temp_6 = hourly.get("soil_temperature_6cm", [])
+    sm_0_1 = hourly.get("soil_moisture_0_to_1cm", [])
+    sm_1_3 = hourly.get("soil_moisture_1_to_3cm", [])
+    sm_3_9 = hourly.get("soil_moisture_3_to_9cm", [])
 
     for i in range(len(times)):
         # Convert wind from km/h to m/s
@@ -413,6 +474,18 @@ def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
         # Get weather description
         code = weather_codes[i] if i < len(weather_codes) else 0
         weather_desc, weather_main = _get_weather_description(code)
+
+        # Compute soil temperature 0-7cm (average of 0cm and 6cm)
+        soil_temperature = None
+        if i < len(soil_temp_0) and i < len(soil_temp_6):
+            if soil_temp_0[i] is not None and soil_temp_6[i] is not None:
+                soil_temperature = round((soil_temp_0[i] + soil_temp_6[i]) / 2, 2)
+
+        # Compute soil moisture 0-7cm (weighted average)
+        soil_moisture = None
+        if i < len(sm_0_1) and i < len(sm_1_3) and i < len(sm_3_9):
+            if sm_0_1[i] is not None and sm_1_3[i] is not None and sm_3_9[i] is not None:
+                soil_moisture = round((1 * sm_0_1[i] + 2 * sm_1_3[i] + 4 * sm_3_9[i]) / 7, 4)
 
         forecast_item = WeatherForecastItem(
             forecast_time=datetime.fromisoformat(times[i]),
@@ -425,7 +498,10 @@ def transform_forecast_data(data: dict) -> List[WeatherForecastItem]:
             weather_main=weather_main.title(),
             weather_description=weather_desc,
             rain_probability=(precip_prob[i] / 100) if i < len(precip_prob) else 0,
-            rain_volume=rain[i] if i < len(rain) else 0
+            rain_volume=rain[i] if i < len(rain) else 0,
+            soil_temperature=soil_temperature,
+            soil_moisture=soil_moisture,
+            shortwave_radiation=shortwave_rad[i] if i < len(shortwave_rad) else None
         )
         forecast_list.append(forecast_item)
 
@@ -731,7 +807,10 @@ async def get_weather_forecast(
             weather_description=forecast[0].weather_description,
             rain=forecast[0].rain_volume,
             rain_1h=forecast[0].rain_volume,
-            rain_3h=None
+            rain_3h=None,
+            soil_temperature=forecast[0].soil_temperature,
+            soil_moisture=forecast[0].soil_moisture,
+            shortwave_radiation=forecast[0].shortwave_radiation
         )
         alerts = generate_weather_alerts(mock_current, forecast)
         recommendations = generate_agricultural_recommendations(mock_current, forecast, alerts)

@@ -1,12 +1,17 @@
 # AgriSense API Documentation
 
+**Last Updated:** February 2026
+**API Status:** ✅ All endpoints implemented and tested (139 tests)
+
 ## Overview
 
 AgriSense is a smart agriculture monitoring system with two core features:
-1. **Weather Early Warning System** - Real-time weather monitoring and forecasts
-2. **Pest Risk Management** - AI-powered pest detection from images
+1. **Weather Early Warning System** - Real-time weather monitoring and forecasts (Open-Meteo API - free, no key required)
+2. **Pest Risk Management** - AI-powered pest detection from images (OpenRouter AI)
 
-Base URL: `http://localhost:5000/api/v1`
+**Base URLs:**
+- **Local:** `http://localhost:8000/api/v1`
+- **Production:** `https://agrisense.bryanlzj.work/api/v1`
 
 ## Authentication
 
@@ -485,7 +490,7 @@ Get complete weather summary (current + forecast + alerts).
 ### 4.4 Test Weather API
 **GET** `/weather/test`
 
-Test OpenWeatherMap API configuration.
+Test weather API configuration (Open-Meteo).
 
 **Response:** `200 OK`
 ```json
@@ -713,11 +718,214 @@ Currently no rate limiting is implemented. In production, consider:
 
 ---
 
+---
+
+## 6. Dashboard Endpoint
+
+### 6.1 Get Dashboard Data
+**GET** `/dashboard/`
+
+Get aggregated dashboard data including weather, alerts, and recent activity.
+
+**Response:** `200 OK`
+```json
+{
+  "weather": {
+    "temperature": 28.5,
+    "humidity": 75,
+    "condition": "Partly cloudy",
+    "icon": "02d"
+  },
+  "alerts": {
+    "unread_count": 3,
+    "recent": [
+      {
+        "id": 1,
+        "title": "High Temperature Alert",
+        "severity": "warning",
+        "created_at": "2026-02-04T10:00:00"
+      }
+    ]
+  },
+  "recent_detections": [
+    {
+      "id": 1,
+      "pest_type": "Aphid",
+      "confidence": 0.85,
+      "created_at": "2026-02-04T09:30:00"
+    }
+  ]
+}
+```
+
+---
+
+## 7. Chat Endpoints (AI Chatbot)
+
+### 7.1 Send Message
+**POST** `/chat/message`
+
+Send a message to the AI chatbot.
+
+**Request Body:**
+```json
+{
+  "message": "What is the best time to plant rice?",
+  "session_id": "optional-session-uuid"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Rice is best planted during...",
+  "session_id": "uuid-string",
+  "context_used": {
+    "crop_type": "rice",
+    "location": "Kuala Lumpur",
+    "weather_available": true,
+    "weather_summary": "Sunny, 32°C"
+  },
+  "ai_available": true,
+  "timestamp": "2026-02-04T10:00:00"
+}
+```
+
+### 7.2 Get Chat Status
+**GET** `/chat/status`
+
+Check chatbot availability and context.
+
+**Response:** `200 OK`
+```json
+{
+  "status": "online",
+  "ai_service_available": true,
+  "user_context": {
+    "crop_type": "rice",
+    "location": "Kuala Lumpur"
+  },
+  "capabilities": ["text", "image"]
+}
+```
+
+---
+
+## 8. Sector Endpoints
+
+### 8.1 Create Sector
+**POST** `/sector/`
+
+Create a new farm sector.
+
+**Request Body:**
+```json
+{
+  "name": "North Field",
+  "crop_type": "rice",
+  "area_hectares": 2.5,
+  "soil_type": "clay",
+  "irrigation_type": "flood",
+  "notes": "Main rice field"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "North Field",
+  "crop_type": "rice",
+  "area_hectares": 2.5,
+  "soil_type": "clay",
+  "irrigation_type": "flood",
+  "notes": "Main rice field",
+  "created_at": "2026-02-04T10:00:00"
+}
+```
+
+### 8.2 List Sectors
+**GET** `/sector/`
+
+Get list of user's farm sectors.
+
+**Query Parameters:**
+- `skip` (int): Pagination offset (default: 0)
+- `limit` (int): Max results (default: 100)
+- `crop_type` (string): Filter by crop type
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "North Field",
+    "crop_type": "rice",
+    "area_hectares": 2.5,
+    "created_at": "2026-02-04T10:00:00"
+  }
+]
+```
+
+### 8.3 Get Sector
+**GET** `/sector/{id}`
+
+Get specific sector details.
+
+**Response:** `200 OK` (same as create response)
+
+### 8.4 Update Sector
+**PUT** `/sector/{id}`
+
+Update existing sector.
+
+**Request Body:** (partial update supported)
+```json
+{
+  "name": "North Field Updated",
+  "crop_type": "vegetables"
+}
+```
+
+**Response:** `200 OK` (updated sector)
+
+### 8.5 Delete Sector
+**DELETE** `/sector/{id}`
+
+Delete a farm sector.
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Sector deleted successfully"
+}
+```
+
+### 8.6 Get Sector Statistics
+**GET** `/sector/stats/summary`
+
+Get sector statistics.
+
+**Response:** `200 OK`
+```json
+{
+  "total_sectors": 5,
+  "total_area_hectares": 12.5,
+  "by_crop_type": {
+    "rice": 3,
+    "vegetables": 2
+  }
+}
+```
+
+---
+
 ## Swagger Documentation
 
 Interactive API documentation is available at:
-- **Swagger UI:** `http://localhost:5000/swagger`
-- **ReDoc:** `http://localhost:5000/redoc`
+- **Local Swagger UI:** `http://localhost:8000/docs`
+- **Local ReDoc:** `http://localhost:8000/redoc`
+- **Production Swagger UI:** `https://agrisense.bryanlzj.work/docs`
 
 ---
 
@@ -734,12 +942,18 @@ Run with coverage:
 pytest --cov=backend --cov-report=html
 ```
 
+**Current Test Coverage:**
+- 139 backend tests
+- 77% overall coverage
+- 92-100% router coverage
+
 ---
 
 ## Notes
 
-1. **Mock ML:** Pest detection currently uses mock ML. Replace with real model in production.
-2. **Weather API:** Requires OpenWeatherMap API key in `.env` file.
+1. **AI Service:** Pest detection and chatbot use OpenRouter API for AI-powered responses.
+2. **Weather API:** Uses **Open-Meteo API** (free, no API key required).
 3. **Image Storage:** Images stored in `backend/uploads/` directory.
 4. **Token Expiry:** JWT tokens expire after 30 days.
-5. **Database:** Currently uses SQLite. Migrate to PostgreSQL for production.
+5. **Database:** PostgreSQL in production (deployed at `agrisense.bryanlzj.work`).
+6. **Port:** API runs on port 8000 (not 5000 as in older documentation).

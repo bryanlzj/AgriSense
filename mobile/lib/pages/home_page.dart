@@ -215,9 +215,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              Text(
-                weather.icon,
-                style: TextStyle(fontSize: 48),
+              Icon(
+                weather.iconData,
+                size: 56,
+                color: weather.iconColor,
               ),
             ],
           ),

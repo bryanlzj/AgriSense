@@ -48,7 +48,7 @@ AgriSense provides farmers with:
 ### External Services
 | Service | Provider |
 |---------|----------|
-| Weather API | WeatherAPI.com |
+| Weather API | Open-Meteo (free, no API key required) |
 | AI/Recommendations | OpenRouter API (Grok model) |
 | ML Service | Mock service (real model TBD) |
 
@@ -190,8 +190,8 @@ DATABASE_URL=postgresql://agrisense_user:strongpassword@localhost:5432/agrisense
 # Authentication (generate with: openssl rand -hex 32)
 SECRET_KEY=your-secret-key-change-in-production
 
-# Weather API (get from https://www.weatherapi.com)
-WEATHERAPI_KEY=your_weatherapi_key_here
+# Weather API - Uses Open-Meteo (free, no API key required)
+# No WEATHERAPI_KEY needed
 
 # AI Service (get from https://openrouter.ai/keys)
 OPENROUTER_API_KEY=your_openrouter_api_key_here

@@ -78,8 +78,6 @@ class Settings(BaseSettings):
     default_latitude: float = Field(default=3.1390, env="DEFAULT_LATITUDE")
     default_longitude: float = Field(default=101.6869, env="DEFAULT_LONGITUDE")
     default_location: str = Field(default="Kuala Lumpur", env="DEFAULT_LOCATION")
-    weather_cache_duration: int = Field(default=1800, env="WEATHER_CACHE_DURATION")
-    
     # ===================================
     # ML Service Configuration
     # ===================================
@@ -230,6 +228,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables not defined in the model
 
 
 # Create global settings instance

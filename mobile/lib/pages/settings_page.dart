@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/widgets/settings_option_card.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,8 +12,41 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Logout'),
+        content: Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<AuthProvider>().logout();
+      if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+
+    // Display user info or defaults
+    final displayName = user?.fullName ?? user?.username ?? 'User';
+    final userId = user?.id != null ? 'UserID: ${user!.id}' : '';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -21,33 +56,34 @@ class _SettingsPageState extends State<SettingsPage> {
             width: double.infinity,
             decoration: BoxDecoration(color: Color(0xFF53AD64)),
             child: Padding(
-              padding: EdgeInsets.only(top: 50.0,bottom: 20),
+              padding: EdgeInsets.only(top: 50.0, bottom: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Image.asset('assets/images/Avatar.png'),
-                  //SizedBox(height: 10),
                   Text(
-                    'Ahmad Rahman',
+                    displayName,
                     style: GoogleFonts.scheherazadeNew(
                       color: Colors.white,
                       fontSize: 28,
                     ),
                   ),
-                  Text('UserID: 012345', style: TextStyle(color: Colors.white, fontSize: 12)),
-                  SizedBox(height: 10,),
+                  Text(
+                    userId,
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  SizedBox(height: 10),
                   SizedBox(
                     height: 30,
                     width: 250,
                     child: ElevatedButton(
                       onPressed: () {
-                        
+                        // TODO: Implement edit profile
                       },
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: Color(0xFF6FCB7B),
                         foregroundColor: Color.fromARGB(255, 1, 119, 30),
-                        //side: BorderSide(color: Colors.white),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadiusGeometry.circular(10),
                         ),
@@ -66,10 +102,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(top: 25.0, left: 25, right: 25),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(top: 25.0, left: 25, right: 25, bottom: 25),
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SettingsOptionCard(
                     imagePath: 'assets/images/farm_icon.png',
@@ -79,7 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pushNamed(context, '/farm');
                     },
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
                   SettingsOptionCard(
                     imagePath: 'assets/images/notification_icon.webp',
                     title: 'Notification Settings',
@@ -88,7 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pushNamed(context, '/notification');
                     },
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
                   SettingsOptionCard(
                     imagePath: 'assets/images/import.png',
                     title: 'Import Dataset',
@@ -97,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pushNamed(context, '/import');
                     },
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
                   SettingsOptionCard(
                     imagePath: 'assets/images/help_support.png',
                     title: 'Help & Support',
@@ -106,7 +141,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pushNamed(context, '/help');
                     },
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 20),
                   SettingsOptionCard(
                     imagePath: 'assets/images/farm_icon.png',
                     title: 'About AgriSense',
@@ -114,6 +149,24 @@ class _SettingsPageState extends State<SettingsPage> {
                     onTap: () {
                       Navigator.pushNamed(context, '/about');
                     },
+                  ),
+                  SizedBox(height: 30),
+                  // Logout button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleLogout,
+                      icon: Icon(Icons.logout),
+                      label: Text('Logout'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
