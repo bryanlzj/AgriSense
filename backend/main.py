@@ -55,8 +55,20 @@ async def lifespan(app: FastAPI):
     # Startup
     from db_init import initialize_database
     from jobs.scheduler import start_scheduler, stop_scheduler
+    from config import settings
+    from services.pest_ml_service import pest_ml_service
 
     initialize_database()
+
+    # Load pest detection ML model
+    if not settings.use_mock_ml:
+        loaded = pest_ml_service.load_model(settings.pest_model_path)
+        if loaded:
+            print(f"Pest ML model loaded — classes: {list(pest_ml_service.class_names.values())}")
+        else:
+            print("Pest ML model not found, falling back to mock predictions")
+    else:
+        print("USE_MOCK_ML=True — skipping ML model load, using mock predictions")
 
     # Start background jobs (weather check, pest risk check)
     # Comment out if you want to disable background jobs

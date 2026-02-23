@@ -81,7 +81,11 @@ class Settings(BaseSettings):
     # ===================================
     # ML Service Configuration
     # ===================================
-    use_mock_ml: bool = Field(default=True, env="USE_MOCK_ML")
+    use_mock_ml: bool = Field(default=False, env="USE_MOCK_ML")
+    pest_model_path: str = Field(
+        default="./ml_models/pest_model.pt",
+        env="PEST_MODEL_PATH"
+    )
     ml_service_url: str = Field(
         default="http://localhost:8001/predict",
         env="ML_SERVICE_URL"
