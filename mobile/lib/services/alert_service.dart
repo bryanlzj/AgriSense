@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 import 'package:fyp_prototype/models/alert.dart';
 
 /// Service for managing alerts from the API.
@@ -30,7 +30,7 @@ class AlertService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.alerts}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -64,7 +64,7 @@ class AlertService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.alerts}/$alertId');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -109,7 +109,7 @@ class AlertService {
     if (isRead != null) body['is_read'] = isRead;
     if (isAcknowledged != null) body['is_acknowledged'] = isAcknowledged;
 
-    final response = await http.put(
+    final response = await appHttpClient.put(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -140,7 +140,7 @@ class AlertService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.alerts}/$alertId');
 
-    final response = await http.delete(
+    final response = await appHttpClient.delete(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -166,7 +166,7 @@ class AlertService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.alertsBulk}');
 
-    final response = await http.put(
+    final response = await appHttpClient.put(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -197,7 +197,7 @@ class AlertService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.alertsStats}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );

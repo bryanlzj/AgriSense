@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 
 /// Service for fetching dashboard data from the API.
 class DashboardService {
@@ -10,7 +10,7 @@ class DashboardService {
   static Future<Map<String, dynamic>> getDashboard(String token) async {
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.dashboard}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       url,
       headers: {
         'Authorization': 'Bearer $token',
@@ -34,7 +34,7 @@ class DashboardService {
   static Future<Map<String, dynamic>> getQuickDashboard(String token) async {
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.dashboardQuick}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       url,
       headers: {
         'Authorization': 'Bearer $token',

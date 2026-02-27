@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'package:fyp_prototype/models/user.dart';
 import 'package:fyp_prototype/utils/api_constants.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 
 /// Service for handling authentication API calls.
 class AuthService {
@@ -10,28 +11,36 @@ class AuthService {
   /// Throws an exception with error message on failure.
   static Future<String> login(String username, String password) async {
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.login}');
+    debugPrint('[AUTH] Login attempt: url=$url, username=$username');
 
-    // OAuth2 password flow uses form-urlencoded format
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'username': username,
-        'password': password,
-      },
-    );
+    try {
+      // OAuth2 password flow uses form-urlencoded format
+      final response = await appHttpClient.post(
+        url,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'username': username,
+          'password': password,
+        },
+      ).timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['access_token'] as String;
-    } else if (response.statusCode == 401) {
-      throw Exception('Invalid username or password');
-    } else {
-      final data = json.decode(response.body);
-      final detail = data['detail'] ?? 'Login failed';
-      throw Exception(detail);
+      debugPrint('[AUTH] Login response: status=${response.statusCode}, body=${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['access_token'] as String;
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid username or password');
+      } else {
+        final data = json.decode(response.body);
+        final detail = data['detail'] ?? 'Login failed';
+        throw Exception(detail);
+      }
+    } catch (e) {
+      debugPrint('[AUTH] Login error: $e');
+      rethrow;
     }
   }
 
@@ -62,7 +71,7 @@ class AuthService {
       body['full_name'] = fullName;
     }
 
-    final response = await http.post(
+    final response = await appHttpClient.post(
       url,
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +100,7 @@ class AuthService {
   static Future<User> getCurrentUser(String token) async {
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.me}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       url,
       headers: {
         'Authorization': 'Bearer $token',

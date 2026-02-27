@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 import 'package:fyp_prototype/models/chat_message.dart';
 
 /// Service for chatbot API calls.
@@ -25,7 +25,7 @@ class ChatService {
     };
     if (sessionId != null) body['session_id'] = sessionId;
 
-    final response = await http.post(
+    final response = await appHttpClient.post(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -62,7 +62,7 @@ class ChatService {
     };
     if (message != null) body['message'] = message;
 
-    final response = await http.post(
+    final response = await appHttpClient.post(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -90,7 +90,7 @@ class ChatService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.chatStatus}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );

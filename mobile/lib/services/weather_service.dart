@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 
 /// Service for fetching weather data from the API.
 class WeatherService {
@@ -27,7 +27,7 @@ class WeatherService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.weatherCurrent}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -63,7 +63,7 @@ class WeatherService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.weatherForecast}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -99,7 +99,7 @@ class WeatherService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.weatherSummary}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );

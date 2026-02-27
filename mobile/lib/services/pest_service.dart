@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 import 'package:fyp_prototype/models/pest_detection.dart';
 
 /// Service for pest detection API calls.
@@ -30,7 +33,7 @@ class PestService {
       await http.MultipartFile.fromPath('file', imageFile.path),
     );
 
-    final streamedResponse = await request.send();
+    final streamedResponse = await appHttpClient.send(request);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 201) {
@@ -71,7 +74,7 @@ class PestService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.pestList}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -98,7 +101,7 @@ class PestService {
       '${ApiConstants.baseUrl}${ApiConstants.pestList}$detectionId',
     );
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -127,7 +130,7 @@ class PestService {
       '${ApiConstants.baseUrl}${ApiConstants.pestList}$detectionId',
     );
 
-    final response = await http.delete(
+    final response = await appHttpClient.delete(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -155,7 +158,7 @@ class PestService {
       '${ApiConstants.baseUrl}${ApiConstants.pestStats}?days=$days',
     );
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
