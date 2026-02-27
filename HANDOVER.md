@@ -1,9 +1,9 @@
 # AgriSense Development Handover Document
 
-> **Date:** 2026-02-04
-> **Session Summary:** Documentation Update - Updated all `.references` files to reflect current project state
-> **Previous Session:** Backend Test Suite Complete (139 tests) + Sector Tests Added
-> **Next Session:** Edit Profile, Weather Enhancements
+> **Date:** 2026-02-27
+> **Session Summary:** Linux environment setup + ML deployment planning
+> **Previous Session:** YOLOv5 Pest Detection Model Integration
+> **Next Session:** Execute ML model deployment plan (6 tasks)
 
 ---
 
@@ -12,234 +12,210 @@
 ### Infrastructure
 - **Backend URL:** `https://agrisense.bryanlzj.work`
 - **Database (Adminer):** `https://db.bryanlzj.work`
-- **Server Location:** Oracle Cloud at `/opt/agrisense`
+- **Server Location:** Oracle Cloud at `/opt/agrisense` (24GB RAM, 200GB disk)
 - **Deployment:** CI/CD via GitHub Actions (`.github/workflows/deploy.yml`)
 - **Database:** PostgreSQL running in Docker on server
+- **Dev Environment:** WSL2 Linux (Ubuntu) at `/home/bryan/AgriSense`
 
 ### Integration Progress
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1: Foundation | ✅ Complete | Login working end-to-end |
-| Phase 2: Sign Up & Dashboard | ✅ Complete | Registration with farm details, dashboard shows real data |
-| Phase 3: Weather & Alerts | ✅ Complete | Weather page, alerts page with real API data |
-| Phase 4: Farm Sectors | ✅ Complete | CRUD for farm sectors (backend + mobile) |
-| Phase 5: Pest Detection & Chat | ✅ Complete | Image upload, pest detection, chatbot |
-| Phase 6: Polish | ✅ Complete | Provider state management, error handling, logout |
+| Phase 1-6 | ✅ Complete | Login, signup, dashboard, weather, alerts, sectors, pest detection, chatbot, polish |
+| ML Model Integration | ✅ Complete locally | YOLOv5 pest detection works locally, server still uses mock |
+| **ML Model Deployment** | 🔲 Ready to execute | Plan written, 6 tasks to implement |
 
 ### Test Coverage
 
 | Type | Count | Coverage | Status |
 |------|-------|----------|--------|
-| Backend (pytest) | 139 | 77% overall, 92-100% routers | ✅ All passing |
+| Backend (pytest) | 139 | 77% overall, 92-100% routers | ✅ 122 passed, 1 pre-existing DB error |
 | Mobile (flutter test) | 29 | - | ✅ All passing |
-
-**Backend Test Breakdown:**
-| Test File | Tests | Description |
-|-----------|-------|-------------|
-| test_auth.py | 15 | Authentication endpoints |
-| test_sensor.py | 13 | Sensor data CRUD |
-| test_pest.py | 28 | Pest detection & reports |
-| test_weather.py | 17 | Weather API endpoints |
-| test_alert.py | 15 | Alert system |
-| test_chat.py | 16 | Chatbot functionality |
-| test_dashboard.py | 14 | Dashboard endpoints |
-| test_sector.py | 21 | Sector CRUD (NEW) |
 
 ---
 
 ## What Was Accomplished This Session
 
-### 1. Documentation Update (`.references` folder)
+### 1. Linux Environment Setup
+- Installed `python3.12-venv` package (was missing on Ubuntu)
+- Created Python venv at `backend/venv/`
+- Installed all requirements from `requirements.txt`
+- Discovered `ultralytics` package was missing from requirements (needed by torch.hub's YOLOv5 loader)
+- Discovered Pillow auto-upgrades to 12.x which breaks JPEG saving (`ImageFile._Tile` removed)
 
-**Files Updated:**
-| File | Changes |
-|------|---------|
-| `.references/tasks/agrisense-tasks.md` | Completely rewritten to reflect actual project state (all phases complete) |
-| `.references/prd/agrisense-prd-v2.md` | Updated acceptance criteria (all checked), added implementation status section |
-| `.references/API_DOCUMENTATION.md` | Updated base URL (8000), added Chat, Dashboard, Sector endpoints |
-| `.references/DEPLOYMENT_GUIDE.md` | Updated port to 8000, added CI/CD section, updated production checklist |
+### 2. Verified ML Model Status
+- **Model file exists:** `backend/ml_models/pest_model.pt` (14MB)
+- **Model loads successfully:** All 10 classes detected
+- **Inference works:** Correctly returns 0 detections on blank image (real inference, not mock)
+- **Key finding:** Previous session claimed model worked but `ultralytics` was never added to requirements — model was silently falling back to mock predictions
 
-**Key Updates:**
-- Task list now shows ~90% complete (Phase 1-6 done, Phase 7 pending)
-- PRD acceptance criteria all marked as complete
-- API docs include all 8 endpoint groups (Auth, Sensor, Pest, Weather, Alert, Dashboard, Chat, Sector)
-- Deployment guide reflects actual Oracle Cloud setup
-
----
-
-### 2. Backend Test Suite Completion (139 tests) - (Previous Session)
-
-**New Test File Created:**
-| File | Tests | Description |
-|------|-------|-------------|
-| `backend/tests/test_sector.py` | 21 | Complete sector CRUD test coverage |
-
-**Tests Added:**
-- `TestCreateSector` (4 tests): success, minimal fields, no auth, invalid name
-- `TestListSectors` (4 tests): list, pagination, filter by crop, no auth
-- `TestGetSector` (3 tests): success, not found, no auth
-- `TestUpdateSector` (4 tests): success, partial update, not found, no auth
-- `TestDeleteSector` (3 tests): success, not found, no auth
-- `TestSectorStatistics` (3 tests): get stats, empty stats, no auth
-
-**Files Modified:**
-| File | Changes |
-|------|---------|
-| `backend/tests/conftest.py` | Added `test_sector` fixture, updated DB URL to hosted PostgreSQL |
-| `backend/config.py` | Added `extra = "ignore"` to Settings to allow extra env vars |
-
-**Coverage Results:**
-| Component | Coverage |
-|-----------|----------|
-| `routers/sector.py` | 100% |
-| `routers/auth.py` | 97% |
-| `routers/chat.py` | 96% |
-| `routers/alert.py` | 96% |
-| `routers/sensor.py` | 97% |
-| `routers/pest.py` | 92% |
-| Overall | 77% |
-
-**Uncovered Code (Not Critical):**
-- `data_simulator.py` (0%) - Dev utility for fake data, not production code
-- `db_init.py` (21%) - Startup infrastructure, runs once at boot
-- `scheduler.py` (29%) - Background jobs, complex async timing
-- External API wrappers - Validated by integration tests passing
+### 3. ML Deployment Plan Created
+- Design doc: `docs/plans/2026-02-25-ml-model-deployment-design.md`
+- Implementation plan: `docs/plans/2026-02-25-ml-model-deployment.md`
+- Approach: Full PyTorch in Docker (server has plenty of resources)
 
 ---
 
-## Previous Session Accomplishments
+## ML Deployment Plan — Ready to Execute
 
-### Phase 6: Polish (Complete)
+### Task 1: Fix requirements.txt
+- Pin `Pillow>=10.3.0,<13.0.0` (replace `==10.1.0`)
+- Add `ultralytics>=8.0.0` and `gitpython>=3.1.30` to ML section
 
-**New Files Created:**
-| File | Description |
-|------|-------------|
-| `lib/providers/auth_provider.dart` | Global auth state with ChangeNotifier |
-| `lib/utils/error_handler.dart` | Consistent error/success message utility |
+### Task 2: Un-gitignore and commit model file
+- Remove `backend/ml_models/*.pt` from `.gitignore`
+- Commit `backend/ml_models/pest_model.pt` (14MB, within GitHub 100MB limit)
 
-**Files Modified:**
-| File | Changes |
-|------|---------|
-| `lib/main.dart` | Added MultiProvider, AuthWrapper for auto-login |
-| `lib/pages/login_page.dart` | Now uses AuthProvider |
-| `lib/pages/sign_up_page.dart` | Now uses AuthProvider |
-| `lib/pages/main_page.dart` | Uses AuthProvider for token access |
-| `lib/pages/settings_page.dart` | Shows real user data, added logout button |
+### Task 3: Update Dockerfile
+- Add `libgl1-mesa-glx` and `libglib2.0-0` (OpenCV runtime deps) to both build stages
+- Add `RUN python -c "import torch; torch.hub.load(...)"` to pre-cache YOLOv5 repo during build
 
-**Key Features Added:**
-- Auto-login check on app startup
-- Global auth state accessible via Provider
-- Logout button with confirmation dialog
-- Session expiration handling (auto-redirect to login on 401)
-- ErrorHandler utility for consistent snackbar messages
+### Task 4: Update docker-compose.yml
+- Change `USE_MOCK_ML` default from `True` to `False`
+- Add `PEST_MODEL_PATH: /app/ml_models/pest_model.pt`
 
-### Flutter Tests
+### Task 5: Local Docker build test
+- `docker compose build backend` — verify image builds
+- Check logs show model loading with 10 classes
 
-**Test Files Created:**
-| File | Tests | Description |
-|------|-------|-------------|
-| `test/unit/auth_provider_test.dart` | 3 | AuthProvider state tests |
-| `test/unit/models_test.dart` | 18 | User, Alert, PestDetection, Chat model tests |
-| `test/unit/error_handler_test.dart` | 12 | ErrorHandler utility tests |
-| `test/widget/login_page_test.dart` | 7 | LoginPage widget tests |
-| `test/widget_test.dart` | - | Main test runner |
+### Task 6: Deploy to production
+- Push to `main` → CI/CD runs tests → deploys to Oracle Cloud
+- Verify with `curl https://agrisense.bryanlzj.work/health`
 
-**Run Tests:**
-```bash
-cd mobile
-flutter test
+Full details in `docs/plans/2026-02-25-ml-model-deployment.md`.
+
+---
+
+## Architecture: ML Service
+
+```
+main.py lifespan
+  └─ pest_ml_service.load_model(settings.pest_model_path)
+       └─ torch.hub.load('ultralytics/yolov5', 'custom', ...)
+       └─ stores model.names → {0: 'rice leaf roller', ...}
+
+routers/pest.py /detect and /detect/enhanced
+  └─ pest_ml_service.predict(file_path)
+       ├─ model loaded → real YOLO inference → PestPredictionResult
+       └─ model not loaded → mock random prediction → PestPredictionResult
 ```
 
+**Model Classes (10):**
+| Index | Class Name | Danger Level |
+|-------|------------|-------------|
+| 0 | rice leaf roller | Medium |
+| 1 | rice leaf caterpillar | Medium |
+| 2 | asiatic rice borer | High |
+| 3 | rice gall midge | High |
+| 4 | brown plant hopper | High |
+| 5 | red spider | Medium |
+| 6 | corn borer | High |
+| 7 | army worm | High |
+| 8 | aphids | Low |
+| 9 | flea beetle | Low |
+
+**Config controls:**
+- `USE_MOCK_ML=True` → skip model loading, always mock
+- `USE_MOCK_ML=False` → attempt model load; if missing, fall back to mock
+- `PEST_MODEL_PATH=./ml_models/pest_model.pt` → model file location
+
 ---
 
-## What's Needed Next
+## What's Needed After ML Deployment
 
 ### Priority 1: Edit Profile
 - **Backend:** Add `PUT /api/v1/auth/me` endpoint to update user profile
 - **Mobile:** Create Edit Profile page accessible from Settings
 - **Fields to edit:** full_name, farm_location_name, crop_type
 
-### Priority 2: Weather Enhancements (User Requested)
-
-These features are marked "Out of Scope" in PRD but user indicates they are needed:
-
-| Feature | Backend Changes | Mobile Changes |
-|---------|-----------------|----------------|
-| **Historical Weather Data** | Add `/weather/historical` endpoint | Add historical tab/view to weather page |
-| **Weather by Farm Sector** | Add lat/lng to Sector model, update weather endpoints | Allow sector selection in weather page |
-| **Sector Selection in Weather** | Support location parameter from sectors | Dropdown to select sector for weather |
-
-**Note:** Sector model currently has NO coordinates (lat/lng). Would need migration to add these fields.
+### Priority 2: Weather Enhancements
+- Historical weather data endpoint (`/weather/historical`)
+- Weather by farm sector (requires adding lat/lng to Sector model + migration)
 
 ### Priority 3: Other Enhancements (Optional)
-- Forgot password flow (currently out of scope)
-- Push notifications (currently out of scope)
-- Offline support (currently out of scope)
+- Forgot password flow
+- Push notifications
+- Offline support
 
 ---
 
 ## API Endpoints Summary
 
 ### Auth
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| POST | `/api/v1/auth/login` | Login | ✅ |
-| POST | `/api/v1/auth/register` | Register | ✅ |
-| GET | `/api/v1/auth/me` | Get current user | ✅ |
-| PUT | `/api/v1/auth/me` | Update profile | ❌ **NEEDED** |
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| POST | `/api/v1/auth/login` | ✅ |
+| POST | `/api/v1/auth/register` | ✅ |
+| GET | `/api/v1/auth/me` | ✅ |
+| PUT | `/api/v1/auth/me` | ❌ NEEDED |
+
+### Pest Detection
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| POST | `/api/v1/pest/detect` | ✅ Uses real ML locally, mock on server |
+| POST | `/api/v1/pest/detect/enhanced` | ✅ Uses real ML locally, mock on server |
+| POST | `/api/v1/pest/upload` | ✅ |
+| GET | `/api/v1/pest/` | ✅ |
+| GET | `/api/v1/pest/stats/summary` | ✅ |
+| GET | `/api/v1/pest/risk` | ✅ |
+| GET | `/api/v1/pest/risk/summary` | ✅ |
+| POST | `/api/v1/pest/report` | ✅ |
 
 ### Weather
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| GET | `/api/v1/weather/current` | Current weather | ✅ |
-| GET | `/api/v1/weather/forecast` | 5-day forecast | ✅ |
-| GET | `/api/v1/weather/summary` | Current + forecast | ✅ |
-| GET | `/api/v1/weather/historical` | Historical data | ❌ **NEEDED** |
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| GET | `/api/v1/weather/current` | ✅ |
+| GET | `/api/v1/weather/forecast` | ✅ |
+| GET | `/api/v1/weather/summary` | ✅ |
+| GET | `/api/v1/weather/historical` | ❌ NEEDED |
 
-### Other Endpoints (All Working)
-- `/api/v1/dashboard` - Dashboard data
-- `/api/v1/alert/` - Alerts CRUD
-- `/api/v1/sector/` - Sectors CRUD
-- `/api/v1/pest/` - Pest detection
-- `/api/v1/chat/` - Chatbot
+### Other (All Working)
+- `/api/v1/dashboard` — Dashboard data
+- `/api/v1/alert/` — Alerts CRUD
+- `/api/v1/sector/` — Sectors CRUD
+- `/api/v1/chat/` — Chatbot
 
 ---
 
 ## How to Run
 
-### Mobile App
+### Backend (Local — Linux/WSL2)
 ```bash
-cd mobile
-flutter pub get
-flutter run
+cd /home/bryan/AgriSense/backend
+source venv/bin/activate
+python run.py
 ```
 
 ### Run Tests
 ```bash
-# Backend tests (139 tests)
-cd backend
-venv\Scripts\activate  # Windows
-python -m pytest -v
-
-# Backend tests with coverage
-python -m pytest --cov=backend --cov-report=html
-
-# Mobile tests (29 tests)
-cd mobile
-flutter test
-```
-
-### Backend (Local)
-```bash
-cd backend
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-python run.py
+cd /home/bryan/AgriSense/backend
+source venv/bin/activate
+TEST_DATABASE_URL="postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense" python -m pytest -v
 ```
 
 ### Deployment
 Push to `main` branch triggers CI/CD automatically.
+
+---
+
+## Known Issues / Notes
+
+### Dependency Versions
+- `ultralytics` auto-installs updated versions of `Pillow`, `requests`, and `gitpython` at runtime via torch.hub — pre-installing them in requirements avoids this
+- YOLOv5 torch.hub prints deprecation warnings about `torch.cuda.amp.autocast` — harmless
+
+### .env File
+- `USE_MOCK_ML=True` in local `.env` — change to `False` for local ML testing
+- `TEST_DATABASE_URL` must be set as env var when running tests (not in .env)
+
+### Pre-existing Test Flake
+`test_sensor.py::TestSensorStatistics::test_get_statistics` occasionally errors with `psycopg2.OperationalError: server closed the connection unexpectedly` during teardown. Remote PostgreSQL connection timeout, not a code bug.
+
+### User Preferences
+- **"Never use mock data under any circumstances unless I say ok"** — Always use real API data
+
+### Sector Model Limitation
+Sector model has NO latitude/longitude. Weather-by-sector requires adding columns + migration.
 
 ---
 
@@ -248,47 +224,29 @@ Push to `main` branch triggers CI/CD automatically.
 ```
 AgriSense/
 ├── backend/
-│   ├── main.py              # FastAPI app entry point
+│   ├── main.py              # FastAPI app (loads ML model in lifespan)
+│   ├── config.py            # Settings (pest_model_path, use_mock_ml)
+│   ├── Dockerfile           # Multi-stage build (needs torch.hub update)
+│   ├── requirements.txt     # Dependencies (needs ultralytics, Pillow pin)
+│   ├── .env                 # Local env vars
 │   ├── models/              # SQLAlchemy models
 │   ├── schemas/             # Pydantic schemas
-│   ├── routers/             # API endpoints
-│   ├── services/            # Business logic
+│   ├── routers/
+│   │   └── pest.py          # Pest endpoints (ML inference integrated)
+│   ├── services/
+│   │   └── pest_ml_service.py  # YOLOv5 singleton service
+│   ├── ml_models/
+│   │   └── pest_model.pt    # YOLOv5 weights (14MB, currently gitignored)
+│   ├── venv/                # Python venv (Linux, created this session)
 │   └── tests/               # pytest tests (139 tests)
-├── mobile/
-│   ├── lib/
-│   │   ├── main.dart        # Flutter app entry point
-│   │   ├── providers/       # State management
-│   │   ├── pages/           # Screen widgets
-│   │   ├── services/        # API services
-│   │   ├── models/          # Data models
-│   │   ├── widgets/         # Reusable components
-│   │   └── utils/           # Constants, helpers
-│   ├── test/                # Flutter tests (29 tests)
-│   └── pubspec.yaml         # Flutter dependencies
-├── INTEGRATION_PLAN.md      # Detailed integration roadmap
+├── mobile/                  # Flutter app
+├── docker-compose.yml       # Docker services config
+├── docs/plans/
+│   ├── 2026-02-25-ml-model-deployment-design.md
+│   └── 2026-02-25-ml-model-deployment.md
 ├── CLAUDE.md                # Project instructions for Claude
 └── HANDOVER.md              # This file
 ```
-
----
-
-## Known Issues / Notes
-
-### Current State
-- All Phase 1-6 features are implemented and tested
-- Backend is deployed and working at `agrisense.bryanlzj.work`
-- Mobile app uses Provider for auth state management
-- **Backend tests use hosted PostgreSQL** at `168.138.188.113:5432` (configured in `conftest.py`)
-
-### User Preferences
-- **"Never use mock data under any circumstances unless I say ok"** - Always use real API data
-
-### Sector Model Limitation
-The Sector model currently does NOT have latitude/longitude coordinates. To enable weather-by-sector, need to:
-1. Add `latitude` and `longitude` columns to Sector model
-2. Create Alembic migration
-3. Update sector schemas and endpoints
-4. Update mobile to use sector coordinates for weather
 
 ---
 

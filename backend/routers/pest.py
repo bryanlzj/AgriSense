@@ -69,6 +69,8 @@ from services.pest_risk_service import (
     get_pest_risk_assessment,
     get_risk_summary_for_display
 )
+from services.pest_ml_service import pest_ml_service
+from config import settings
 
 router = APIRouter(prefix="/pest", tags=["Pest Detection 🐛"])
 
@@ -151,14 +153,9 @@ async def detect_pest(
     
     **Process:**
     1. Validate and save image
-    2. Run ML model for pest detection (mock for now)
+    2. Run YOLO pest detection model (falls back to mock if model unavailable)
     3. Save detection results to database
     4. Return analysis results
-    
-    **Mock ML Results:**
-    - Currently returns mock predictions
-    - Real ML model will be integrated in Phase 2
-    - Mock results include common pests: Fall Armyworm, Aphids, Whitefly
     
     **Returns:**
     - Detection ID (saved in database)
@@ -182,33 +179,32 @@ async def detect_pest(
     base_url = str(request.base_url).rstrip('/')
     file_url = generate_file_url(filename, base_url)
     
-    # Mock ML detection (will be replaced with real ML in Phase 2)
-    # For now, return mock results
-    import random
-    
-    pest_types = [
-        ("Fall Armyworm", "A major pest of corn and other crops"),
-        ("Aphids", "Small sap-sucking insects that damage plants"),
-        ("Whitefly", "Small white flying insects that spread diseases"),
-        ("Leaf Miner", "Creates tunnels in leaves"),
-        ("Thrips", "Tiny insects that damage flowers and leaves")
-    ]
-    
-    # Generate mock detections
+    # Run ML inference (real model or mock fallback)
+    ml_result = pest_ml_service.predict(file_path)
+
+    # Build detection list from ML results
     detections = []
-    for pest_name, description in pest_types[:3]:  # Return top 3
-        confidence = random.uniform(0.1, 0.95)
+    for det in ml_result.all_detections:
+        info = get_pest_info(det.class_name)
         detections.append(PestDetectionResult(
-            pest_type=pest_name,
-            confidence=round(confidence, 2),
-            description=description
+            pest_type=det.class_name,
+            confidence=round(det.confidence, 2),
+            description=info["description"]
         ))
-    
+
+    # If no detections, add an "unknown" entry
+    if not detections:
+        detections.append(PestDetectionResult(
+            pest_type="Unknown",
+            confidence=0.0,
+            description="No pest detected in image."
+        ))
+
     # Sort by confidence (highest first)
     detections.sort(key=lambda x: x.confidence, reverse=True)
     primary_detection = detections[0]
-    
-    # Save primary detection to database (use correct model field names)
+
+    # Save primary detection to database
     pest_detection = PestDetection(
         user_id=current_user.id,
         pest_type=primary_detection.pest_type,
@@ -219,7 +215,7 @@ async def detect_pest(
     db.add(pest_detection)
     db.commit()
     db.refresh(pest_detection)
-    
+
     return PestDetectionAnalysisResponse(
         detection_id=pest_detection.id,
         image_url=file_url,
@@ -236,6 +232,128 @@ async def detect_pest(
 # Mock pest database with detailed info (will be replaced with real ML model)
 # Maps pest names to their info including severity (using SeverityLevel enum for database)
 PEST_DATABASE = {
+    # === Classes from the trained YOLOv5 model ===
+    "rice leaf roller": {
+        "scientific_name": "Cnaphalocrocis medinalis",
+        "description": "Larvae roll and fold rice leaves, feeding inside and reducing photosynthesis.",
+        "danger_level": DangerLevel.MEDIUM,
+        "severity_enum": SeverityLevel.MEDIUM,
+        "recommendations": [
+            "Scout for folded leaves with larvae inside",
+            "Maintain field hygiene",
+            "Avoid dense planting",
+            "Apply neem-based spray if >10% damage"
+        ]
+    },
+    "rice leaf caterpillar": {
+        "scientific_name": "Spodoptera mauritia",
+        "description": "Caterpillar that feeds on rice leaves, causing defoliation and reduced yield.",
+        "danger_level": DangerLevel.MEDIUM,
+        "severity_enum": SeverityLevel.MEDIUM,
+        "recommendations": [
+            "Monitor for caterpillar egg masses on leaves",
+            "Hand-pick larvae when infestation is low",
+            "Use biological control agents like Bacillus thuringiensis",
+            "Maintain proper water management"
+        ]
+    },
+    "asiatic rice borer": {
+        "scientific_name": "Chilo suppressalis",
+        "description": "A major stem borer that causes deadhearts in young plants and whiteheads in mature rice.",
+        "danger_level": DangerLevel.HIGH,
+        "severity_enum": SeverityLevel.HIGH,
+        "recommendations": [
+            "Monitor rice stems for entry holes and frass",
+            "Apply Trichogramma biological control",
+            "Remove and destroy infected stems",
+            "Avoid excessive nitrogen fertilizer"
+        ]
+    },
+    "rice gall midge": {
+        "scientific_name": "Orseolia oryzae",
+        "description": "Larvae cause tubular galls (silver shoots) in rice tillers, preventing panicle formation.",
+        "danger_level": DangerLevel.HIGH,
+        "severity_enum": SeverityLevel.HIGH,
+        "recommendations": [
+            "Use resistant rice varieties if available",
+            "Remove silver shoots and destroy them",
+            "Synchronize planting in the area",
+            "Apply systemic insecticide at early tillering if needed"
+        ]
+    },
+    "brown plant hopper": {
+        "scientific_name": "Nilaparvata lugens",
+        "description": "Sap-sucking pest that causes hopper burn in rice fields.",
+        "danger_level": DangerLevel.HIGH,
+        "severity_enum": SeverityLevel.HIGH,
+        "recommendations": [
+            "Avoid excessive nitrogen application",
+            "Maintain proper plant spacing",
+            "Drain fields periodically",
+            "Use resistant varieties if available"
+        ]
+    },
+    "red spider": {
+        "scientific_name": "Oligonychus oryzae",
+        "description": "Spider mite that feeds on rice leaves, causing yellowing and reduced photosynthesis.",
+        "danger_level": DangerLevel.MEDIUM,
+        "severity_enum": SeverityLevel.MEDIUM,
+        "recommendations": [
+            "Maintain adequate field moisture",
+            "Avoid water stress during dry season",
+            "Spray neem oil or miticide if infestation is severe",
+            "Encourage natural predators like ladybugs"
+        ]
+    },
+    "corn borer": {
+        "scientific_name": "Ostrinia furnacalis",
+        "description": "Larvae bore into corn stalks and ears, reducing yield and plant structural integrity.",
+        "danger_level": DangerLevel.HIGH,
+        "severity_enum": SeverityLevel.HIGH,
+        "recommendations": [
+            "Monitor for egg masses on leaves",
+            "Apply Trichogramma biological control",
+            "Remove and destroy infected stalks after harvest",
+            "Apply insecticide at early whorl stage if needed"
+        ]
+    },
+    "army worm": {
+        "scientific_name": "Spodoptera frugiperda",
+        "description": "Highly destructive caterpillar that feeds on leaves, stems, and grain in large swarms.",
+        "danger_level": DangerLevel.HIGH,
+        "severity_enum": SeverityLevel.HIGH,
+        "recommendations": [
+            "Monitor for egg masses and early instar larvae",
+            "Apply Bacillus thuringiensis (Bt) for early-stage larvae",
+            "Use pheromone traps for population monitoring",
+            "Act quickly as large larvae are harder to control"
+        ]
+    },
+    "aphids": {
+        "scientific_name": "Rhopalosiphum padi",
+        "description": "Small sap-sucking insects that damage plants and can transmit viral diseases.",
+        "danger_level": DangerLevel.LOW,
+        "severity_enum": SeverityLevel.LOW,
+        "recommendations": [
+            "Encourage natural predators (ladybugs, lacewings)",
+            "Spray neem oil for moderate infestations",
+            "Avoid excessive nitrogen fertilizer",
+            "Monitor for honeydew and sooty mold"
+        ]
+    },
+    "flea beetle": {
+        "scientific_name": "Chaetocnema basalis",
+        "description": "Small jumping beetle that creates shot-hole damage on leaves, weakening seedlings.",
+        "danger_level": DangerLevel.LOW,
+        "severity_enum": SeverityLevel.LOW,
+        "recommendations": [
+            "Monitor seedlings especially during dry weather",
+            "Maintain adequate soil moisture",
+            "Apply foliar insecticide if damage exceeds 25%",
+            "Use sticky traps for population monitoring"
+        ]
+    },
+    # === Legacy names (for existing database records and mock fallback) ===
     "Rice Stem Borer": {
         "scientific_name": "Scirpophaga incertulas",
         "description": "A major pest of rice that bores into stems, causing deadhearts and whiteheads.",
@@ -298,6 +416,31 @@ PEST_DATABASE = {
     }
 }
 
+# Fallback info for pest classes the model detects but aren't in PEST_DATABASE
+DEFAULT_PEST_INFO = {
+    "scientific_name": "Unknown",
+    "description": "Pest detected by image analysis.",
+    "danger_level": DangerLevel.MEDIUM,
+    "severity_enum": SeverityLevel.MEDIUM,
+    "recommendations": [
+        "Monitor the affected area closely",
+        "Take additional photos for expert review",
+        "Consider consulting a local agricultural extension officer",
+        "Apply general integrated pest management practices"
+    ]
+}
+
+
+def get_pest_info(pest_name: str) -> dict:
+    """Look up pest metadata, falling back to defaults for unknown classes."""
+    if pest_name in PEST_DATABASE:
+        return PEST_DATABASE[pest_name]
+    # Try case-insensitive match
+    for key, value in PEST_DATABASE.items():
+        if key.lower() == pest_name.lower():
+            return value
+    return {**DEFAULT_PEST_INFO, "description": f"{pest_name} detected by image analysis."}
+
 
 @router.post("/detect/enhanced", response_model=EnhancedPestDetectionResponse, status_code=201)
 async def detect_pest_enhanced(
@@ -352,18 +495,22 @@ async def detect_pest_enhanced(
     base_url = str(request.base_url).rstrip('/')
     file_url = generate_file_url(filename, base_url)
 
-    # Mock ML detection (will be replaced with real ML model)
-    import random
+    # Run ML inference (real model or mock fallback)
+    ml_result = pest_ml_service.predict(file_path)
 
-    pest_names = list(PEST_DATABASE.keys())
+    confidence = ml_result.confidence
+    selected_pest = ml_result.pest_type
+    pest_info = get_pest_info(selected_pest) if selected_pest else DEFAULT_PEST_INFO
 
-    # Generate mock confidence (biased towards different ranges for testing)
-    # In production, this comes from the ML model
-    confidence = random.uniform(0.3, 0.95)
-
-    # Select a pest (in production, ML model determines this)
-    selected_pest = random.choice(pest_names)
-    pest_info = PEST_DATABASE[selected_pest]
+    # Store bounding-box data for potential future use
+    detections_json = [
+        {
+            "class": d.class_name,
+            "confidence": d.confidence,
+            "bbox": d.bbox,
+        }
+        for d in ml_result.all_detections
+    ]
 
     # Determine status based on confidence tiering (PRD v2)
     confidence_percent = int(confidence * 100)

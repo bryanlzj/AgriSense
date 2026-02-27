@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     libpq-dev \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
@@ -37,6 +38,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     libpq5 \
     curl \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder
@@ -45,6 +47,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY . .
+
+# Pre-cache YOLOv5 torch.hub repo so it doesn't download at runtime
+RUN python -c "import torch; torch.hub.load('ultralytics/yolov5', 'custom', path='ml_models/pest_model.pt', trust_repo=True)" || true
 
 # Create directories for uploads and logs
 RUN mkdir -p uploads logs && \
