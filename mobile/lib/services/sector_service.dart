@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
+import 'package:fyp_prototype/utils/http_client.dart';
 import 'package:fyp_prototype/models/farm_sector.dart';
 
 /// Service for managing farm sectors via the API.
@@ -26,7 +26,7 @@ class SectorService {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectors}')
         .replace(queryParameters: queryParams);
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -58,7 +58,7 @@ class SectorService {
     final uri =
         Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectors}$sectorId');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -85,7 +85,7 @@ class SectorService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectors}');
 
-    final response = await http.post(
+    final response = await appHttpClient.post(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -115,7 +115,7 @@ class SectorService {
     final uri =
         Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectors}$sectorId');
 
-    final response = await http.put(
+    final response = await appHttpClient.put(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -147,7 +147,7 @@ class SectorService {
     final uri =
         Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectors}$sectorId');
 
-    final response = await http.delete(
+    final response = await appHttpClient.delete(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -173,7 +173,7 @@ class SectorService {
 
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.sectorStats}');
 
-    final response = await http.get(
+    final response = await appHttpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $token'},
     );
