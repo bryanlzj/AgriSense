@@ -24,7 +24,7 @@ httpx==0.25.1
 requests==2.31.0
 
 # Image Processing (for pest detection)
-Pillow==10.1.0
+Pillow>=10.3.0,<13.0.0
 
 # ML / Pest Detection (YOLOv5 via torch.hub)
 torch>=2.0.0
@@ -33,6 +33,8 @@ opencv-python-headless>=4.8.0
 pandas>=2.0.0
 seaborn>=0.12.0
 tqdm>=4.60.0
+ultralytics>=8.0.0
+gitpython>=3.1.30
 
 # Date/Time utilities
 python-dateutil==2.8.2

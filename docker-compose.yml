@@ -54,7 +54,8 @@ services:
       DEFAULT_LONGITUDE: 101.6869
       DEFAULT_LOCATION: Kuala Lumpur
       WEATHER_CACHE_DURATION: 1800
-      USE_MOCK_ML: ${USE_MOCK_ML:-True}
+      USE_MOCK_ML: ${USE_MOCK_ML:-False}
+      PEST_MODEL_PATH: /app/ml_models/pest_model.pt
       ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-service:8001/predict}
       ML_SERVICE_TIMEOUT: 10
       UPLOAD_DIR: /app/uploads

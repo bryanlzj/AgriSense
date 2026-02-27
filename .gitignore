@@ -105,8 +105,7 @@ Thumbs.db
 .AppleDouble
 .LSOverride
 
-# ML model files
-backend/ml_models/*.pt
+# ML model files (keep .pt tracked for deployment, ignore large/converted formats)
 backend/ml_models/*.onnx
 backend/ml_models/*.tflite
 best.pt.zip
