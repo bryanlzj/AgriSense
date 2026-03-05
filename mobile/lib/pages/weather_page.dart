@@ -1447,7 +1447,7 @@ class _WeatherPageState extends State<WeatherPage>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('  ',
+                      Text('• ',
                           style: TextStyle(color: Colors.grey[600])),
                       Expanded(
                         child: Text(
