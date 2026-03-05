@@ -14,8 +14,8 @@ Learning Notes:
 - Nested schemas allow for complex data structures
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Dict, Optional, List
 from datetime import datetime
 
 
@@ -219,3 +219,62 @@ class WeatherSummaryResponse(BaseModel):
     alerts: List[WeatherAlert] = Field(default_factory=list)
     recommendations: List[AgriculturalRecommendation] = Field(default_factory=list)
     updated_at: datetime
+
+
+# ============================================================================
+# SENSOR-BASED WEATHER SCHEMAS
+# ============================================================================
+
+class SensorWeatherReading(BaseModel):
+    """Single sensor reading with ML weather classification."""
+    timestamp: datetime
+    temperature: float
+    relative_humidity: float
+    rain: float
+    wind_speed: float
+    soil_temperature: Optional[float] = None
+    soil_moisture: float
+    solar_radiation: Optional[float] = None
+    weather_code: Optional[int] = None
+    weather_condition: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CurrentSensorWeatherResponse(BaseModel):
+    """Current weather from latest sensor reading + ML classification."""
+    source: str = "sensor"
+    weather_condition: Optional[str] = None
+    confidence: Optional[float] = None
+    probabilities: Optional[Dict[str, float]] = None
+    temperature: float
+    relative_humidity: float
+    rain: float
+    wind_speed: float
+    soil_temperature: Optional[float] = None
+    soil_moisture: float
+    solar_radiation: Optional[float] = None
+    weather_code: Optional[int] = None
+    timestamp: datetime
+    model_loaded: bool = False
+
+
+class HistoricalSummary(BaseModel):
+    """Summary statistics for a historical period."""
+    avg_temperature: float
+    max_temperature: float
+    min_temperature: float
+    avg_humidity: float
+    total_rain: float
+    dominant_condition: Optional[str] = None
+    condition_breakdown: Dict[str, int] = {}
+
+
+class HistoricalWeatherResponse(BaseModel):
+    """Historical weather data from sensor readings."""
+    period: str
+    start: datetime
+    end: datetime
+    readings_count: int
+    readings: List[SensorWeatherReading]
+    summary: HistoricalSummary

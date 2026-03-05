@@ -29,6 +29,7 @@ class ApiConstants {
   static const String weatherCurrent = '$apiPrefix/weather/current';
   static const String weatherForecast = '$apiPrefix/weather/forecast';
   static const String weatherSummary = '$apiPrefix/weather/summary';
+  static const String weatherHistorical = '$apiPrefix/weather/historical';
 
   // Alert endpoints (note: trailing slash required for list endpoint)
   static const String alerts = '$apiPrefix/alert/';

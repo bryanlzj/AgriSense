@@ -70,6 +70,18 @@ async def lifespan(app: FastAPI):
     else:
         print("USE_MOCK_ML=True — skipping ML model load, using mock predictions")
 
+    # Load weather classification ML model
+    from services.weather_ml_service import weather_ml_service
+
+    if not settings.use_mock_weather_ml:
+        loaded = weather_ml_service.load_model(settings.weather_model_path)
+        if loaded:
+            print(f"Weather ML model loaded — labels: {weather_ml_service.class_labels}")
+        else:
+            print("Weather ML model not found, falling back to mock predictions")
+    else:
+        print("USE_MOCK_WEATHER_ML=True — skipping weather model load")
+
     # Start background jobs (weather check, pest risk check)
     # Comment out if you want to disable background jobs
     try:

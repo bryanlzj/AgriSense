@@ -121,6 +121,7 @@ class SensorDataResponse(BaseModel):
     soil_temperature: Optional[float]
     soil_moisture: float
     weather_code: Optional[int]
+    weather_condition: Optional[str] = None
     timestamp: datetime
 
     class Config:

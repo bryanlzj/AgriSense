@@ -36,6 +36,7 @@ from models.alert import Alert, AlertType, AlertSeverity
 from models.sensor_reading import SensorReading
 from services.weather_service import fetch_current_weather, transform_current_weather
 from services.pest_risk_service import check_and_generate_pest_risk_alerts
+from services.weather_ml_service import weather_ml_service
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -110,6 +111,22 @@ async def weather_check_job():
                         soil_moisture=current.soil_moisture if current.soil_moisture is not None else 0.0,
                         weather_code=raw_current.get("weather_code")
                     )
+
+                    # Auto-classify weather condition using ML model
+                    try:
+                        prediction = weather_ml_service.predict({
+                            "temperature": reading.temperature,
+                            "relative_humidity": reading.relative_humidity,
+                            "rain": reading.rain,
+                            "wind_speed": reading.wind_speed,
+                            "soil_temperature": reading.soil_temperature,
+                            "soil_moisture": reading.soil_moisture,
+                            "solar_radiation": reading.solar_radiation,
+                        })
+                        reading.weather_condition = prediction.condition
+                    except Exception as e:
+                        logger.warning("Weather classification failed: %s", e)
+
                     db.add(reading)
                     readings_created += 1
                 db.commit()

@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from database import get_db
 from models.sensor_reading import SensorReading
 from models.user import User
+from services.weather_ml_service import weather_ml_service
 from schemas.sensor import (
     SensorDataCreate,
     SensorDataResponse,
@@ -75,7 +76,22 @@ def create_sensor_data(
         soil_moisture=sensor_data.soil_moisture,
         weather_code=sensor_data.weather_code
     )
-    
+
+    # Auto-classify weather condition using ML model
+    try:
+        prediction = weather_ml_service.predict({
+            "temperature": db_sensor_data.temperature,
+            "relative_humidity": db_sensor_data.relative_humidity,
+            "rain": db_sensor_data.rain,
+            "wind_speed": db_sensor_data.wind_speed,
+            "soil_temperature": db_sensor_data.soil_temperature,
+            "soil_moisture": db_sensor_data.soil_moisture,
+            "solar_radiation": db_sensor_data.solar_radiation,
+        })
+        db_sensor_data.weather_condition = prediction.condition
+    except Exception:
+        pass  # Classification failure shouldn't block reading creation
+
     db.add(db_sensor_data)
     db.commit()
     db.refresh(db_sensor_data)

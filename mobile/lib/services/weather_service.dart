@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp_prototype/utils/api_constants.dart';
 import 'package:fyp_prototype/utils/token_storage.dart';
 import 'package:fyp_prototype/utils/http_client.dart';
+import 'package:fyp_prototype/models/sensor_weather.dart';
 
 /// Service for fetching weather data from the API.
 class WeatherService {
@@ -112,6 +113,62 @@ class WeatherService {
     } else {
       final data = json.decode(response.body);
       throw Exception(data['detail'] ?? 'Failed to fetch weather summary');
+    }
+  }
+
+  /// Get current weather from sensor data + ML classification
+  static Future<SensorCurrentWeather> getSensorCurrent() async {
+    final token = await TokenStorage.getToken();
+    if (token == null) throw Exception('Not authenticated');
+
+    final response = await appHttpClient.get(
+      Uri.parse('${ApiConstants.baseUrl}${ApiConstants.weatherCurrent}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return SensorCurrentWeather.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired');
+    } else if (response.statusCode == 404) {
+      throw Exception('No sensor data available');
+    } else {
+      throw Exception('Failed to load current weather');
+    }
+  }
+
+  /// Get historical weather data from sensor readings
+  static Future<HistoricalWeatherData> getHistorical({
+    String period = '24h',
+    String? startDate,
+    String? endDate,
+  }) async {
+    final token = await TokenStorage.getToken();
+    if (token == null) throw Exception('Not authenticated');
+
+    String url =
+        '${ApiConstants.baseUrl}${ApiConstants.weatherHistorical}?period=$period';
+    if (period == 'custom' && startDate != null && endDate != null) {
+      url += '&start_date=$startDate&end_date=$endDate';
+    }
+
+    final response = await appHttpClient.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return HistoricalWeatherData.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to load historical weather');
     }
   }
 }

@@ -22,61 +22,32 @@ sys.path.insert(0, str(backend_dir))
 
 
 class TestCurrentWeather:
-    """Test current weather endpoint."""
+    """Test current weather endpoint (sensor-based)."""
 
     def test_get_current_weather_success(self, client: TestClient, auth_headers: dict):
-        """Test getting current weather with valid coordinates."""
-        response = client.get(
-            "/api/v1/weather/current?latitude=3.1390&longitude=101.6869&location_name=Kuala%20Lumpur",
-            headers=auth_headers
-        )
+        """Test getting current weather when sensor data exists."""
+        # Create a sensor reading first
+        client.post("/api/v1/sensor/", json={
+            "temperature": 28.5, "relative_humidity": 75.0,
+            "rain": 0.0, "wind_speed": 12.5, "soil_moisture": 0.35,
+        }, headers=auth_headers)
 
-        # May succeed or fail depending on API availability
-        assert response.status_code in [200, 500]
-        if response.status_code == 200:
-            data = response.json()
-            assert "location" in data
-            assert "current" in data
-            assert "updated_at" in data
+        response = client.get("/api/v1/weather/current", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["source"] == "sensor"
+        assert "temperature" in data
+        assert "weather_condition" in data
+        assert "timestamp" in data
 
-    def test_get_current_weather_user_location(self, client: TestClient, auth_headers: dict, test_user):
-        """Test getting current weather for user's farm location."""
-        response = client.get(
-            f"/api/v1/weather/current?latitude={test_user.farm_location_lat}&longitude={test_user.farm_location_lng}",
-            headers=auth_headers
-        )
-
-        assert response.status_code in [200, 500]
-
-    def test_get_current_weather_invalid_coords(self, client: TestClient, auth_headers: dict):
-        """Test getting weather with invalid coordinates."""
-        # Latitude out of range
-        response = client.get(
-            "/api/v1/weather/current?latitude=100&longitude=101.6869",
-            headers=auth_headers
-        )
-        assert response.status_code == 422
-
-        # Longitude out of range
-        response = client.get(
-            "/api/v1/weather/current?latitude=3.1390&longitude=200",
-            headers=auth_headers
-        )
-        assert response.status_code == 422
-
-    def test_get_current_weather_missing_coords(self, client: TestClient, auth_headers: dict):
-        """Test getting weather without coordinates."""
-        response = client.get(
-            "/api/v1/weather/current",
-            headers=auth_headers
-        )
-        assert response.status_code == 422
+    def test_get_current_weather_no_sensor_data(self, client: TestClient, auth_headers: dict):
+        """Test getting current weather when no sensor data exists returns 404."""
+        response = client.get("/api/v1/weather/current", headers=auth_headers)
+        assert response.status_code == 404
 
     def test_get_current_weather_no_auth(self, client: TestClient):
         """Test getting weather without authentication."""
-        response = client.get(
-            "/api/v1/weather/current?latitude=3.1390&longitude=101.6869"
-        )
+        response = client.get("/api/v1/weather/current")
         assert response.status_code == 403
 
 
@@ -191,7 +162,7 @@ class TestWeatherCoordinateRanges:
     """Test weather endpoints with various coordinate ranges."""
 
     def test_edge_case_coordinates(self, client: TestClient, auth_headers: dict):
-        """Test with edge case coordinates."""
+        """Test forecast with edge case coordinates."""
         # Valid edge coordinates
         valid_coords = [
             (0, 0),           # Equator/Prime meridian
@@ -205,14 +176,14 @@ class TestWeatherCoordinateRanges:
 
         for lat, lng in valid_coords:
             response = client.get(
-                f"/api/v1/weather/current?latitude={lat}&longitude={lng}",
+                f"/api/v1/weather/forecast?latitude={lat}&longitude={lng}",
                 headers=auth_headers
             )
             # Should not return 422 (validation error)
             assert response.status_code in [200, 500]
 
     def test_malaysian_locations(self, client: TestClient, auth_headers: dict):
-        """Test with Malaysian state locations."""
+        """Test forecast with Malaysian state locations."""
         malaysian_locations = [
             ("Kedah", 6.1184, 100.3685),
             ("Penang", 5.4164, 100.3327),
@@ -222,7 +193,7 @@ class TestWeatherCoordinateRanges:
 
         for name, lat, lng in malaysian_locations:
             response = client.get(
-                f"/api/v1/weather/current?latitude={lat}&longitude={lng}&location_name={name}",
+                f"/api/v1/weather/forecast?latitude={lat}&longitude={lng}&location_name={name}",
                 headers=auth_headers
             )
             assert response.status_code in [200, 500]
