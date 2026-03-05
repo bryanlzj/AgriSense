@@ -150,7 +150,7 @@ class WeatherService {
     if (token == null) throw Exception('Not authenticated');
 
     String url =
-        '${ApiConstants.baseUrl}/api/v1/weather/historical?period=$period';
+        '${ApiConstants.baseUrl}${ApiConstants.weatherHistorical}?period=$period';
     if (period == 'custom' && startDate != null && endDate != null) {
       url += '&start_date=$startDate&end_date=$endDate';
     }

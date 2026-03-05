@@ -61,7 +61,7 @@ router = APIRouter(
 # WEATHER ENDPOINTS
 # ============================================================================
 
-@router.get("/current", response_model=None)
+@router.get("/current", response_model=CurrentSensorWeatherResponse)
 async def get_current_weather_endpoint(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)

@@ -16,18 +16,16 @@ A teammate trained a Random Forest classifier that predicts weather conditions f
 
 **Output labels:** `Cloudy`, `Heavy Rain`, `Light Rain`, `Sunny`
 
-**Input features (9):**
+**Input features (7):** (`time` and `weather_code` were excluded during training, confirmed via scaler inspection)
 | Feature | Source (DB column) |
 |---|---|
-| `time` | `timestamp` |
-| `temperature_2m` | `temperature` |
-| `relative_humidity_2m` | `relative_humidity` |
-| `rain` | `rain` |
-| `wind_speed_10m` | `wind_speed` |
-| `soil_temperature_0_to_7cm` | `soil_temperature` |
-| `soil_moisture_0_to_7cm` | `soil_moisture` |
-| `shortwave_radiation` | `solar_radiation` |
-| `weather_code` | `weather_code` |
+| `temperature_2m (°C)` | `temperature` |
+| `relative_humidity_2m (%)` | `relative_humidity` |
+| `rain (mm)` | `rain` |
+| `wind_speed_10m (km/h)` | `wind_speed` |
+| `soil_temperature_0_to_7cm (°C)` | `soil_temperature` |
+| `soil_moisture_0_to_7cm (m³/m³)` | `soil_moisture` |
+| `shortwave_radiation (W/m²)` | `solar_radiation` |
 
 All input features already exist in the `sensor_readings` table.
 
