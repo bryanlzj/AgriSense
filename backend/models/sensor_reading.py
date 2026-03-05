@@ -14,7 +14,7 @@ Educational Notes:
 - Stores time-series data (readings over time)
 """
 
-from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from database import Base
@@ -111,6 +111,11 @@ class SensorReading(Base):
     # 95 = Thunderstorm
     # Used for weather condition classification
 
+    weather_condition = Column(String(20), nullable=True)
+    # ML-predicted weather condition: "Sunny", "Cloudy", "Light Rain", "Heavy Rain"
+    # Set automatically when sensor reading is created
+    # NULL for readings before model integration
+
     # Timestamp
     timestamp = Column(
         DateTime(timezone=True),
@@ -156,6 +161,7 @@ class SensorReading(Base):
             "soil_temperature": round(self.soil_temperature, 2) if self.soil_temperature else None,
             "soil_moisture": round(self.soil_moisture, 4),  # 4 decimal places for m³/m³
             "weather_code": self.weather_code,
+            "weather_condition": self.weather_condition,
             "timestamp": self.timestamp.isoformat(),
         }
 

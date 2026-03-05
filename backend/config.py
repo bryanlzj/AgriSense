@@ -86,6 +86,11 @@ class Settings(BaseSettings):
         default="./ml_models/pest_model.pt",
         env="PEST_MODEL_PATH"
     )
+    use_mock_weather_ml: bool = Field(default=False, env="USE_MOCK_WEATHER_ML")
+    weather_model_path: str = Field(
+        default="./ml_models/weather",
+        env="WEATHER_MODEL_PATH"
+    )
     ml_service_url: str = Field(
         default="http://localhost:8001/predict",
         env="ML_SERVICE_URL"
