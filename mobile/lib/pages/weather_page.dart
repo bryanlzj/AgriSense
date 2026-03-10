@@ -76,8 +76,13 @@ class _WeatherPageState extends State<WeatherPage>
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.contains('Session expired')) {
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
         setState(() {
-          _currentError = e.toString().replaceFirst('Exception: ', '');
+          _currentError = msg;
           _currentLoading = false;
         });
       }
@@ -112,8 +117,13 @@ class _WeatherPageState extends State<WeatherPage>
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.contains('Session expired')) {
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
         setState(() {
-          _historicalError = e.toString().replaceFirst('Exception: ', '');
+          _historicalError = msg;
           _historicalLoading = false;
         });
       }
@@ -146,8 +156,13 @@ class _WeatherPageState extends State<WeatherPage>
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.contains('Session expired')) {
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
         setState(() {
-          _forecastError = e.toString().replaceFirst('Exception: ', '');
+          _forecastError = msg;
           _forecastLoading = false;
         });
       }
