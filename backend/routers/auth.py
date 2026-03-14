@@ -63,6 +63,15 @@ async def register(
             detail="Username already registered"
         )
 
+    # Check if email already exists
+    if user_data.email:
+        existing_email = db.query(User).filter(User.email == user_data.email).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
     # Hash password
     hashed_password = get_password_hash(user_data.password)
 
@@ -71,6 +80,7 @@ async def register(
         username=user_data.username,
         hashed_password=hashed_password,
         full_name=user_data.full_name,
+        email=user_data.email,
         farm_location_name=user_data.farm_location_name,
         farm_location_lat=user_data.farm_location_lat,
         farm_location_lng=user_data.farm_location_lng,
