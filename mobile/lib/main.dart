@@ -4,6 +4,7 @@ import 'package:fyp_prototype/providers/auth_provider.dart';
 import 'package:fyp_prototype/pages/about_agrisense_page.dart';
 import 'package:fyp_prototype/pages/alerts_page.dart';
 import 'package:fyp_prototype/pages/chatbot_page.dart';
+import 'package:fyp_prototype/pages/edit_profile_page.dart';
 import 'package:fyp_prototype/pages/farm_management_page.dart';
 import 'package:fyp_prototype/pages/forgot_password_page.dart';
 import 'package:fyp_prototype/pages/help_support_page.dart';
@@ -76,6 +77,7 @@ class _AgriSenseAppState extends State<AgriSenseApp> {
       '/import': (context) => ImportDatasetPage(),
       '/help': (context) => HelpSupportPage(),
       '/about': (context) => AboutAgrisensePage(),
+      '/editProfile': (context) => EditProfilePage(),
       '/alerts': (context) => AlertsPage(),
     };
 
