@@ -94,6 +94,7 @@ class AuthProvider extends ChangeNotifier {
     required String username,
     required String password,
     String? fullName,
+    String? email,
     required String farmLocationName,
     required double farmLocationLat,
     required double farmLocationLng,
@@ -108,12 +109,78 @@ class AuthProvider extends ChangeNotifier {
         username: username,
         password: password,
         fullName: fullName,
+        email: email,
         farmLocationName: farmLocationName,
         farmLocationLat: farmLocationLat,
         farmLocationLng: farmLocationLng,
         cropType: cropType,
       );
 
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Update user profile.
+  Future<bool> updateProfile({
+    String? fullName,
+    String? email,
+    String? farmLocationName,
+    double? farmLocationLat,
+    double? farmLocationLng,
+    String? cropType,
+  }) async {
+    if (_token == null) return false;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await AuthService.updateProfile(
+        token: _token!,
+        fullName: fullName,
+        email: email,
+        farmLocationName: farmLocationName,
+        farmLocationLat: farmLocationLat,
+        farmLocationLng: farmLocationLng,
+        cropType: cropType,
+      );
+      _user = updatedUser;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Change user password.
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (_token == null) return false;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await AuthService.changePassword(
+        token: _token!,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
       _isLoading = false;
       notifyListeners();
       return true;
