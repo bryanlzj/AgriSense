@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp_prototype/utils/greetings.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fyp_prototype/models/home_page_data.dart';
+import 'package:fyp_prototype/pages/alert_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   final HomePageData homePageData;
@@ -471,7 +472,19 @@ class _HomePageState extends State<HomePage> {
         severityColor = Colors.blue;
     }
 
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AlertDetailPage(
+              alert: alert,
+              onUpdated: widget.onRefresh,
+            ),
+          ),
+        );
+      },
+      child: Container(
       width: double.infinity,
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
@@ -551,6 +564,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

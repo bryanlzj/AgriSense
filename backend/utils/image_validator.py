@@ -71,20 +71,22 @@ async def validate_image_file(file: UploadFile) -> Tuple[bool, Optional[str]]:
     if file_size == 0:
         return False, "File is empty"
     
-    # 2. Validate MIME type
-    if file.content_type not in ALLOWED_MIME_TYPES:
-        return False, f"Invalid file type. Allowed types: JPEG, PNG"
-    
-    # 3. Validate actual image content and dimensions
+    # 2. Validate actual image content, format, and dimensions
     try:
         # Open image using PIL
         image = Image.open(BytesIO(content))
-        
+
         # Verify it's actually an image (PIL will raise exception if not)
         image.verify()
-        
-        # Re-open image for dimension check (verify() closes the image)
+
+        # Re-open image for format and dimension check (verify() closes the image)
         image = Image.open(BytesIO(content))
+
+        # Check actual image format from bytes (not client-reported MIME type)
+        actual_format = image.format
+        if actual_format not in ("JPEG", "PNG"):
+            return False, f"Invalid file type ({actual_format}). Allowed types: JPEG, PNG"
+
         width, height = image.size
         
         # Check minimum dimensions
