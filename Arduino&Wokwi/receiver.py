@@ -10,10 +10,39 @@ MQTT_TOPIC = "agrisense/fyp/peng/data/unique_99"
 
 # ── Backend API Configuration ──
 API_BASE_URL = "https://agrisense.bryanlzj.work"
+API_LOGIN_ENDPOINT = f"{API_BASE_URL}/api/v1/auth/login"
 API_SENSOR_ENDPOINT = f"{API_BASE_URL}/api/v1/sensor/"
 
-# Paste your JWT token here (login to the app first, then copy the token)
-AUTH_TOKEN = "YOUR_TOKEN_HERE"
+# Will be set after login
+AUTH_TOKEN = None
+
+
+def login():
+    """Prompt for credentials and login to get JWT token."""
+    print("\n-- AgriSense Login --")
+    username = input("Username: ").strip()
+    password = input("Password: ").strip()
+
+    try:
+        response = requests.post(
+            API_LOGIN_ENDPOINT,
+            data={"username": username, "password": password},
+        )
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get("access_token") or data.get("token")
+            if token:
+                print("Login successful!\n")
+                return token
+            else:
+                print(f"Login response missing token: {data}")
+                return None
+        else:
+            print(f"Login failed ({response.status_code}): {response.text}")
+            return None
+    except Exception as e:
+        print(f"Login error: {e}")
+        return None
 
 
 def map_wokwi_to_backend(data):
@@ -83,12 +112,7 @@ def on_connect(client, userdata, flags, rc, properties):
         print(f"Connection failed with code {rc}")
 
 
-# Setup MQTT client with TLS
-client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
-client.tls_set(cert_reqs=ssl.CERT_NONE)
-client.on_message = on_message
-client.on_connect = on_connect
-
+# ── Main ──
 print("=" * 40)
 print("  AgriSense IoT Bridge")
 print("  Wokwi -> MQTT -> Backend API")
@@ -96,12 +120,25 @@ print("=" * 40)
 print(f"Broker:   {MQTT_BROKER}:{MQTT_PORT}")
 print(f"Topic:    {MQTT_TOPIC}")
 print(f"Backend:  {API_SENSOR_ENDPOINT}")
-print()
+
+# Login first
+AUTH_TOKEN = login()
+if not AUTH_TOKEN:
+    print("Cannot proceed without authentication. Exiting.")
+    exit(1)
+
+# Setup MQTT client with TLS
+client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+client.tls_set(cert_reqs=ssl.CERT_NONE)
+client.on_message = on_message
+client.on_connect = on_connect
 
 try:
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     client.loop_forever()
+except KeyboardInterrupt:
+    print("\nStopped by user.")
 except Exception as e:
     print(f"FATAL ERROR: {e}")
     print("\n[HINT] Your network may be blocking encrypted traffic. Try a Mobile Hotspot.")
-    exit()
+    exit(1)

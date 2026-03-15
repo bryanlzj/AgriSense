@@ -4,6 +4,7 @@ class Alert {
   final String severity;
   final String title;
   final String message;
+  final String? recommendations;
   final bool isRead;
   final DateTime? createdAt;
 
@@ -13,6 +14,7 @@ class Alert {
     required this.severity,
     required this.title,
     required this.message,
+    this.recommendations,
     required this.isRead,
     this.createdAt,
   });
@@ -21,10 +23,12 @@ class Alert {
   factory Alert.fromJson(Map<String, dynamic> json) {
     return Alert(
       id: json['id'] as int? ?? 0,
-      type: json['type'] as String? ?? 'system',
+      // Backend sends 'alert_type', not 'type'
+      type: json['alert_type'] as String? ?? json['type'] as String? ?? 'system',
       severity: json['severity'] as String? ?? 'low',
       title: json['title'] as String? ?? '',
       message: json['message'] as String? ?? '',
+      recommendations: json['recommendations'] as String?,
       isRead: json['is_read'] as bool? ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
@@ -58,15 +62,48 @@ class Alert {
     return severity[0].toUpperCase() + severity.substring(1);
   }
 
+  /// Returns the category this alert belongs to.
+  String get category {
+    switch (type.toLowerCase()) {
+      case 'heavy_rain':
+      case 'extreme_heat':
+      case 'storm_warning':
+      case 'low_temperature':
+        return 'weather';
+      case 'pest_detection':
+      case 'pest_risk_warning':
+      case 'pest_risk':
+        return 'pest';
+      case 'low_soil_moisture':
+      case 'high_humidity':
+        return 'environmental';
+      case 'system':
+      default:
+        return 'system';
+    }
+  }
+
   /// Returns an icon based on alert type.
   String get icon {
     switch (type.toLowerCase()) {
+      case 'heavy_rain':
+        return '🌧️';
+      case 'extreme_heat':
+        return '🌡️';
+      case 'storm_warning':
+        return '⛈️';
+      case 'low_temperature':
+        return '❄️';
+      case 'pest_detection':
+      case 'pest_risk_warning':
+      case 'pest_risk':
+        return '🐛';
+      case 'low_soil_moisture':
+        return '💧';
+      case 'high_humidity':
+        return '💦';
       case 'weather':
         return '🌤️';
-      case 'pest':
-        return '🐛';
-      case 'environmental':
-        return '🌱';
       case 'system':
       default:
         return '⚠️';

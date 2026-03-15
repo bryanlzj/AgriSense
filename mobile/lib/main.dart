@@ -20,9 +20,11 @@ import 'package:fyp_prototype/pages/sign_up_page.dart';
 import 'package:fyp_prototype/pages/success_page.dart';
 import 'package:fyp_prototype/pages/weather_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fyp_prototype/services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
   runApp(const MyApp());
 }
 

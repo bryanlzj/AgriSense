@@ -8,6 +8,7 @@ import 'package:fyp_prototype/pages/pests_page.dart';
 import 'package:fyp_prototype/pages/settings_page.dart';
 import 'package:fyp_prototype/pages/weather_page.dart';
 import 'package:fyp_prototype/services/dashboard_service.dart';
+import 'package:fyp_prototype/services/notification_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -26,6 +27,14 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    // Start polling for new alerts every 30 seconds
+    NotificationService.startPolling();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.stopPolling();
+    super.dispose();
   }
 
   Future<void> _loadDashboardData() async {
@@ -80,6 +89,10 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+    // Refresh dashboard data when returning to Home tab
+    if (index == 0) {
+      _loadDashboardData();
+    }
   }
 
   void _onChatbotTap() {
@@ -173,7 +186,7 @@ class _MainPageState extends State<MainPage> {
 
     // Build pages list with loaded data
     final routes = [
-      HomePage(homePageData: _homePageData!),
+      HomePage(homePageData: _homePageData!, onRefresh: _loadDashboardData),
       WeatherPage(),
       PestsPage(),
       SettingsPage(),

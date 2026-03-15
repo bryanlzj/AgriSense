@@ -67,11 +67,24 @@ def list_alerts(
         List of alerts
     """
     query = db.query(Alert).filter(Alert.user_id == current_user.id)
-    
+
     # Apply filters
     if filter_params.type:
-        query = query.filter(Alert.alert_type == filter_params.type)
-    
+        # Support category-based filtering (mobile sends 'weather', 'pest', etc.)
+        category_map = {
+            "weather": [ModelAlertType.HEAVY_RAIN, ModelAlertType.EXTREME_HEAT,
+                        ModelAlertType.STORM_WARNING, ModelAlertType.LOW_TEMPERATURE],
+            "pest": [ModelAlertType.PEST_DETECTION, ModelAlertType.PEST_RISK_WARNING,
+                     ModelAlertType.PEST_RISK],
+            "environmental": [ModelAlertType.LOW_SOIL_MOISTURE, ModelAlertType.HIGH_HUMIDITY],
+            "system": [ModelAlertType.SYSTEM],
+        }
+        if filter_params.type in category_map:
+            query = query.filter(Alert.alert_type.in_(category_map[filter_params.type]))
+        else:
+            # Direct type match (e.g. 'heavy_rain')
+            query = query.filter(Alert.alert_type == filter_params.type)
+
     if filter_params.severity:
         query = query.filter(Alert.severity == filter_params.severity)
     

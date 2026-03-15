@@ -5,8 +5,9 @@ import 'package:fyp_prototype/models/home_page_data.dart';
 
 class HomePage extends StatefulWidget {
   final HomePageData homePageData;
+  final Future<void> Function()? onRefresh;
 
-  const HomePage({super.key, required this.homePageData});
+  const HomePage({super.key, required this.homePageData, this.onRefresh});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,7 +20,11 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
-      body: SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh ?? () async {},
+        color: Color(0xFF53AD64),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,6 +57,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

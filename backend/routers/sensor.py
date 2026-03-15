@@ -22,6 +22,7 @@ from database import get_db
 from models.sensor_reading import SensorReading
 from models.user import User
 from services.weather_ml_service import weather_ml_service
+from services.alert_service import AlertService
 from schemas.sensor import (
     SensorDataCreate,
     SensorDataResponse,
@@ -97,7 +98,13 @@ def create_sensor_data(
     db.add(db_sensor_data)
     db.commit()
     db.refresh(db_sensor_data)
-    
+
+    # Trigger immediate alert checks for this sensor reading
+    try:
+        AlertService.check_sensor_alerts(db, current_user.id)
+    except Exception:
+        pass  # Alert check failure shouldn't block sensor creation
+
     return db_sensor_data
 
 
