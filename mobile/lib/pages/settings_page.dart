@@ -78,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     width: 250,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement edit profile
+                        Navigator.pushNamed(context, '/editProfile');
                       },
                       style: ElevatedButton.styleFrom(
                         elevation: 0,

@@ -20,6 +20,11 @@ class ApiConstants {
   static const String login = '$apiPrefix/auth/login';
   static const String register = '$apiPrefix/auth/register';
   static const String me = '$apiPrefix/auth/me';
+  static const String profileUpdate = '$apiPrefix/auth/me';
+  static const String changePassword = '$apiPrefix/auth/change-password';
+
+  // Sensor endpoints
+  static const String sensorImport = '$apiPrefix/sensor/import';
 
   // Dashboard endpoints
   static const String dashboard = '$apiPrefix/dashboard';

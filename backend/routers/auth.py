@@ -14,7 +14,7 @@ from typing import Annotated
 
 from database import get_db
 from models.user import User
-from schemas.auth import UserRegister, UserLogin, Token, UserResponse
+from schemas.auth import UserRegister, UserLogin, Token, UserResponse, UserUpdate, PasswordChange
 from utils.password import get_password_hash, verify_password
 from utils.security import create_access_token
 from dependencies.auth import get_current_user
@@ -63,6 +63,15 @@ async def register(
             detail="Username already registered"
         )
 
+    # Check if email already exists
+    if user_data.email:
+        existing_email = db.query(User).filter(User.email == user_data.email).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
     # Hash password
     hashed_password = get_password_hash(user_data.password)
 
@@ -71,6 +80,7 @@ async def register(
         username=user_data.username,
         hashed_password=hashed_password,
         full_name=user_data.full_name,
+        email=user_data.email,
         farm_location_name=user_data.farm_location_name,
         farm_location_lat=user_data.farm_location_lat,
         farm_location_lng=user_data.farm_location_lng,
@@ -161,3 +171,58 @@ async def get_me(
         401: Invalid or missing token
     """
     return current_user
+
+
+@router.put(
+    "/me",
+    response_model=UserResponse,
+    summary="Update current user profile",
+)
+async def update_me(
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update the current user's profile fields."""
+    # Check email uniqueness if email is being updated
+    if user_data.email is not None:
+        existing = db.query(User).filter(
+            User.email == user_data.email,
+            User.id != current_user.id
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already in use by another account"
+            )
+
+    # Update only provided fields
+    update_data = user_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post(
+    "/change-password",
+    status_code=status.HTTP_200_OK,
+    summary="Change password",
+)
+async def change_password(
+    password_data: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change the current user's password."""
+    if not verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    current_user.hashed_password = get_password_hash(password_data.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}

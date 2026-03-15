@@ -58,6 +58,11 @@ class UserRegister(BaseModel):
         max_length=100,
         description="User's full name"
     )
+    email: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="User email address (required for new signups)"
+    )
     farm_location_name: str = Field(
         default="Kuala Lumpur",
         max_length=100,
@@ -79,6 +84,18 @@ class UserRegister(BaseModel):
         default="rice",
         description="Primary crop type (rice, vegetables, corn, oil_palm, rubber)"
     )
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        """Basic email format validation."""
+        if v is None or v.strip() == '':
+            return None
+        import re
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, v):
+            raise ValueError('Invalid email format')
+        return v.lower()
 
     @field_validator('username')
     @classmethod
@@ -149,6 +166,43 @@ class Token(BaseModel):
         }
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating user profile. All fields optional."""
+    full_name: Optional[str] = Field(None, max_length=100)
+    email: Optional[str] = Field(None, max_length=255)
+    farm_location_name: Optional[str] = Field(None, max_length=100)
+    farm_location_lat: Optional[float] = Field(None, ge=-90, le=90)
+    farm_location_lng: Optional[float] = Field(None, ge=-180, le=180)
+    crop_type: Optional[str] = Field(None)
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v.strip() == '':
+            return None
+        import re
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, v):
+            raise ValueError('Invalid email format')
+        return v.lower()
+
+    @field_validator('crop_type')
+    @classmethod
+    def validate_crop_type_update(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        valid_types = ["rice", "vegetables", "corn", "oil_palm", "rubber"]
+        if v.lower() not in valid_types:
+            raise ValueError(f'Crop type must be one of: {", ".join(valid_types)}')
+        return v.lower()
+
+
+class PasswordChange(BaseModel):
+    """Schema for changing password."""
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., min_length=6, description="New password (min 6 chars)")
+
+
 class UserResponse(BaseModel):
     """
     Schema for user data response (PRD v2).
@@ -159,6 +213,7 @@ class UserResponse(BaseModel):
     id: int = Field(..., description="User ID")
     username: str = Field(..., description="Username")
     full_name: Optional[str] = Field(None, description="User's full name")
+    email: Optional[str] = Field(None, description="User email address")
     farm_location_name: str = Field(..., description="Farm location name")
     farm_location_lat: float = Field(..., description="Farm latitude")
     farm_location_lng: float = Field(..., description="Farm longitude")
@@ -173,6 +228,7 @@ class UserResponse(BaseModel):
                 "id": 1,
                 "username": "ahmad_farmer",
                 "full_name": "Ahmad bin Ibrahim",
+                "email": "ahmad@example.com",
                 "farm_location_name": "Kedah",
                 "farm_location_lat": 6.1184,
                 "farm_location_lng": 100.3685,

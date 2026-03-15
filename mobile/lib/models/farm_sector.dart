@@ -4,7 +4,8 @@ class Sector {
   final int? userId;
   String name;
   String location;
-  String area;
+  double? areaValue;
+  String areaUnit;
   String crop;
   String planted; // Date string in format 'yyyy-MM-dd'
   final DateTime? createdAt;
@@ -15,24 +16,42 @@ class Sector {
     this.userId,
     required this.name,
     required this.location,
-    required this.area,
+    this.areaValue,
+    this.areaUnit = 'acres',
     required this.crop,
     required this.planted,
     this.createdAt,
     this.updatedAt,
   });
 
-  /// Create a Sector from JSON response
+  /// Formatted area display string.
+  String get areaDisplay {
+    if (areaValue == null) return 'Not set';
+    return '${areaValue!.toStringAsFixed(1)} $areaUnit';
+  }
+
+  /// Create a Sector from JSON response.
   factory Sector.fromJson(Map<String, dynamic> json) {
-    // Handle planted_date which could be a full datetime or just a date
     String plantedDate = '';
     if (json['planted_date'] != null) {
       final dateStr = json['planted_date'] as String;
-      // Extract just the date part (yyyy-MM-dd) if it's a full datetime
       if (dateStr.contains('T')) {
         plantedDate = dateStr.split('T')[0];
       } else {
         plantedDate = dateStr;
+      }
+    }
+
+    // Parse area: prefer area_value/area_unit, fall back to parsing area string
+    double? areaValue = (json['area_value'] as num?)?.toDouble();
+    String areaUnit = json['area_unit'] as String? ?? 'acres';
+
+    if (areaValue == null && json['area'] != null) {
+      final areaStr = json['area'] as String;
+      final match = RegExp(r'([\d.]+)\s*(\w+)?').firstMatch(areaStr);
+      if (match != null) {
+        areaValue = double.tryParse(match.group(1) ?? '');
+        if (match.group(2) != null) areaUnit = match.group(2)!;
       }
     }
 
@@ -41,7 +60,8 @@ class Sector {
       userId: json['user_id'] as int?,
       name: json['name'] as String? ?? '',
       location: json['location'] as String? ?? '',
-      area: json['area'] as String? ?? '',
+      areaValue: areaValue,
+      areaUnit: areaUnit,
       crop: json['crop'] as String? ?? '',
       planted: plantedDate,
       createdAt: json['created_at'] != null
@@ -53,18 +73,18 @@ class Sector {
     );
   }
 
-  /// Convert Sector to JSON for API requests
+  /// Convert Sector to JSON for API requests.
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{
       'name': name,
       'location': location.isNotEmpty ? location : null,
-      'area': area.isNotEmpty ? area : null,
+      'area': areaValue != null ? '${areaValue!.toStringAsFixed(1)} $areaUnit' : null,
+      'area_value': areaValue,
+      'area_unit': areaUnit,
       'crop': crop.isNotEmpty ? crop : null,
     };
 
-    // Convert planted date to ISO format if provided
     if (planted.isNotEmpty) {
-      // If it's just a date (yyyy-MM-dd), append time
       if (!planted.contains('T')) {
         json['planted_date'] = '${planted}T00:00:00';
       } else {
@@ -75,13 +95,13 @@ class Sector {
     return json;
   }
 
-  /// Create a copy of this sector with updated fields
   Sector copyWith({
     int? id,
     int? userId,
     String? name,
     String? location,
-    String? area,
+    double? areaValue,
+    String? areaUnit,
     String? crop,
     String? planted,
     DateTime? createdAt,
@@ -92,7 +112,8 @@ class Sector {
       userId: userId ?? this.userId,
       name: name ?? this.name,
       location: location ?? this.location,
-      area: area ?? this.area,
+      areaValue: areaValue ?? this.areaValue,
+      areaUnit: areaUnit ?? this.areaUnit,
       crop: crop ?? this.crop,
       planted: planted ?? this.planted,
       createdAt: createdAt ?? this.createdAt,

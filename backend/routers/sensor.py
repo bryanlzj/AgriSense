@@ -10,16 +10,19 @@ This module provides endpoints for:
 
 All endpoints require authentication.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from typing import List, Optional
 from datetime import datetime, timedelta
+import csv
+import io
 
 from database import get_db
 from models.sensor_reading import SensorReading
 from models.user import User
 from services.weather_ml_service import weather_ml_service
+from services.alert_service import AlertService
 from schemas.sensor import (
     SensorDataCreate,
     SensorDataResponse,
@@ -95,7 +98,13 @@ def create_sensor_data(
     db.add(db_sensor_data)
     db.commit()
     db.refresh(db_sensor_data)
-    
+
+    # Trigger immediate alert checks for this sensor reading
+    try:
+        AlertService.check_sensor_alerts(db, current_user.id)
+    except Exception:
+        pass  # Alert check failure shouldn't block sensor creation
+
     return db_sensor_data
 
 
@@ -156,6 +165,139 @@ def get_sensor_data(
     sensor_data = query.offset(skip).limit(limit).all()
     
     return sensor_data
+
+
+@router.post("/import", status_code=200)
+async def import_sensor_data(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Import sensor data from a CSV file.
+
+    Accepted columns: temperature, relative_humidity (alias: humidity),
+    soil_moisture, rain (alias: rainfall), wind_speed, solar_radiation,
+    soil_temperature, weather_code, timestamp.
+
+    Required per row: temperature, relative_humidity, soil_moisture.
+    Missing optional columns default to 0.0 or NULL.
+    Max 10,000 rows per import.
+    """
+    if not file.filename or not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted")
+
+    content = await file.read()
+    # Handle UTF-8 BOM
+    text = content.decode('utf-8-sig')
+
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV file is empty or has no headers")
+
+    # Column aliases
+    aliases = {
+        'humidity': 'relative_humidity',
+        'rainfall': 'rain',
+    }
+
+    # Normalize headers
+    normalized_fields = []
+    for f in reader.fieldnames:
+        clean = f.strip().lower()
+        normalized_fields.append(aliases.get(clean, clean))
+
+    expected_columns = [
+        'temperature', 'relative_humidity', 'soil_moisture',
+        'rain', 'wind_speed', 'solar_radiation',
+        'soil_temperature', 'weather_code', 'timestamp'
+    ]
+    required_columns = ['temperature', 'relative_humidity', 'soil_moisture']
+
+    columns_matched = [c for c in expected_columns if c in normalized_fields]
+    columns_missing = [c for c in expected_columns if c not in normalized_fields]
+
+    rows_imported = 0
+    rows_skipped = 0
+    errors = []
+
+    for row_num, row in enumerate(reader, start=2):
+        if rows_imported + rows_skipped >= 10000:
+            errors.append({"row": row_num, "message": "Row limit (10,000) reached"})
+            break
+
+        # Normalize row keys
+        normalized_row = {}
+        for key, value in row.items():
+            clean_key = key.strip().lower()
+            normalized_row[aliases.get(clean_key, clean_key)] = value.strip() if value else None
+
+        # Check required fields
+        missing_required = []
+        for req in required_columns:
+            if req not in normalized_row or not normalized_row[req]:
+                missing_required.append(req)
+
+        if missing_required:
+            rows_skipped += 1
+            errors.append({"row": row_num, "message": f"Missing required fields: {', '.join(missing_required)}"})
+            continue
+
+        try:
+            # Parse timestamp
+            ts = None
+            if 'timestamp' in normalized_row and normalized_row['timestamp']:
+                ts_str = normalized_row['timestamp']
+                for fmt in ['%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y %H:%M:%S', '%d/%m/%Y']:
+                    try:
+                        ts = datetime.strptime(ts_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+                if ts is None:
+                    rows_skipped += 1
+                    errors.append({"row": row_num, "message": f"Invalid timestamp format: {ts_str}"})
+                    continue
+
+            def safe_float(val, default=None):
+                if val is None or val == '':
+                    return default
+                return float(val)
+
+            def safe_int(val, default=None):
+                if val is None or val == '':
+                    return default
+                return int(float(val))
+
+            reading = SensorReading(
+                user_id=current_user.id,
+                temperature=safe_float(normalized_row.get('temperature')),
+                relative_humidity=safe_float(normalized_row.get('relative_humidity')),
+                soil_moisture=safe_float(normalized_row.get('soil_moisture')),
+                rain=safe_float(normalized_row.get('rain'), 0.0),
+                wind_speed=safe_float(normalized_row.get('wind_speed'), 0.0),
+                solar_radiation=safe_float(normalized_row.get('solar_radiation')),
+                soil_temperature=safe_float(normalized_row.get('soil_temperature')),
+                weather_code=safe_int(normalized_row.get('weather_code')),
+            )
+            if ts:
+                reading.timestamp = ts
+
+            db.add(reading)
+            rows_imported += 1
+        except (ValueError, TypeError) as e:
+            rows_skipped += 1
+            errors.append({"row": row_num, "message": str(e)})
+
+    db.commit()
+
+    return {
+        "rows_imported": rows_imported,
+        "rows_skipped": rows_skipped,
+        "columns_matched": columns_matched,
+        "columns_missing": columns_missing,
+        "errors": errors[:50],
+    }
 
 
 @router.get("/{sensor_data_id}", response_model=SensorDataResponse)

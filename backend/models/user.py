@@ -64,6 +64,14 @@ class User(Base):
         comment="User's full name"
     )
 
+    email = Column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="User email address (required for new signups, optional for existing users)"
+    )
+
     # Farm Location Fields
     farm_location_name = Column(
         String(100),
@@ -182,6 +190,7 @@ class User(Base):
             "id": self.id,
             "username": self.username,
             "full_name": self.full_name,
+            "email": self.email,
             "farm_location_name": self.farm_location_name,
             "farm_location_lat": self.farm_location_lat,
             "farm_location_lng": self.farm_location_lng,

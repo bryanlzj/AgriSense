@@ -16,6 +16,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   String _selectedLocation = 'Kuala Lumpur';
@@ -65,6 +66,7 @@ class _SignUpPageState extends State<SignUpPage> {
       username: usernameController.text.trim(),
       password: passwordController.text,
       fullName: nameController.text.trim(),
+      email: emailController.text.trim(),
       farmLocationName: _selectedLocation,
       farmLocationLat: coords['lat']!,
       farmLocationLng: coords['lng']!,
@@ -94,6 +96,7 @@ class _SignUpPageState extends State<SignUpPage> {
   void dispose() {
     nameController.dispose();
     usernameController.dispose();
+    emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
@@ -182,6 +185,22 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       if (!val.isValidUsername) {
                         return 'Username must be 3-50 characters (letters, numbers, underscore)';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  // Email
+                  CustomFormField(
+                    controller: emailController,
+                    hintText: 'Enter your email address',
+                    validator: (val) {
+                      if (val == null || val.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                      if (!emailRegex.hasMatch(val)) {
+                        return 'Please enter a valid email address';
                       }
                       return null;
                     },
