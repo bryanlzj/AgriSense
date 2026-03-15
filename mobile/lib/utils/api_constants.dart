@@ -23,6 +23,9 @@ class ApiConstants {
   static const String profileUpdate = '$apiPrefix/auth/me';
   static const String changePassword = '$apiPrefix/auth/change-password';
 
+  // Sensor endpoints
+  static const String sensorImport = '$apiPrefix/sensor/import';
+
   // Dashboard endpoints
   static const String dashboard = '$apiPrefix/dashboard';
   static const String dashboardQuick = '$apiPrefix/dashboard/quick';
