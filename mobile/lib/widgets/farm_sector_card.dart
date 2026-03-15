@@ -77,7 +77,7 @@ class FarmSectorCard extends StatelessWidget {
               ],
             ),
             buildInfoRow('assets/images/pin.png', 'Location', sector.location),
-            buildInfoRow('assets/images/area.png', 'Area', sector.area),
+            buildInfoRow('assets/images/area.png', 'Area', sector.areaDisplay),
             buildInfoRow('assets/images/crop.png', 'Crop', sector.crop),
             buildInfoRow('assets/images/calender.png', 'Planted', sector.planted),
           ],
