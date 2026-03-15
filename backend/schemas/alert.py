@@ -102,8 +102,6 @@ class AlertResponse(BaseModel):
     title: str
     message: str
     recommendations: Optional[str] = None  # PRD v2: Include recommendations in response
-    source_id: Optional[int] = None
-    source_type: Optional[str] = None
     alert_metadata: Optional[str] = None  # Stored as JSON string in DB
     is_read: bool
     is_acknowledged: bool = False

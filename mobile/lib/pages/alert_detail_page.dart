@@ -32,7 +32,9 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
         setState(() => _isRead = true);
         widget.onUpdated?.call();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to mark alert as read: $e');
+    }
   }
 
   Future<void> _deleteAlert() async {
