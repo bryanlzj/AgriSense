@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fyp_prototype/services/alert_service.dart';
 import 'package:fyp_prototype/models/alert.dart';
+import 'package:fyp_prototype/pages/alert_detail_page.dart';
 
 class AlertsPage extends StatefulWidget {
   const AlertsPage({super.key});
@@ -52,59 +53,6 @@ class _AlertsPageState extends State<AlertsPage> {
           _errorMessage = e.toString().replaceFirst('Exception: ', '');
           _isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _markAsRead(Alert alert) async {
-    try {
-      await AlertService.markAsRead(alert.id);
-      _loadAlerts();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to mark as read'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteAlert(Alert alert) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Alert'),
-        content: Text('Are you sure you want to delete this alert?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await AlertService.deleteAlert(alert.id);
-        _loadAlerts();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete alert'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       }
     }
   }
@@ -475,9 +423,15 @@ class _AlertsPageState extends State<AlertsPage> {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              if (!alert.isRead) {
-                _markAsRead(alert);
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AlertDetailPage(
+                    alert: alert,
+                    onUpdated: _loadAlerts,
+                  ),
+                ),
+              );
             },
             child: Padding(
               padding: EdgeInsets.all(16),
