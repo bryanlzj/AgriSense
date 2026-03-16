@@ -62,15 +62,19 @@ class PestDetectionCreate(BaseModel):
 class PestDetectionResponse(BaseModel):
     """
     Schema for pest detection response.
-    Returns detection results with metadata.
+    Returns detection results with metadata and pest info.
     """
     id: int = Field(..., description="Detection record ID")
     user_id: int = Field(..., description="ID of user who uploaded image")
     pest_type: Optional[str] = Field(None, description="Type of pest detected")
     confidence_score: Optional[float] = Field(None, description="Confidence score (0-1)")
     image_url: str = Field(..., description="URL to access image")
-    recommendations: Optional[str] = Field(None, description="Treatment recommendations")
+    recommendations: Optional[str] = Field(None, description="User notes")
     detected_at: datetime = Field(..., description="Detection timestamp")
+    scientific_name: Optional[str] = Field(None, description="Scientific name of pest")
+    description: Optional[str] = Field(None, description="Description of the pest")
+    danger_level: Optional[str] = Field(None, description="Danger level: low, medium, high")
+    pest_recommendations: Optional[list] = Field(None, description="Treatment recommendations")
 
     class Config:
         from_attributes = True
@@ -81,8 +85,12 @@ class PestDetectionResponse(BaseModel):
                 "pest_type": "Fall Armyworm",
                 "confidence_score": 0.87,
                 "image_url": "http://localhost:8000/uploads/abc123.jpg",
-                "recommendations": "Apply neem oil spray",
-                "detected_at": "2025-01-04T10:30:00"
+                "recommendations": "User notes",
+                "detected_at": "2025-01-04T10:30:00",
+                "scientific_name": "Spodoptera frugiperda",
+                "description": "Destructive pest that attacks many crops.",
+                "danger_level": "high",
+                "pest_recommendations": ["Apply neem oil spray", "Remove affected leaves"]
             }
         }
 

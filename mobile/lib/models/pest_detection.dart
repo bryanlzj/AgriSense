@@ -28,6 +28,10 @@ class PestDetection {
   final String imageUrl;
   final String? recommendations;
   final DateTime detectedAt;
+  final String? scientificName;
+  final String? description;
+  final String? dangerLevel;
+  final List<String>? pestRecommendations;
 
   PestDetection({
     required this.id,
@@ -37,6 +41,10 @@ class PestDetection {
     required this.imageUrl,
     this.recommendations,
     required this.detectedAt,
+    this.scientificName,
+    this.description,
+    this.dangerLevel,
+    this.pestRecommendations,
   });
 
   factory PestDetection.fromJson(Map<String, dynamic> json) {
@@ -48,6 +56,12 @@ class PestDetection {
       imageUrl: json['image_url'] ?? '',
       recommendations: json['recommendations'],
       detectedAt: DateTime.parse(json['detected_at']),
+      scientificName: json['scientific_name'],
+      description: json['description'],
+      dangerLevel: json['danger_level'],
+      pestRecommendations: json['pest_recommendations'] != null
+          ? List<String>.from(json['pest_recommendations'])
+          : null,
     );
   }
 }
