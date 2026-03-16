@@ -23,8 +23,12 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
+# Note: ultralytics pulls in opencv-python (non-headless) which needs GUI libs.
+# We force-replace it with opencv-python-headless for the slim image.
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip uninstall opencv-python -y 2>/dev/null; \
+    pip install --no-cache-dir opencv-python-headless "requests>=2.32.2"
 
 # ===================================
 # Stage 2: Production
