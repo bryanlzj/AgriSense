@@ -52,16 +52,17 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY . .
 
-# Pre-cache YOLOv5 torch.hub repo so it doesn't download at runtime
-RUN python -c "import torch; torch.hub.load('ultralytics/yolov5', 'custom', path='ml_models/pest_model.pt', trust_repo=True)" || true
+# Create non-root user for security
+RUN useradd -m -u 1000 agrisense
+
+# Pre-cache YOLOv5 torch.hub repo and copy cache to agrisense user
+RUN TORCH_HOME=/home/agrisense/.cache/torch \
+    python -c "import torch; torch.hub.load('ultralytics/yolov5', 'custom', path='ml_models/pest_model.pt', trust_repo=True)" || true
 
 # Create directories for uploads and logs
 RUN mkdir -p uploads logs && \
-    chmod 755 uploads logs
-
-# Create non-root user for security
-RUN useradd -m -u 1000 agrisense && \
-    chown -R agrisense:agrisense /app
+    chmod 755 uploads logs && \
+    chown -R agrisense:agrisense /app /home/agrisense
 
 # Switch to non-root user
 USER agrisense
