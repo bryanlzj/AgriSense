@@ -530,9 +530,20 @@ class _PestsPageState extends State<PestsPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8),
+                if (detection.scientificName != null) ...[
+                  SizedBox(height: 4),
+                  Text(
+                    detection.scientificName!,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+                SizedBox(height: 12),
 
-                // Confidence
+                // Confidence and danger level
                 Row(
                   children: [
                     Icon(Icons.analytics, size: 20, color: Colors.grey),
@@ -544,6 +555,32 @@ class _PestsPageState extends State<PestsPage> {
                         color: Colors.grey[700],
                       ),
                     ),
+                    if (detection.dangerLevel != null) ...[
+                      SizedBox(width: 16),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: detection.dangerLevel == 'high'
+                              ? Colors.red.withAlpha(26)
+                              : detection.dangerLevel == 'medium'
+                                  ? Colors.orange.withAlpha(26)
+                                  : Colors.green.withAlpha(26),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          detection.dangerLevel!.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: detection.dangerLevel == 'high'
+                                ? Colors.red
+                                : detection.dangerLevel == 'medium'
+                                    ? Colors.orange
+                                    : Colors.green,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 SizedBox(height: 8),
@@ -563,6 +600,57 @@ class _PestsPageState extends State<PestsPage> {
                   ],
                 ),
 
+                // Description
+                if (detection.description != null) ...[
+                  SizedBox(height: 20),
+                  Text(
+                    'About this pest',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    detection.description!,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+
+                // Recommendations
+                if (detection.pestRecommendations != null &&
+                    detection.pestRecommendations!.isNotEmpty) ...[
+                  SizedBox(height: 20),
+                  Text(
+                    'Recommendations',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  ...detection.pestRecommendations!.map((rec) => Padding(
+                    padding: EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('• ', style: GoogleFonts.inter(fontSize: 14, color: Color(0xFF53AD64))),
+                        Expanded(
+                          child: Text(
+                            rec,
+                            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[700], height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+
+                // User notes
                 if (detection.recommendations != null) ...[
                   SizedBox(height: 20),
                   Text(

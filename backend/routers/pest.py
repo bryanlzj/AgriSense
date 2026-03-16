@@ -666,6 +666,9 @@ def get_pest_detections(
         filename = detection.image_url.split('/')[-1] if detection.image_url else ""
         image_url = generate_file_url(filename, base_url) if filename else ""
 
+        # Enrich with pest info from database
+        pest_info = get_pest_info(detection.pest_type) if detection.pest_type else {}
+
         results.append(PestDetectionResponse(
             id=detection.id,
             user_id=detection.user_id,
@@ -673,7 +676,11 @@ def get_pest_detections(
             confidence_score=detection.confidence_score,
             image_url=image_url,
             recommendations=detection.recommendations,
-            detected_at=detection.detected_at
+            detected_at=detection.detected_at,
+            scientific_name=pest_info.get("scientific_name"),
+            description=pest_info.get("description"),
+            danger_level=pest_info.get("danger_level"),
+            pest_recommendations=pest_info.get("recommendations"),
         ))
 
     return results
@@ -1141,6 +1148,9 @@ def get_pest_detection(
     filename = detection.image_url.split('/')[-1] if detection.image_url else ""
     image_url = generate_file_url(filename, base_url) if filename else ""
 
+    # Enrich with pest info
+    pest_info = get_pest_info(detection.pest_type) if detection.pest_type else {}
+
     return PestDetectionResponse(
         id=detection.id,
         user_id=detection.user_id,
@@ -1148,7 +1158,11 @@ def get_pest_detection(
         confidence_score=detection.confidence_score,
         image_url=image_url,
         recommendations=detection.recommendations,
-        detected_at=detection.detected_at
+        detected_at=detection.detected_at,
+        scientific_name=pest_info.get("scientific_name"),
+        description=pest_info.get("description"),
+        danger_level=pest_info.get("danger_level"),
+        pest_recommendations=pest_info.get("recommendations"),
     )
 
 
