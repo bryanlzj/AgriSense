@@ -82,10 +82,11 @@ class PestMLService:
                     sys.path.insert(0, hub_dir)
                     sys.path = [p for p in sys.path if p not in ("/app",)]
 
+                    model_abs_path = str(path) if path.is_absolute() else str(Path(original_cwd) / path)
                     self._model = torch.hub.load(
                         hub_dir,
                         "custom",
-                        path=str(Path(original_cwd) / path) if not path.startswith("/") else str(path),
+                        path=model_abs_path,
                         source="local",
                         trust_repo=True,
                     )
