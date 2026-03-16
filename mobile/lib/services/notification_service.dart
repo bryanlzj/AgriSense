@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fyp_prototype/models/alert.dart';
@@ -17,7 +18,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Timer? _pollTimer;
-  static int _lastSeenAlertId = 0;
+  static final Set<int> _notifiedAlertIds = {};
   static int _notificationIdCounter = 0;
 
   // Notification channel IDs
@@ -42,7 +43,7 @@ class NotificationService {
     await _plugin.initialize(
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Notification tapped while app is open — no-op for now
+        // Notification tapped while app is open
       },
       onDidReceiveBackgroundNotificationResponse: _onBackgroundNotificationTap,
     );
@@ -56,9 +57,10 @@ class NotificationService {
     // Create notification channels
     await _createChannels();
 
-    // Load last seen alert ID
+    // Load previously notified alert IDs
     final prefs = await SharedPreferences.getInstance();
-    _lastSeenAlertId = prefs.getInt('lastSeenAlertId') ?? 0;
+    final savedIds = prefs.getStringList('notifiedAlertIds') ?? [];
+    _notifiedAlertIds.addAll(savedIds.map((s) => int.tryParse(s) ?? 0));
   }
 
   /// Create Android notification channels.
@@ -105,7 +107,7 @@ class NotificationService {
       final pestEnabled = prefs.getBool('pestDetection') ?? true;
       if (!pestEnabled) return;
     } else if (category == 'environmental') {
-      final droughtEnabled = prefs.getBool('droughtWarnings') ?? false;
+      final droughtEnabled = prefs.getBool('droughtWarnings') ?? true;
       if (!droughtEnabled) return;
     }
 
@@ -145,12 +147,17 @@ class NotificationService {
       notificationDetails,
       payload: 'alert_${alert.id}',
     );
+
+    debugPrint('[NotificationService] Showed notification for alert ${alert.id}: ${alert.title}');
   }
 
   /// Start polling for new alerts periodically.
   static void startPolling({Duration interval = const Duration(seconds: 30)}) {
     stopPolling();
+    // Run immediately on start, then every interval
+    _checkForNewAlerts();
     _pollTimer = Timer.periodic(interval, (_) => _checkForNewAlerts());
+    debugPrint('[NotificationService] Polling started (every ${interval.inSeconds}s)');
   }
 
   /// Stop polling.
@@ -163,32 +170,46 @@ class NotificationService {
   static Future<void> _checkForNewAlerts() async {
     try {
       final token = await TokenStorage.getToken();
-      if (token == null) return;
+      if (token == null) {
+        debugPrint('[NotificationService] No token, skipping poll');
+        return;
+      }
 
       final response = await AlertService.getAlerts(
         isRead: false,
-        limit: 10,
+        limit: 20,
       );
 
+      debugPrint('[NotificationService] Polled: ${response.alerts.length} unread alerts');
+
+      int newCount = 0;
       for (final alert in response.alerts) {
-        if (alert.id > _lastSeenAlertId) {
+        if (!_notifiedAlertIds.contains(alert.id)) {
           await showAlertNotification(alert);
+          _notifiedAlertIds.add(alert.id);
+          newCount++;
         }
       }
 
-      // Update last seen ID
-      if (response.alerts.isNotEmpty) {
-        final maxId = response.alerts
-            .map((a) => a.id)
-            .reduce((a, b) => a > b ? a : b);
-        if (maxId > _lastSeenAlertId) {
-          _lastSeenAlertId = maxId;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('lastSeenAlertId', _lastSeenAlertId);
+      // Persist notified IDs (keep only last 200 to avoid bloat)
+      if (newCount > 0) {
+        final idsToSave = _notifiedAlertIds.toList();
+        if (idsToSave.length > 200) {
+          idsToSave.sort();
+          idsToSave.removeRange(0, idsToSave.length - 200);
+          _notifiedAlertIds
+            ..clear()
+            ..addAll(idsToSave);
         }
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(
+          'notifiedAlertIds',
+          _notifiedAlertIds.map((id) => id.toString()).toList(),
+        );
+        debugPrint('[NotificationService] $newCount new notifications shown');
       }
-    } catch (_) {
-      // Silently fail — polling should not crash the app
+    } catch (e) {
+      debugPrint('[NotificationService] Poll error: $e');
     }
   }
 }
