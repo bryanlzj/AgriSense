@@ -56,21 +56,41 @@ class PestMLService:
 
         try:
             import sys
+            import os
             import torch
 
-            # Temporarily remove /app from sys.path to prevent our backend
-            # models/ package from shadowing YOLOv5's internal models/ module.
+            # torch.hub.load downloads YOLOv5 repo to cache, then imports from it.
+            # Our /app/models/ package shadows YOLOv5's models/ module.
+            # Fix: temporarily chdir to the hub repo so relative imports resolve there.
+            hub_dir = os.path.join(
+                os.environ.get("TORCH_HOME", os.path.expanduser("~/.cache/torch")),
+                "hub", "ultralytics_yolov5_master"
+            )
+
+            original_cwd = os.getcwd()
             original_path = sys.path.copy()
-            sys.path = [p for p in sys.path if p not in ("", "/app", ".", "/app/")]
 
             try:
-                self._model = torch.hub.load(
-                    "ultralytics/yolov5",
-                    "custom",
-                    path=str(path),
-                    trust_repo=True,
-                )
+                # Ensure hub repo is downloaded
+                if not os.path.isdir(hub_dir):
+                    torch.hub.load("ultralytics/yolov5", "custom",
+                                   path=str(path), trust_repo=True)
+                else:
+                    # Insert hub dir at front and remove /app so YOLOv5's
+                    # models/ is found before our backend models/
+                    os.chdir(hub_dir)
+                    sys.path.insert(0, hub_dir)
+                    sys.path = [p for p in sys.path if p not in ("/app",)]
+
+                    self._model = torch.hub.load(
+                        hub_dir,
+                        "custom",
+                        path=str(Path(original_cwd) / path) if not path.startswith("/") else str(path),
+                        source="local",
+                        trust_repo=True,
+                    )
             finally:
+                os.chdir(original_cwd)
                 sys.path = original_path
             self._model.conf = 0.25  # default confidence threshold
             self._class_names = self._model.names  # {0: "name", ...}
