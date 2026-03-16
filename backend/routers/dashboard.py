@@ -18,6 +18,7 @@ from sqlalchemy import desc
 
 from database import get_db
 from models import User, Alert, PestDetection
+from models.sensor_reading import SensorReading
 from dependencies.auth import get_current_user
 from schemas.alert import AlertResponse
 from services.weather_service import fetch_current_weather, transform_current_weather
@@ -77,23 +78,43 @@ async def get_dashboard(
         "generated_at": datetime.utcnow().isoformat()
     }
 
-    # 1. Get weather summary
+    # 1. Get weather summary (prefer latest sensor reading, fallback to Open-Meteo)
     try:
-        weather_data = await fetch_current_weather(
-            current_user.farm_location_lat,
-            current_user.farm_location_lng
+        # Try latest sensor reading first (includes Wokwi/IoT data)
+        latest_sensor = (
+            db.query(SensorReading)
+            .filter(SensorReading.user_id == current_user.id)
+            .order_by(SensorReading.timestamp.desc())
+            .first()
         )
-        current_weather = transform_current_weather(weather_data)
 
-        response_data["weather"] = {
-            "temperature": round(current_weather.temperature, 1),
-            "humidity": current_weather.relative_humidity,
-            "weather_main": current_weather.weather_main,
-            "weather_description": current_weather.weather_description,
-            "feels_like": round(current_weather.feels_like, 1),
-            "wind_speed": round(current_weather.wind_speed, 1),
-            "location": current_user.farm_location_name
-        }
+        if latest_sensor:
+            response_data["weather"] = {
+                "temperature": round(latest_sensor.temperature, 1),
+                "humidity": round(latest_sensor.relative_humidity, 1),
+                "weather_main": latest_sensor.weather_condition or "Unknown",
+                "weather_description": latest_sensor.weather_condition or "Sensor data",
+                "feels_like": round(latest_sensor.temperature, 1),
+                "wind_speed": round(latest_sensor.wind_speed, 1) if latest_sensor.wind_speed else 0,
+                "location": current_user.farm_location_name
+            }
+        else:
+            # Fallback to Open-Meteo API if no sensor data
+            weather_data = await fetch_current_weather(
+                current_user.farm_location_lat,
+                current_user.farm_location_lng
+            )
+            current_weather = transform_current_weather(weather_data)
+
+            response_data["weather"] = {
+                "temperature": round(current_weather.temperature, 1),
+                "humidity": current_weather.relative_humidity,
+                "weather_main": current_weather.weather_main,
+                "weather_description": current_weather.weather_description,
+                "feels_like": round(current_weather.feels_like, 1),
+                "wind_speed": round(current_weather.wind_speed, 1),
+                "location": current_user.farm_location_name
+            }
     except Exception as e:
         response_data["weather"] = {
             "error": "Failed to fetch weather data",
