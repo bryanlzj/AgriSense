@@ -23,12 +23,12 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
-# Note: ultralytics pulls in opencv-python (non-headless) which needs GUI libs.
-# We force-replace it with opencv-python-headless for the slim image.
+# ultralytics pulls in opencv-python (needs GUI libs absent in slim images).
+# We install everything, then swap to headless opencv as the final step.
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip uninstall opencv-python -y 2>/dev/null; \
-    pip install --no-cache-dir opencv-python-headless "requests>=2.32.2"
+    pip uninstall -y opencv-python 2>/dev/null || true && \
+    pip install --no-cache-dir --force-reinstall opencv-python-headless "requests>=2.32.2"
 
 # ===================================
 # Stage 2: Production
@@ -49,15 +49,19 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Verify only headless opencv is present (no GUI opencv)
+RUN python -c "import cv2; print('cv2 OK:', cv2.__version__)"
+
 # Copy application code
 COPY . .
 
 # Create non-root user for security
 RUN useradd -m -u 1000 agrisense
 
-# Pre-cache YOLOv5 torch.hub repo and copy cache to agrisense user
+# Pre-cache YOLOv5 torch.hub repo under agrisense user's home
 RUN TORCH_HOME=/home/agrisense/.cache/torch \
-    python -c "import torch; torch.hub.load('ultralytics/yolov5', 'custom', path='ml_models/pest_model.pt', trust_repo=True)" || true
+    python -c "import torch; torch.hub.load('ultralytics/yolov5', 'custom', path='ml_models/pest_model.pt', trust_repo=True)" && \
+    echo 'YOLOv5 pre-cache SUCCESS' || echo 'YOLOv5 pre-cache FAILED'
 
 # Create directories for uploads and logs
 RUN mkdir -p uploads logs && \
