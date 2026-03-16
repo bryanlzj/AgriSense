@@ -57,42 +57,81 @@ class PestMLService:
         try:
             import sys
             import os
+            import subprocess
             import torch
 
-            # torch.hub.load downloads YOLOv5 repo to cache, then imports from it.
-            # Our /app/models/ package shadows YOLOv5's models/ module.
-            # Fix: temporarily chdir to the hub repo so relative imports resolve there.
+            # torch.hub.load has a module name conflict: our /app/models/ package
+            # shadows YOLOv5's internal models/ module. Fix: load the model in a
+            # subprocess that runs from the YOLOv5 hub directory, then load the
+            # result with torch.load in the main process.
             hub_dir = os.path.join(
                 os.environ.get("TORCH_HOME", os.path.expanduser("~/.cache/torch")),
                 "hub", "ultralytics_yolov5_master"
             )
 
+            # Ensure hub repo is downloaded
+            if not os.path.isdir(hub_dir):
+                logger.info("Downloading YOLOv5 hub repo...")
+                torch.hub.download_url_to_file(
+                    "https://github.com/ultralytics/yolov5/zipball/master",
+                    os.path.join(os.path.dirname(hub_dir), "master.zip"),
+                )
+                import zipfile
+                with zipfile.ZipFile(os.path.join(os.path.dirname(hub_dir), "master.zip")) as z:
+                    z.extractall(os.path.dirname(hub_dir))
+
+            model_abs_path = str(path.resolve())
+
+            # Run torch.hub.load in a subprocess where /app is not on sys.path
+            loader_script = f"""
+import sys, os
+os.chdir("{hub_dir}")
+sys.path.insert(0, "{hub_dir}")
+import torch
+model = torch.hub.load("{hub_dir}", "custom", path="{model_abs_path}", source="local", trust_repo=True)
+print("CLASSES:" + str(model.names))
+"""
+            result = subprocess.run(
+                [sys.executable, "-c", loader_script],
+                capture_output=True, text=True, timeout=120
+            )
+
+            if result.returncode != 0:
+                raise RuntimeError(f"Subprocess model load failed: {result.stderr}")
+
+            # Parse class names from subprocess output
+            for line in result.stdout.strip().split("\n"):
+                if line.startswith("CLASSES:"):
+                    import ast
+                    self._class_names = ast.literal_eval(line[len("CLASSES:"):])
+                    break
+
+            # Now load the model in the main process using the same approach
+            # but with direct torch.load (the subprocess confirmed it works)
             original_cwd = os.getcwd()
             original_path = sys.path.copy()
+            original_modules = {k: v for k, v in sys.modules.items() if k.startswith("models")}
+
+            # Remove our backend models from sys.modules temporarily
+            for k in list(sys.modules.keys()):
+                if k == "models" or k.startswith("models."):
+                    del sys.modules[k]
 
             try:
-                # Ensure hub repo is downloaded
-                if not os.path.isdir(hub_dir):
-                    torch.hub.load("ultralytics/yolov5", "custom",
-                                   path=str(path), trust_repo=True)
-                else:
-                    # Insert hub dir at front and remove /app so YOLOv5's
-                    # models/ is found before our backend models/
-                    os.chdir(hub_dir)
-                    sys.path.insert(0, hub_dir)
-                    sys.path = [p for p in sys.path if p not in ("/app",)]
-
-                    model_abs_path = str(path) if path.is_absolute() else str(Path(original_cwd) / path)
-                    self._model = torch.hub.load(
-                        hub_dir,
-                        "custom",
-                        path=model_abs_path,
-                        source="local",
-                        trust_repo=True,
-                    )
+                os.chdir(hub_dir)
+                sys.path = [hub_dir] + [p for p in sys.path if p not in ("/app", "")]
+                self._model = torch.hub.load(
+                    hub_dir, "custom", path=model_abs_path,
+                    source="local", trust_repo=True,
+                )
             finally:
                 os.chdir(original_cwd)
                 sys.path = original_path
+                # Restore our backend models modules
+                for k in list(sys.modules.keys()):
+                    if k == "models" or k.startswith("models."):
+                        del sys.modules[k]
+                sys.modules.update(original_modules)
             self._model.conf = 0.25  # default confidence threshold
             self._class_names = self._model.names  # {0: "name", ...}
             self._model_loaded = True
