@@ -55,13 +55,23 @@ class PestMLService:
             return False
 
         try:
+            import sys
             import torch
-            self._model = torch.hub.load(
-                "ultralytics/yolov5",
-                "custom",
-                path=str(path),
-                trust_repo=True,
-            )
+
+            # Temporarily remove /app from sys.path to prevent our backend
+            # models/ package from shadowing YOLOv5's internal models/ module.
+            original_path = sys.path.copy()
+            sys.path = [p for p in sys.path if p not in ("", "/app", ".", "/app/")]
+
+            try:
+                self._model = torch.hub.load(
+                    "ultralytics/yolov5",
+                    "custom",
+                    path=str(path),
+                    trust_repo=True,
+                )
+            finally:
+                sys.path = original_path
             self._model.conf = 0.25  # default confidence threshold
             self._class_names = self._model.names  # {0: "name", ...}
             self._model_loaded = True
