@@ -186,7 +186,7 @@ class TestWeatherMLServicePrediction:
 
 ```bash
 cd backend
-SET TEST_DATABASE_URL=postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense
+SET TEST_DATABASE_URL=postgresql://<user>:<password>@<db-host>:5432/agrisense
 python -m pytest tests/test_weather_ml_service.py -v
 ```
 
@@ -642,7 +642,7 @@ Then after creating `db_sensor_data` (around line 77), before `db.add()`:
 
 ```bash
 cd backend
-SET TEST_DATABASE_URL=postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense
+SET TEST_DATABASE_URL=postgresql://<user>:<password>@<db-host>:5432/agrisense
 python -m pytest tests/test_sensor.py -v
 ```
 
@@ -1011,7 +1011,7 @@ class TestHistoricalWeather:
 
 ```bash
 cd backend
-SET TEST_DATABASE_URL=postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense
+SET TEST_DATABASE_URL=postgresql://<user>:<password>@<db-host>:5432/agrisense
 python -m pytest tests/test_weather_endpoints.py -v
 ```
 
@@ -1413,7 +1413,7 @@ git commit -m "feat: redesign weather page with 3-tab layout (current, historica
 
 ```bash
 cd backend
-SET TEST_DATABASE_URL=postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense
+SET TEST_DATABASE_URL=postgresql://<user>:<password>@<db-host>:5432/agrisense
 python -m pytest -v --tb=short
 ```
 

@@ -123,8 +123,10 @@ def serialize(self, handler):
 ```
 
 ### Database Credentials
+> Credentials are not stored in this repository. Supply them at runtime via the
+> `TEST_DATABASE_URL` environment variable (see `.env.example`).
 - **Only user in DB:** `admin` / `admin123` (ID: 153)
-- **DB connection:** `postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense`
+- **DB connection:** `postgresql://<user>:<password>@<db-host>:5432/agrisense`
 
 ### Mobile Base URL
 - Currently set to `production` (`https://agrisense.bryanlzj.work`) in `api_constants.dart:14`
@@ -265,7 +267,7 @@ flutter run
 ### Run Tests
 ```bash
 cd C:\AgriSense\backend
-SET TEST_DATABASE_URL=postgresql://agrisense_user:PwGszJbrHGnxVplLFmjc3X31gtHr412+@168.138.188.113:5432/agrisense
+SET TEST_DATABASE_URL=postgresql://<user>:<password>@<db-host>:5432/agrisense
 C:\AgriSense\backend\venv\Scripts\python.exe -m pytest -v
 ```
 
